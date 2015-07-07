@@ -60,6 +60,7 @@
     <class>com.docdoku.core.product.PartMaster</class>
     <class>com.docdoku.core.product.PartMasterTemplate</class>
     <class>com.docdoku.core.product.PartRevision</class>
+    <class>com.docdoku.core.product.PartLink</class>
     <class>com.docdoku.core.product.PartSubstituteLink</class>
     <class>com.docdoku.core.product.PartUsageLink</class>
     <class>com.docdoku.core.product.SerialNumberBasedEffectivity</class>

@@ -28,10 +28,7 @@ import com.docdoku.core.document.DocumentRevision;
 import com.docdoku.core.document.DocumentRevisionKey;
 import com.docdoku.core.exceptions.*;
 import com.docdoku.core.meta.InstanceAttribute;
-import com.docdoku.core.product.ConfigurationItem;
-import com.docdoku.core.product.ConfigurationItemKey;
-import com.docdoku.core.product.PartRevision;
-import com.docdoku.core.product.PathToPathLink;
+import com.docdoku.core.product.*;
 import com.docdoku.core.security.ACL;
 import com.docdoku.core.security.UserGroupMapping;
 import com.docdoku.core.services.IDataManagerLocal;
@@ -545,7 +542,7 @@ public class ProductInstanceManagerBean implements IProductInstanceManagerLocal 
 
     @RolesAllowed({UserGroupMapping.REGULAR_USER_ROLE_ID})
     @Override
-    public PathDataMaster addNewPathDataIteration(String workspaceId, String configurationItemId, String serialNumber, int pathDataId, String path, List<InstanceAttribute> attributes, String note, DocumentRevisionKey[] links, String[] documentLinkComments) throws UserNotFoundException, AccessRightException, WorkspaceNotFoundException, ProductInstanceMasterNotFoundException, UserNotActiveException, NotAllowedException, PathDataAlreadyExistsException, FileAlreadyExistsException, CreationException {
+    public PathDataMaster addNewPathDataIteration(String workspaceId, String configurationItemId, String serialNumber, int pathDataId, List<PartLink> path, List<InstanceAttribute> attributes, String note, DocumentRevisionKey[] links, String[] documentLinkComments) throws UserNotFoundException, AccessRightException, WorkspaceNotFoundException, ProductInstanceMasterNotFoundException, UserNotActiveException, NotAllowedException, PathDataAlreadyExistsException, FileAlreadyExistsException, CreationException {
         User user = userManager.checkWorkspaceReadAccess(workspaceId);
         Locale locale = new Locale(user.getLanguage());
 
@@ -705,7 +702,7 @@ public class ProductInstanceManagerBean implements IProductInstanceManagerLocal 
 
     @RolesAllowed({UserGroupMapping.REGULAR_USER_ROLE_ID})
     @Override
-    public PathDataMaster getPathDataByPath(String workspaceId, String configurationItemId, String serialNumber, String path) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, AccessRightException, ProductInstanceMasterNotFoundException {
+    public PathDataMaster getPathDataByPath(String workspaceId, String configurationItemId, String serialNumber, List<PartLink> path) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, AccessRightException, ProductInstanceMasterNotFoundException {
         User user = userManager.checkWorkspaceReadAccess(workspaceId);
         Locale locale = new Locale(user.getLanguage());
 
@@ -937,7 +934,7 @@ public class ProductInstanceManagerBean implements IProductInstanceManagerLocal 
 
     @RolesAllowed({UserGroupMapping.REGULAR_USER_ROLE_ID})
     @Override
-    public PathDataMaster createPathDataMaster(String workspaceId, String configurationItemId, String serialNumber, String path, List<InstanceAttribute> attributes, String noteIteration) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, ProductInstanceMasterNotFoundException, AccessRightException {
+    public PathDataMaster createPathDataMaster(String workspaceId, String configurationItemId, String serialNumber, List<PartLink> path, List<InstanceAttribute> attributes, String noteIteration) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, ProductInstanceMasterNotFoundException, AccessRightException {
         User user = userManager.checkWorkspaceReadAccess(workspaceId);
         Locale locale = new Locale(user.getLanguage());
 

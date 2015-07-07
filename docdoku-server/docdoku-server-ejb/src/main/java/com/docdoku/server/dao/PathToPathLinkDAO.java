@@ -1,3 +1,23 @@
+/*
+ * DocDoku, Professional Open Source
+ * Copyright 2006 - 2015 DocDoku SARL
+ *
+ * This file is part of DocDokuPLM.
+ *
+ * DocDokuPLM is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * DocDokuPLM is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with DocDokuPLM.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.docdoku.server.dao;
 
 import com.docdoku.core.configuration.ProductBaseline;
@@ -196,7 +216,7 @@ public class PathToPathLinkDAO {
                 .getResultList();
     }
 
-    public List<PathToPathLink> getSourcesPathToPathLinksInProduct(ConfigurationItem configurationItem, String type, String source) {
+    public List<PathToPathLink> getSourcesPathToPathLinksInProduct(ConfigurationItem configurationItem, String type, List<PartLink> source) {
         return em.createNamedQuery("PathToPathLink.findSourcesPathToPathLinkInProduct", PathToPathLink.class)
                 .setParameter("configurationItem", configurationItem)
                 .setParameter("type",type)
@@ -240,6 +260,7 @@ public class PathToPathLinkDAO {
         }
     }
 
+    //TODO rewrite
     private void upgradePathToPathLink(PartLink oldLink, PartLink newLink){
 
         List<PathToPathLink> oldP2PLinks = getPathToPathLinksFromPartialPath(oldLink.getFullId());
@@ -247,8 +268,8 @@ public class PathToPathLinkDAO {
         String newFullId = newLink.getFullId();
 
         for(PathToPathLink pathToPathLink:oldP2PLinks){
-            pathToPathLink.setSourcePath(upgradePath(pathToPathLink.getSourcePath(), oldFullId, newFullId));
-            pathToPathLink.setTargetPath(upgradePath(pathToPathLink.getTargetPath(), oldFullId, newFullId));
+            //pathToPathLink.setSourcePath(upgradePath(pathToPathLink.getSourcePath(), oldFullId, newFullId));
+            //pathToPathLink.setTargetPath(upgradePath(pathToPathLink.getTargetPath(), oldFullId, newFullId));
         }
 
         if(oldLink.getSubstitutes() != null){
@@ -282,6 +303,7 @@ public class PathToPathLinkDAO {
         }
     }
 
+    //TODO rewrite
     private void cloneAndUpgradePathToPathLink(PartLink oldLink, PartLink newLink, Map<PathToPathLink,Map<PathToPathLink, ConfigurationItem>> modifiedP2P){
 
         List<PathToPathLink> oldP2PLinks = getPathToPathLinksFromPartialPath(oldLink.getFullId());
@@ -295,8 +317,8 @@ public class PathToPathLinkDAO {
             }else{
                 clone = new PathToPathLink(pathToPathLink.getType(),pathToPathLink.getSourcePath(),pathToPathLink.getTargetPath(),pathToPathLink.getDescription());
             }
-            clone.setSourcePath(upgradePath(clone.getSourcePath(), oldFullId, newFullId));
-            clone.setTargetPath(upgradePath(clone.getTargetPath(), oldFullId, newFullId));
+            //clone.setSourcePath(upgradePath(clone.getSourcePath(), oldFullId, newFullId));
+            //clone.setTargetPath(upgradePath(clone.getTargetPath(), oldFullId, newFullId));
 
             // Add in configuration item list
             try {
@@ -322,9 +344,11 @@ public class PathToPathLinkDAO {
 
     }
 
-    public String upgradePath(String path, String oldFullId, String newFullId) {
-        return path.replaceAll("("+oldFullId+")(-|$)", newFullId + "$2");
-    }
+    //TODO rewrite
+//
+//    public String upgradePath(String path, String oldFullId, String newFullId) {
+//        return path.replaceAll("("+oldFullId+")(-|$)", newFullId + "$2");
+//    }
 
     public List<PathToPathLink> getPathToPathLinkSourceInContext(ConfigurationItem configurationItem, ProductInstanceIteration productInstanceIteration, String path){
         if(productInstanceIteration != null){

@@ -171,12 +171,12 @@ public class ProductResource {
         if(configSpecType.startsWith("pi-")){
             serialNumber = configSpecType.substring(3);
         }
+        List<PartLink> decodedPath = productService.decodePath(ciKey, path);
 
         if(linkType == null){
-            List<PartLink> decodedPath = productService.decodePath(ciKey, path);
             component = productService.filterProductStructure(ciKey,filter,decodedPath,depth);
         }else {
-            component = productService.filterProductStructureOnLinkType(ciKey, filter, serialNumber, path, linkType);
+            component = productService.filterProductStructureOnLinkType(ciKey, filter, serialNumber, decodedPath, linkType);
         }
 
         if(component == null){
@@ -452,7 +452,10 @@ public class ProductResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public LightPathToPathLinkDTO createPathToPathLink(@PathParam("workspaceId") String workspaceId, @PathParam("ciId") String configurationItemId, @PathParam("serialNumber") String serialNumber, LightPathToPathLinkDTO pathToPathLinkDTO) throws PathToPathLinkAlreadyExistsException, UserNotActiveException, WorkspaceNotFoundException, CreationException, UserNotFoundException, ProductInstanceMasterNotFoundException, AccessRightException, PathToPathCyclicException, ConfigurationItemNotFoundException, PartUsageLinkNotFoundException, NotAllowedException {
-        PathToPathLink pathToPathLink = productService.createPathToPathLink(workspaceId, configurationItemId, pathToPathLinkDTO.getType(), pathToPathLinkDTO.getSourcePath(), pathToPathLinkDTO.getTargetPath(), pathToPathLinkDTO.getDescription());
+        ConfigurationItemKey ciKey = new ConfigurationItemKey(workspaceId,configurationItemId);
+        List<PartLink> sourcePath = productService.decodePath(ciKey, pathToPathLinkDTO.getSourcePath());
+        List<PartLink> targetPath = productService.decodePath(ciKey, pathToPathLinkDTO.getTargetPath());
+        PathToPathLink pathToPathLink = productService.createPathToPathLink(workspaceId, configurationItemId, pathToPathLinkDTO.getType(), sourcePath, targetPath, pathToPathLinkDTO.getDescription());
         return mapper.map(pathToPathLink,LightPathToPathLinkDTO.class);
     }
 
@@ -618,8 +621,11 @@ public class ProductResource {
         List<PathToPathLinkDTO> pathToPathLinkDTOs = new ArrayList<>();
 
         for (PathToPathLink pathToPathLink : pathToPathLinkTypes) {
-            PartMaster partMasterSource = productService.getPartMasterFromPath(workspaceId, configurationItem.getId(), pathToPathLink.getSourcePath());
-            PartMaster partMasterTarget = productService.getPartMasterFromPath(workspaceId, configurationItem.getId(), pathToPathLink.getTargetPath());
+
+            List<PartLink> sourcePath = pathToPathLink.getSourcePath();
+            List<PartLink> targetPath =  pathToPathLink.getTargetPath();
+            PartMaster partMasterSource = sourcePath.get(sourcePath.size()-1).getComponent();
+            PartMaster partMasterTarget = targetPath.get(targetPath.size()-1).getComponent();
 
             LightPartMasterDTO lightPartMasterDTOSource = new LightPartMasterDTO();
             LightPartMasterDTO lightPartMasterDTOTarget = new LightPartMasterDTO();

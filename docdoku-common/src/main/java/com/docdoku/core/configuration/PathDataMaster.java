@@ -20,6 +20,8 @@
 package com.docdoku.core.configuration;
 
 
+import com.docdoku.core.product.PartLink;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -43,7 +45,8 @@ public class PathDataMaster implements Serializable{
     @Column(name="ID")
     private int id;
 
-    private String path;
+    @OneToMany(fetch = FetchType.LAZY)
+    private List<PartLink> path;
 
     @OneToMany(mappedBy = "pathDataMaster", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @OrderBy("iteration ASC")
@@ -58,11 +61,11 @@ public class PathDataMaster implements Serializable{
         this.id = id;
     }
 
-    public String getPath() {
+    public List<PartLink> getPath() {
         return path;
     }
 
-    public void setPath(String path) {
+    public void setPath(List<PartLink> path) {
         this.path = path;
     }
 

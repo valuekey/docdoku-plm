@@ -28,12 +28,14 @@ import java.util.List;
  * @author Morgan Guimard
  */
 
-@MappedSuperclass
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class PartLink implements Serializable {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     protected int id;
+
     protected double amount;
     protected String unit;
     protected String referenceDescription;

@@ -52,6 +52,10 @@ import java.util.List;
 })
 public class PartSubstituteLink extends PartLink implements Serializable, Cloneable {
 
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    private int id;
+
     public PartSubstituteLink() {
     }
 
@@ -63,23 +67,13 @@ public class PartSubstituteLink extends PartLink implements Serializable, Clonea
     private PartMaster substitute;
 
     @Override
-    public PartSubstituteLink clone() {
-        PartSubstituteLink clone = null;
-        try {
-            clone = (PartSubstituteLink) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new InternalError();
-        }
+    public int getId() {
+        return id;
+    }
 
-        //perform a deep copy
-        List<CADInstance> clonedCADInstances = new LinkedList<CADInstance>();
-        for (CADInstance cadInstance : cadInstances) {
-            CADInstance clonedCADInstance = cadInstance.clone();
-            clonedCADInstances.add(clonedCADInstance);
-        }
-        clone.cadInstances = clonedCADInstances;
-
-        return clone;
+    @Override
+    public void setId(int id) {
+        this.id = id;
     }
 
     @Override
@@ -109,4 +103,25 @@ public class PartSubstituteLink extends PartLink implements Serializable, Clonea
     public void setSubstitute(PartMaster substitute) {
         this.substitute = substitute;
     }
+
+    @Override
+    public PartSubstituteLink clone() {
+        PartSubstituteLink clone = null;
+        try {
+            clone = (PartSubstituteLink) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError();
+        }
+
+        //perform a deep copy
+        List<CADInstance> clonedCADInstances = new LinkedList<CADInstance>();
+        for (CADInstance cadInstance : cadInstances) {
+            CADInstance clonedCADInstance = cadInstance.clone();
+            clonedCADInstances.add(clonedCADInstance);
+        }
+        clone.cadInstances = clonedCADInstances;
+
+        return clone;
+    }
+
 }

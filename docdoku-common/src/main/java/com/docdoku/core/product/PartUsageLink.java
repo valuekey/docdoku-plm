@@ -53,6 +53,10 @@ import java.util.List;
 })
 public class PartUsageLink extends PartLink implements Serializable, Cloneable {
 
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    private int id;
+
     @OrderColumn(name = "PARTSUBSTITUTE_ORDER")
     @OneToMany(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name = "PUSAGELINK_PSUBSTITUTELINK",
@@ -84,30 +88,13 @@ public class PartUsageLink extends PartLink implements Serializable, Cloneable {
     }
 
     @Override
-    public PartUsageLink clone() {
-        PartUsageLink clone;
-        try {
-            clone = (PartUsageLink) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new InternalError();
-        }
+    public int getId() {
+        return id;
+    }
 
-        //perform a deep copy
-        List<PartSubstituteLink> clonedSubstitutes = new LinkedList<>();
-        for (PartSubstituteLink substitute : substitutes) {
-            PartSubstituteLink clonedSubstitute = substitute.clone();
-            clonedSubstitutes.add(clonedSubstitute);
-        }
-        clone.substitutes = clonedSubstitutes;
-
-        List<CADInstance> clonedCADInstances = new LinkedList<>();
-        for (CADInstance cadInstance : cadInstances) {
-            CADInstance clonedCADInstance = cadInstance.clone();
-            clonedCADInstances.add(clonedCADInstance);
-        }
-        clone.cadInstances = clonedCADInstances;
-
-        return clone;
+    @Override
+    public void setId(int id) {
+        this.id = id;
     }
 
     @Override
@@ -142,4 +129,30 @@ public class PartUsageLink extends PartLink implements Serializable, Cloneable {
         return component;
     }
 
+    @Override
+    public PartUsageLink clone() {
+        PartUsageLink clone;
+        try {
+            clone = (PartUsageLink) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError();
+        }
+
+        //perform a deep copy
+        List<PartSubstituteLink> clonedSubstitutes = new LinkedList<>();
+        for (PartSubstituteLink substitute : substitutes) {
+            PartSubstituteLink clonedSubstitute = substitute.clone();
+            clonedSubstitutes.add(clonedSubstitute);
+        }
+        clone.substitutes = clonedSubstitutes;
+
+        List<CADInstance> clonedCADInstances = new LinkedList<>();
+        for (CADInstance cadInstance : cadInstances) {
+            CADInstance clonedCADInstance = cadInstance.clone();
+            clonedCADInstances.add(clonedCADInstance);
+        }
+        clone.cadInstances = clonedCADInstances;
+
+        return clone;
+    }
 }

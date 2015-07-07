@@ -2483,7 +2483,7 @@ public class ProductManagerBean implements IProductManagerWS, IProductManagerLoc
 
     @RolesAllowed(UserGroupMapping.REGULAR_USER_ROLE_ID)
     @Override
-    public Component filterProductStructureOnLinkType(ConfigurationItemKey ciKey, PSFilter filter, String serialNumber, String path, String linkType) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, ConfigurationItemNotFoundException, PartUsageLinkNotFoundException {
+    public Component filterProductStructureOnLinkType(ConfigurationItemKey ciKey, PSFilter filter, String serialNumber, List<PartLink> path, String linkType) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, ConfigurationItemNotFoundException, PartUsageLinkNotFoundException {
 
         User user = userManager.checkWorkspaceReadAccess(ciKey.getWorkspace());
         Locale locale = new Locale(user.getLanguage());
@@ -2495,7 +2495,7 @@ public class ProductManagerBean implements IProductManagerWS, IProductManagerLoc
         component.setUser(user);
         component.setComponents(new ArrayList<>());
 
-        Set<String> links = new HashSet<>();
+        Set<List<PartLink>> links = new HashSet<>();
 
         // If path is null => get Root links embedded as subComponents of a virtual component
         if (path == null) {
@@ -2581,30 +2581,27 @@ public class ProductManagerBean implements IProductManagerWS, IProductManagerLoc
             for (PathToPathLink link : sourcesPathToPathLinksInProduct) {
                 links.add(link.getTargetPath());
             }
-            List<PartLink> decodedSourcePath = decodePath(ciKey, path);
-            PartLink link = decodedSourcePath.get(decodedSourcePath.size() - 1);
+            PartLink link = path.get(path.size() - 1);
             List<PartIteration> partIterations = filter.filter(link.getComponent());
             PartIteration retainedIteration = partIterations.get(partIterations.size() - 1);
 
-            component.setPath(decodedSourcePath);
+            component.setPath(path);
             component.setPartMaster(link.getComponent());
             component.setRetainedIteration(retainedIteration);
         }
 
         // Iterate the list and populate sub components
 
-        for (String link : links) {
+        for (List<PartLink> link : links) {
 
             Component subComponent = new Component();
 
-            List<PartLink> decodedPath = decodePath(ciKey, link);
-
-            PartLink partLink = decodedPath.get(decodedPath.size() - 1);
+            PartLink partLink = link.get(link.size() - 1);
             List<PartIteration> partIterations = filter.filter(partLink.getComponent());
             PartIteration retainedIteration = partIterations.get(partIterations.size() - 1);
 
             subComponent.setPartMaster(partLink.getComponent());
-            subComponent.setPath(decodedPath);
+            subComponent.setPath(link);
             subComponent.setRetainedIteration(retainedIteration);
             subComponent.setUser(user);
             subComponent.setComponents(new ArrayList<>());
@@ -2616,11 +2613,11 @@ public class ProductManagerBean implements IProductManagerWS, IProductManagerLoc
 
     @RolesAllowed(UserGroupMapping.REGULAR_USER_ROLE_ID)
     @Override
-    public List<PartLink> decodePath(ConfigurationItemKey ciKey, String path) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, PartUsageLinkNotFoundException, ConfigurationItemNotFoundException {
+    public List<PartLink> decodePath(ConfigurationItemKey ciKey, String pathAsString) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, PartUsageLinkNotFoundException, ConfigurationItemNotFoundException {
 
         User user = userManager.checkWorkspaceReadAccess(ciKey.getWorkspace());
 
-        if (path == null) {
+        if (pathAsString == null) {
             throw new IllegalArgumentException("Path cannot be null");
         }
         List<PartLink> decodedPath = new ArrayList<>();
@@ -2628,12 +2625,12 @@ public class ProductManagerBean implements IProductManagerWS, IProductManagerLoc
         PartLink rootPartUsageLink = getRootPartUsageLink(ciKey);
         decodedPath.add(rootPartUsageLink);
 
-        if ("-1".equals(path)) {
+        if ("-1".equals(pathAsString)) {
             return decodedPath;
         }
 
         // Remove the -1- in front of string
-        String[] split = path.substring(3).split("-");
+        String[] split = pathAsString.substring(3).split("-");
 
         for (String codeAndId : split) {
 
@@ -3210,23 +3207,14 @@ public class ProductManagerBean implements IProductManagerWS, IProductManagerLoc
 
                     List<PathToPathLink> pathToPathLinkSourceInContext = pathToPathLinkDAO.getPathToPathLinkSourceInContext(ci, finalProductInstanceIteration, pathAsString);
                     for (PathToPathLink pathToPathLink : pathToPathLinkSourceInContext) {
-                        try {
-                            List<PartLink> partLinks = decodePath(ciKey, pathToPathLink.getTargetPath());
-                            row.addSource(partLinks);
-                        } catch (UserNotFoundException | UserNotActiveException | WorkspaceNotFoundException | PartUsageLinkNotFoundException | ConfigurationItemNotFoundException e) {
-                            LOGGER.log(Level.FINEST, null, e);
-                        }
-
+                        List<PartLink> targetPath = pathToPathLink.getTargetPath();
+                        row.addSource(targetPath);
                     }
 
                     List<PathToPathLink> pathToPathLinkTargetInContext = pathToPathLinkDAO.getPathToPathLinkTargetInContext(ci, finalProductInstanceIteration, pathAsString);
                     for (PathToPathLink pathToPathLink : pathToPathLinkTargetInContext) {
-                        try {
-                            List<PartLink> partLinks = decodePath(ciKey, pathToPathLink.getSourcePath());
-                            row.addTarget(partLinks);
-                        } catch (UserNotFoundException | UserNotActiveException | WorkspaceNotFoundException | PartUsageLinkNotFoundException | ConfigurationItemNotFoundException e) {
-                            LOGGER.log(Level.FINEST, null, e);
-                        }
+                        List<PartLink> sourcePath = pathToPathLink.getSourcePath();
+                        row.addTarget(sourcePath);
                     }
 
                     PathDataIteration pathDataIteration = pathDataIterationDAO.getLastPathDataIteration(pathAsString, finalProductInstanceIteration);
@@ -3310,16 +3298,12 @@ public class ProductManagerBean implements IProductManagerWS, IProductManagerLoc
 
     @RolesAllowed({UserGroupMapping.REGULAR_USER_ROLE_ID})
     @Override
-    public PathToPathLink createPathToPathLink(String workspaceId, String configurationItemId, String type, String pathFrom, String pathTo, String description) throws UserNotFoundException, AccessRightException, WorkspaceNotFoundException, ConfigurationItemNotFoundException, PathToPathLinkAlreadyExistsException, CreationException, PathToPathCyclicException, PartUsageLinkNotFoundException, UserNotActiveException, NotAllowedException {
+    public PathToPathLink createPathToPathLink(String workspaceId, String configurationItemId, String type, List<PartLink> pathFrom, List<PartLink> pathTo, String description) throws UserNotFoundException, AccessRightException, WorkspaceNotFoundException, ConfigurationItemNotFoundException, PathToPathLinkAlreadyExistsException, CreationException, PathToPathCyclicException, PartUsageLinkNotFoundException, UserNotActiveException, NotAllowedException {
         User user = userManager.checkWorkspaceWriteAccess(workspaceId);
         Locale locale = new Locale(user.getLanguage());
 
         // Load the product
         ConfigurationItem ci = new ConfigurationItemDAO(locale, em).loadConfigurationItem(new ConfigurationItemKey(workspaceId, configurationItemId));
-
-        // Decode the paths to insure path validity
-        decodePath(ci.getKey(), pathFrom);
-        decodePath(ci.getKey(), pathTo);
 
         if (type == null || type.isEmpty()) {
             throw new NotAllowedException(locale, "NotAllowedException54");
@@ -3377,14 +3361,6 @@ public class ProductManagerBean implements IProductManagerWS, IProductManagerLoc
         User user = userManager.checkWorkspaceReadAccess(workspaceId);
         PathDataMasterDAO pathDataMasterDAO = new PathDataMasterDAO(new Locale(user.getLanguage()), em);
         return pathDataMasterDAO.findByPathData(pathDataMaster);
-    }
-
-    @RolesAllowed({UserGroupMapping.REGULAR_USER_ROLE_ID})
-    @Override
-    public PartMaster getPartMasterFromPath(String workspaceId, String configurationItemId, String partPath) throws ConfigurationItemNotFoundException, UserNotFoundException, WorkspaceNotFoundException, UserNotActiveException, PartUsageLinkNotFoundException {
-        ConfigurationItem configurationItem = new ConfigurationItemDAO(em).loadConfigurationItem(new ConfigurationItemKey(workspaceId, configurationItemId));
-        List<PartLink> partLinks = decodePath(configurationItem.getKey(), partPath);
-        return partLinks.get(partLinks.size() - 1).getComponent();
     }
 
     @RolesAllowed({UserGroupMapping.REGULAR_USER_ROLE_ID})

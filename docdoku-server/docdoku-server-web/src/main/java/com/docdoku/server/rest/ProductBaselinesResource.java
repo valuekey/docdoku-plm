@@ -215,8 +215,10 @@ public class ProductBaselinesResource {
         List<PathToPathLinkDTO> pathToPathLinkDTOs = new ArrayList<>();
 
         for (PathToPathLink pathToPathLink : pathToPathLinkTypes) {
-            PartMaster partMasterSource = productService.getPartMasterFromPath(workspaceId, productBaseline.getConfigurationItem().getId(), pathToPathLink.getSourcePath());
-            PartMaster partMasterTarget = productService.getPartMasterFromPath(workspaceId, productBaseline.getConfigurationItem().getId(), pathToPathLink.getTargetPath());
+            List<PartLink> sourcePath = pathToPathLink.getSourcePath();
+            List<PartLink> targetPath =  pathToPathLink.getTargetPath();
+            PartMaster partMasterSource = sourcePath.get(sourcePath.size()-1).getComponent();
+            PartMaster partMasterTarget = targetPath.get(targetPath.size()-1).getComponent();
 
             LightPartMasterDTO lightPartMasterDTOSource = new LightPartMasterDTO();
             LightPartMasterDTO lightPartMasterDTOTarget = new LightPartMasterDTO();

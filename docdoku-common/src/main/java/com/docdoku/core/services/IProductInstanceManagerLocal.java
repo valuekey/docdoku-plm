@@ -25,6 +25,7 @@ import com.docdoku.core.document.DocumentRevisionKey;
 import com.docdoku.core.exceptions.*;
 import com.docdoku.core.meta.InstanceAttribute;
 import com.docdoku.core.product.ConfigurationItemKey;
+import com.docdoku.core.product.PartLink;
 import com.docdoku.core.product.PartRevision;
 import com.docdoku.core.product.PathToPathLink;
 import com.docdoku.core.security.ACL;
@@ -60,11 +61,11 @@ public interface IProductInstanceManagerLocal {
     public ProductInstanceMaster updateProductInstance(String workspaceId,int iteration,String iterationNote, ConfigurationItemKey configurationItemKey, String serialNumber, int baselineId, List<InstanceAttribute> attributes, DocumentRevisionKey[] links, String[] documentLinkComments) throws ProductInstanceMasterNotFoundException, UserNotFoundException, AccessRightException, WorkspaceNotFoundException, ProductInstanceIterationNotFoundException, UserNotActiveException, BaselineNotFoundException;
     public ProductInstanceMaster rebaseProductInstance(String workspaceId, String serialNumber, ConfigurationItemKey configurationItemKey, int baselineId) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, ProductInstanceMasterNotFoundException, AccessRightException, BaselineNotFoundException, NotAllowedException, ConfigurationItemNotFoundException, PathToPathLinkAlreadyExistsException, PartMasterNotFoundException, CreationException, EntityConstraintException;
 
-    public PathDataMaster addNewPathDataIteration(String workspaceId, String configurationItemId, String serialNumber, int pathDataId, String path, List<InstanceAttribute> attributes, String description, DocumentRevisionKey[] links, String[] documentLinkComments) throws UserNotFoundException, AccessRightException, WorkspaceNotFoundException, ProductInstanceMasterNotFoundException, UserNotActiveException, NotAllowedException, PathDataAlreadyExistsException, FileAlreadyExistsException, CreationException;
+    public PathDataMaster addNewPathDataIteration(String workspaceId, String configurationItemId, String serialNumber, int pathDataId, List<PartLink> path, List<InstanceAttribute> attributes, String description, DocumentRevisionKey[] links, String[] documentLinkComments) throws UserNotFoundException, AccessRightException, WorkspaceNotFoundException, ProductInstanceMasterNotFoundException, UserNotActiveException, NotAllowedException, PathDataAlreadyExistsException, FileAlreadyExistsException, CreationException;
     public PathDataMaster updatePathData(String workspaceId, String configurationItemId, String serialNumber, int path, int iteration, List<InstanceAttribute> attributes, String description, DocumentRevisionKey[] pLinkKeys, String[] documentLinkComments) throws UserNotActiveException, WorkspaceNotFoundException, UserNotFoundException, ProductInstanceMasterNotFoundException, AccessRightException, NotAllowedException;
     public void deletePathData(String workspaceId, String configurationItemId, String serialNumber, int pathDataId,int iteration) throws UserNotActiveException, WorkspaceNotFoundException, UserNotFoundException, ProductInstanceMasterNotFoundException, AccessRightException, NotAllowedException;
 
-    public PathDataMaster getPathDataByPath(String workspaceId, String configurationItemId, String serialNumber, String path) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, AccessRightException, ProductInstanceMasterNotFoundException;
+    public PathDataMaster getPathDataByPath(String workspaceId, String configurationItemId, String serialNumber, List<PartLink> path) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, AccessRightException, ProductInstanceMasterNotFoundException;
 
     public BinaryResource saveFileInPathData(String workspaceId, String configurationItemId,  String serialNumber, int pathDataId,int iteration, String fileName, int pSize) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, NotAllowedException, AccessRightException, ProductInstanceMasterNotFoundException, FileAlreadyExistsException, CreationException;
     public BinaryResource getPathDataBinaryResource(String fullName) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, NotAllowedException, FileNotFoundException, AccessRightException;
@@ -74,7 +75,7 @@ public interface IProductInstanceManagerLocal {
 
     BinaryResource saveFileInPathDataIteration(String workspaceId, String configurationItemId, String serialNumber, int pathDataId, int iteration, String fileName, int i) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, NotAllowedException, AccessRightException, ProductInstanceMasterNotFoundException, FileAlreadyExistsException, CreationException;
 
-    PathDataMaster createPathDataMaster(String workspaceId, String configurationItemId, String serialNumber, String path, List<InstanceAttribute> attributes, String noteIteration) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, ProductInstanceMasterNotFoundException, AccessRightException;
+    PathDataMaster createPathDataMaster(String workspaceId, String configurationItemId, String serialNumber, List<PartLink> path, List<InstanceAttribute> attributes, String noteIteration) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, ProductInstanceMasterNotFoundException, AccessRightException;
 
     PathToPathLink getPathToPathLink(String workspaceId, String configurationItemId, String serialNumber, int pathToPathLinkId) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, ProductInstanceMasterNotFoundException, AccessRightException, PathToPathLinkNotFoundException;
     List<String> getPathToPathLinkTypes(String workspaceId, String configurationItemId, String serialNumber) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, ProductInstanceMasterNotFoundException, AccessRightException;

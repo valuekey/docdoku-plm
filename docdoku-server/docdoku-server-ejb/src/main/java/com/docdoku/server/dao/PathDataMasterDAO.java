@@ -23,9 +23,11 @@ package com.docdoku.server.dao;
 import com.docdoku.core.configuration.PathDataMaster;
 import com.docdoku.core.configuration.ProductInstanceIteration;
 import com.docdoku.core.configuration.ProductInstanceMaster;
+import com.docdoku.core.product.PartLink;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,7 +56,7 @@ public class PathDataMasterDAO {
     }
 
 
-    public PathDataMaster findByPathAndProductInstanceIteration(String path, ProductInstanceIteration productInstanceIteration) {
+    public PathDataMaster findByPathAndProductInstanceIteration(List<PartLink> path, ProductInstanceIteration productInstanceIteration) {
         try {
             return em.createNamedQuery("pathDataMaster.findByPathAndProductInstanceIteration", PathDataMaster.class)
                     .setParameter("path", path)

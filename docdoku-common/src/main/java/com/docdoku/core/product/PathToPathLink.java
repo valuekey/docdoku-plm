@@ -22,6 +22,7 @@ package com.docdoku.core.product;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Created by morgan on 29/04/15.
@@ -64,8 +65,13 @@ public class PathToPathLink implements Serializable, Cloneable{
     private int id;
 
     private String type;
-    private String sourcePath;
-    private String targetPath;
+
+
+    @OneToMany(fetch = FetchType.LAZY)
+    private List<PartLink> sourcePath;
+
+    @OneToMany(fetch = FetchType.LAZY)
+    private List<PartLink> targetPath;
 
     @Lob
     private String description;
@@ -73,7 +79,7 @@ public class PathToPathLink implements Serializable, Cloneable{
     public PathToPathLink() {
     }
 
-    public PathToPathLink(String type, String sourcePath, String targetPath, String description) {
+    public PathToPathLink(String type, List<PartLink> sourcePath, List<PartLink> targetPath, String description) {
         this.type = type;
         this.sourcePath = sourcePath;
         this.targetPath = targetPath;
@@ -86,22 +92,6 @@ public class PathToPathLink implements Serializable, Cloneable{
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public String getSourcePath() {
-        return sourcePath;
-    }
-
-    public void setSourcePath(String pathFrom) {
-        this.sourcePath = pathFrom;
-    }
-
-    public String getTargetPath() {
-        return targetPath;
-    }
-
-    public void setTargetPath(String pathTo) {
-        this.targetPath = pathTo;
     }
 
     public String getType() {
@@ -118,6 +108,22 @@ public class PathToPathLink implements Serializable, Cloneable{
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public List<PartLink> getSourcePath() {
+        return sourcePath;
+    }
+
+    public void setSourcePath(List<PartLink> sourcePath) {
+        this.sourcePath = sourcePath;
+    }
+
+    public List<PartLink> getTargetPath() {
+        return targetPath;
+    }
+
+    public void setTargetPath(List<PartLink> targetPath) {
+        this.targetPath = targetPath;
     }
 
     @Override
