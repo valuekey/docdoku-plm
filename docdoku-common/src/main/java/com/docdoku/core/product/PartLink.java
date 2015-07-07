@@ -19,21 +19,87 @@
  */
 package com.docdoku.core.product;
 
+import javax.persistence.*;
+import java.io.Serializable;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
  * @author Morgan Guimard
  */
-public interface PartLink {
-    int getId();
-    Character getCode();
-    String getFullId();
-    double getAmount();
-    String getUnit();
-    String getComment();
-    boolean isOptional();
-    PartMaster getComponent();
-    List<PartSubstituteLink> getSubstitutes();
-    String getReferenceDescription();
-    List<CADInstance> getCadInstances();
+
+@MappedSuperclass
+public abstract class PartLink implements Serializable {
+
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    protected int id;
+    protected double amount;
+    protected String unit;
+    protected String referenceDescription;
+    @Column(name = "COMMENTDATA")
+    protected String comment;
+
+    @OrderColumn(name = "CADINSTANCE_ORDER")
+    @OneToMany(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    protected List<CADInstance> cadInstances = new LinkedList<>();
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public String getReferenceDescription() {
+        return referenceDescription;
+    }
+
+    public void setReferenceDescription(String referenceDescription) {
+        this.referenceDescription = referenceDescription;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public abstract Character getCode();
+
+    public String getFullId(){
+        return getCode()+""+getId();
+    }
+
+    public List<CADInstance> getCadInstances() {
+        return cadInstances;
+    }
+
+    public void setCadInstances(List<CADInstance> cadInstances) {
+        this.cadInstances = cadInstances;
+    }
+
+    public abstract PartMaster getComponent();
+    public abstract boolean isOptional();
+    public abstract List<PartSubstituteLink> getSubstitutes();
+
 }

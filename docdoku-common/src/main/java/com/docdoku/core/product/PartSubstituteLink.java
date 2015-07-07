@@ -34,132 +34,33 @@ import java.util.List;
  */
 @Table(name="PARTSUBSTITUTELINK")
 @Entity
+@AssociationOverrides({
+        @AssociationOverride(
+                name="cadInstances",
+                joinTable = @JoinTable(name="PARTSUBSTITUTELINK_CADINSTANCE",
+                        inverseJoinColumns = {
+                                @JoinColumn(name = "CADINSTANCE_ID", referencedColumnName = "ID")
+                        },
+                        joinColumns = {
+                                @JoinColumn(name = "PARTSUBSTITUTELINK_ID", referencedColumnName = "ID")
+                        }
+                )
+        )
+})
 @NamedQueries({
         @NamedQuery(name="PartSubstituteLink.findBySubstitute",query="SELECT u FROM PartSubstituteLink u WHERE u.substitute.number LIKE :partNumber AND u.substitute.workspace.id = :workspaceId"),
 })
-public class PartSubstituteLink implements Serializable, Cloneable, PartLink {
-
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Id
-    private int id;
-    private double amount;
-    private String unit;
-
-
-    private String referenceDescription;
-    
-    @Column(name="COMMENTDATA")
-    private String comment;
-    
-    @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumns({
-        @JoinColumn(name = "SUBSTITUTE_WORKSPACE_ID", referencedColumnName = "WORKSPACE_ID"),
-        @JoinColumn(name = "SUBSTITUTE_PARTNUMBER", referencedColumnName = "PARTNUMBER")
-    })
-    private PartMaster substitute;
-
-    @OrderColumn(name = "CADINSTANCE_ORDER")
-    @JoinTable(name = "PARTSUBSTITUTELINK_CADINSTANCE",
-    inverseJoinColumns = {
-        @JoinColumn(name = "CADINSTANCE_ID", referencedColumnName = "ID")
-    },
-    joinColumns = {
-        @JoinColumn(name = "PARTSUBSTITUTELINK_ID", referencedColumnName = "ID")
-    })
-    @OneToMany(orphanRemoval=true, cascade=CascadeType.ALL, fetch=FetchType.LAZY)
-    private List<CADInstance> cadInstances = new LinkedList<CADInstance>();
+public class PartSubstituteLink extends PartLink implements Serializable, Cloneable {
 
     public PartSubstituteLink() {
     }
 
-    @Override
-    public int getId() {
-        return id;
-    }
-
-    @Override
-    public double getAmount() {
-        return amount;
-    }
-
-    @Override
-    public String getUnit() {
-        return unit;
-    }
-
-    @Override
-    public String getComment() {
-        return comment;
-    }
-
-    @Override
-    public boolean isOptional() {
-        // A substitute cannot be optional
-        return false;
-    }
-
-    @Override
-    public PartMaster getComponent() {
-        return substitute;
-    }
-
-    @Override
-    public List<PartSubstituteLink> getSubstitutes() {
-        // A substitute cannot have substitutes
-        return null;
-    }
-
-    @Override
-    public String getReferenceDescription() {
-        return referenceDescription;
-    }
-
-    @Override
-    public Character getCode() {
-        return 's';
-    }
-
-    @Override
-    public String getFullId() {
-        return getCode()+""+getId();
-    }
-
-    public PartMaster getSubstitute() {
-        return substitute;
-    }
-
-    @Override
-    public List<CADInstance> getCadInstances() {
-        return cadInstances;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
-    public void setUnit(String unit) {
-        this.unit = unit;
-    }
-
-    public void setReferenceDescription(String referenceDescription) {
-        this.referenceDescription = referenceDescription;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
-    public void setSubstitute(PartMaster substitute) {
-        this.substitute = substitute;
-    }
-
-    public void setCadInstances(List<CADInstance> cadInstances) {
-        this.cadInstances = cadInstances;
-    }
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @JoinColumns({
+            @JoinColumn(name = "SUBSTITUTE_WORKSPACE_ID", referencedColumnName = "WORKSPACE_ID"),
+            @JoinColumn(name = "SUBSTITUTE_PARTNUMBER", referencedColumnName = "PARTNUMBER")
+    })
+    private PartMaster substitute;
 
     @Override
     public PartSubstituteLink clone() {
@@ -181,4 +82,31 @@ public class PartSubstituteLink implements Serializable, Cloneable, PartLink {
         return clone;
     }
 
+    @Override
+    public Character getCode() {
+        return 's';
+    }
+
+    @Override
+    public PartMaster getComponent() {
+        return substitute;
+    }
+
+    @Override
+    public boolean isOptional() {
+        return false;
+    }
+
+    @Override
+    public List<PartSubstituteLink> getSubstitutes() {
+        return null;
+    }
+
+    public PartMaster getSubstitute() {
+        return substitute;
+    }
+
+    public void setSubstitute(PartMaster substitute) {
+        this.substitute = substitute;
+    }
 }

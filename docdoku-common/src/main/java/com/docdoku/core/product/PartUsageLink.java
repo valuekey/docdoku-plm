@@ -34,28 +34,25 @@ import java.util.List;
  */
 @Table(name = "PARTUSAGELINK")
 @Entity
+@AssociationOverrides({
+        @AssociationOverride(
+                name="cadInstances",
+                joinTable = @JoinTable(name="PARTUSAGELINK_CADINSTANCE",
+                        inverseJoinColumns = {
+                                @JoinColumn(name = "CADINSTANCE_ID", referencedColumnName = "ID")
+                        },
+                        joinColumns = {
+                                @JoinColumn(name = "PARTUSAGELINK_ID", referencedColumnName = "ID")
+                        }
+                )
+        )
+})
 @NamedQueries({
     @NamedQuery(name="PartUsageLink.findByComponent",query="SELECT u FROM PartUsageLink u WHERE u.component.number LIKE :partNumber AND u.component.workspace.id = :workspaceId"),
     @NamedQuery(name="PartUsageLink.getPartOwner",query="SELECT p FROM PartIteration p WHERE :usage MEMBER OF p.components")
 })
-public class PartUsageLink implements Serializable, Cloneable, PartLink {
+public class PartUsageLink extends PartLink implements Serializable, Cloneable {
 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Id
-    private int id;
-    private double amount;
-    private String unit;
-
-    private String referenceDescription;
-
-    @Column(name = "COMMENTDATA")
-    private String comment;
-    @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    @JoinColumns({
-        @JoinColumn(name = "COMPONENT_WORKSPACE_ID", referencedColumnName = "WORKSPACE_ID"),
-        @JoinColumn(name = "COMPONENT_PARTNUMBER", referencedColumnName = "PARTNUMBER")
-    })
-    private PartMaster component;
     @OrderColumn(name = "PARTSUBSTITUTE_ORDER")
     @OneToMany(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinTable(name = "PUSAGELINK_PSUBSTITUTELINK",
@@ -66,19 +63,15 @@ public class PartUsageLink implements Serializable, Cloneable, PartLink {
         @JoinColumn(name = "PARTUSAGELINK_ID", referencedColumnName = "ID")
     })
     private List<PartSubstituteLink> substitutes = new LinkedList<>();
-    
-    @OrderColumn(name = "CADINSTANCE_ORDER")
-    @JoinTable(name = "PARTUSAGELINK_CADINSTANCE",
-    inverseJoinColumns = {
-        @JoinColumn(name = "CADINSTANCE_ID", referencedColumnName = "ID")
-    },
-    joinColumns = {
-        @JoinColumn(name = "PARTUSAGELINK_ID", referencedColumnName = "ID")
-    })
-    @OneToMany(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CADInstance> cadInstances = new LinkedList<>();
 
     private boolean optional;
+
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @JoinColumns({
+            @JoinColumn(name = "COMPONENT_WORKSPACE_ID", referencedColumnName = "WORKSPACE_ID"),
+            @JoinColumn(name = "COMPONENT_PARTNUMBER", referencedColumnName = "PARTNUMBER")
+    })
+    protected PartMaster component;
 
     public PartUsageLink() {
     }
@@ -88,97 +81,6 @@ public class PartUsageLink implements Serializable, Cloneable, PartLink {
         amount=pAmount;
         unit=pUnit;
         optional=pOptional;
-    }
-
-    @Override
-    public int getId() {
-        return id;
-    }
-
-    @Override
-    public double getAmount() {
-        return amount;
-    }
-
-    @Override
-    public String getUnit() {
-        return unit;
-    }
-
-    @Override
-    public String getComment() {
-        return comment;
-    }
-
-    @Override
-    public boolean isOptional() {
-        return optional;
-    }
-
-    @Override
-    public PartMaster getComponent() {
-        return component;
-    }
-
-    @Override
-    public List<PartSubstituteLink> getSubstitutes() {
-        return substitutes;
-    }
-
-    @Override
-    public String getReferenceDescription() {
-        return referenceDescription;
-    }
-
-    @Override
-    public Character getCode() {
-        return 'u';
-    }
-
-    @Override
-    public String getFullId() {
-        return getCode()+""+getId();
-    }
-
-    @Override
-    public List<CADInstance> getCadInstances() {
-        return cadInstances;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
-    public void setUnit(String unit) {
-        this.unit = unit;
-    }
-
-    public void setReferenceDescription(String referenceDescription) {
-        this.referenceDescription = referenceDescription;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
-    public void setComponent(PartMaster component) {
-        this.component = component;
-    }
-
-    public void setSubstitutes(List<PartSubstituteLink> substitutes) {
-        this.substitutes = substitutes;
-    }
-
-    public void setCadInstances(List<CADInstance> cadInstances) {
-        this.cadInstances = cadInstances;
-    }
-
-    public void setOptional(boolean optional) {
-        this.optional = optional;
     }
 
     @Override
@@ -208,7 +110,36 @@ public class PartUsageLink implements Serializable, Cloneable, PartLink {
         return clone;
     }
 
-    public void addSubstitute(PartSubstituteLink partSubstituteLink) {
-        substitutes.add(partSubstituteLink);
+    @Override
+    public Character getCode() {
+        return 'u';
     }
+
+    @Override
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public void setOptional(boolean optional) {
+        this.optional = optional;
+    }
+
+    @Override
+    public List<PartSubstituteLink> getSubstitutes() {
+        return substitutes;
+    }
+
+    public void setSubstitutes(List<PartSubstituteLink> substitutes) {
+        this.substitutes = substitutes;
+    }
+
+    public void setComponent(PartMaster component) {
+        this.component = component;
+    }
+
+    @Override
+    public PartMaster getComponent() {
+        return component;
+    }
+
 }
