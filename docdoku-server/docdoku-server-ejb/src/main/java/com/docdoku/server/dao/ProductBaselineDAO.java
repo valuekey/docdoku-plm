@@ -106,10 +106,9 @@ public class ProductBaselineDAO {
                 .getResultList();
     }
 
-    public List<PartRevision> findObsoletePartsInBaseline(String workspaceId, ProductBaseline productBaseline) {
+    public List<PartRevision> findObsoletePartsInBaseline(ProductBaseline productBaseline) {
         return em.createNamedQuery("ProductBaseline.findObsoletePartRevisions", PartRevision.class)
                 .setParameter("productBaseline", productBaseline)
-                .setParameter("workspaceId", workspaceId)
                 .getResultList();
     }
 

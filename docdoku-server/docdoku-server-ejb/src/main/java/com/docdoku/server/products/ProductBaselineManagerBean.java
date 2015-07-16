@@ -628,7 +628,7 @@ public class ProductBaselineManagerBean implements IProductBaselineManagerLocal,
         Locale locale = new Locale(user.getLanguage());
         ProductBaselineDAO productBaselineDAO = new ProductBaselineDAO(locale, em);
         ProductBaseline baseline = productBaselineDAO.loadBaseline(baselineId);
-        List<PartRevision> obsoletePartsInBaseline = productBaselineDAO.findObsoletePartsInBaseline(workspaceId, baseline);
+        List<PartRevision> obsoletePartsInBaseline = productBaselineDAO.findObsoletePartsInBaseline(baseline);
         return obsoletePartsInBaseline;
     }
 
