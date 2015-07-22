@@ -25,8 +25,9 @@ define([
     'text!templates/content.html',
     'common-objects/models/part',
     'views/path_data_modal',
-    'views/path_to_path_link_modal'
-], function (Backbone, Mustache, SearchView, PartsTreeView, BomView, CollaborativeView, PartMetadataView, PartInstanceView, ExportSceneModalView, ControlNavigationView, ControlModesView, ControlTransformView, ControlMarkersView, ControlLayersView, ControlOptionsView, ControlClippingView, ControlExplodeView, ControlMeasureView, BaselineSelectView, SceneManager, CollaborativeController, InstancesManager, template, Part, PathDataModalView, PathToPathLinkModalView) {
+    'views/path_to_path_link_modal',
+    'views/configurator/configurator_view'
+], function (Backbone, Mustache, SearchView, PartsTreeView, BomView, CollaborativeView, PartMetadataView, PartInstanceView, ExportSceneModalView, ControlNavigationView, ControlModesView, ControlTransformView, ControlMarkersView, ControlLayersView, ControlOptionsView, ControlClippingView, ControlExplodeView, ControlMeasureView, BaselineSelectView, SceneManager, CollaborativeController, InstancesManager, template, Part, PathDataModalView, PathToPathLinkModalView,ConfiguratorView) {
 
     'use strict';
 
@@ -39,7 +40,8 @@ define([
             'click #export_scene_btn': 'exportScene',
             'click #fullscreen_scene_btn': 'fullScreenScene',
             'click #path_data_btn': 'openPathDataModal',
-            'click #path_to_path_link_btn' : 'openPathToPathLinkModal'
+            'click #path_to_path_link_btn' : 'openPathToPathLinkModal',
+            'click #configurator-view-btn': 'configuratorButton'
         },
 
         inBomMode: false,
@@ -120,6 +122,7 @@ define([
             App.searchView = new SearchView().render();
             App.partsTreeView = new PartsTreeView({resultPathCollection: App.searchView.collection}).render();
             App.bomView = new BomView().render();
+            App.configuratorView = new ConfiguratorView({el: this.configuratorContainer}).render();
             App.baselineSelectView = new BaselineSelectView({el: '#config_spec_container'}).render();
 
             this.bomControls.append(App.bomView.bomHeaderView.$el);
@@ -138,6 +141,7 @@ define([
             this.$contentContainer = this.$('#product-content');
             this.$productMenu = this.$('#product-menu');
             this.sceneModeButton = this.$('#scene_view_btn');
+            this.configuratorModeButton = this.$('#configurator-view-btn');
             this.bomModeButton = this.$('#bom_view_btn');
             this.exportSceneButton = this.$('#export_scene_btn');
             this.pathDataModalButton = this.$('#path_data_btn');
@@ -146,6 +150,7 @@ define([
             this.dmuControls = this.$('.dmu-controls');
             App.$ControlsContainer = this.$('#side_controls_container');
             App.$SceneContainer = this.$('#scene_container');
+            this.configuratorContainer = this.$('#configurator_container');
         },
 
         menuResizable: function () {
@@ -170,6 +175,7 @@ define([
             this.$productMenu.attr('class', 'bom-mode');
             this.bomModeButton.addClass('active');
             this.sceneModeButton.removeClass('active');
+            this.configuratorModeButton.removeClass('active');
         },
 
         sceneMode: function () {
@@ -178,6 +184,15 @@ define([
             this.bomModeButton.removeClass('active');
             this.sceneModeButton.addClass('active');
             App.sceneManager.onContainerShown();
+            this.sceneModeButton.removeClass('active');
+            this.configuratorModeButton.addClass('active');
+            this.configuratorModeButton.removeClass('active');
+        },
+
+        configuratorMode: function () {
+            this.$contentContainer.attr('class','configurator-mode');
+            this.$productMenu.attr('class','bom-mode');
+            this.bomModeButton.removeClass('active');
         },
 
         listenEvents: function () {
@@ -237,8 +252,16 @@ define([
             }
         },
 
+        updateConfigurator: function() {
+            App.configuratorView.updateContent(App.partsTreeView.componentSelected);
+        },
+
         sceneButton: function () {
             App.router.navigate(App.config.workspaceId + '/' + App.config.productId + '/config-spec/' + App.config.productConfigSpec + '/scene', {trigger: true});
+        },
+
+        configuratorButton: function () {
+            App.router.navigate(App.config.workspaceId + '/' + App.config.productId + '/config-spec/' + App.config.configSpec + '/configurator', {trigger: true});
         },
 
         bomButton: function () {
@@ -269,6 +292,7 @@ define([
             this.exportSceneButton.show();
 
             this.updateBom(showRoot);
+            this.updateConfigurator();
             this.showPartMetadata();
             App.sceneManager.setPathForIFrame(App.partsTreeView.componentSelected.getPath());
         },

@@ -12,7 +12,8 @@ function (Backbone, singletonDecorator) {
             ':workspaceId/:productId/config-spec/:configSpecType': 'defaults',
             ':workspaceId/:productId/config-spec/:configSpecType/scene(/camera/:camera)(/target/:target)(/up/:up)': 'scene',
             ':workspaceId/:productId/config-spec/:configSpecType/bom': 'bom',
-            ':workspaceId/:productId/config-spec/:configSpecType/room/:key': 'joinCollaborative'
+            ':workspaceId/:productId/config-spec/:configSpecType/room/:key': 'joinCollaborative',
+            ':workspaceId/:productId/config-spec/:configSpecType/configurator': 'configurator'
         },
 
         defaults: function (workspaceId, productId, configSpecType) {
@@ -53,6 +54,11 @@ function (Backbone, singletonDecorator) {
                     App.collaborativeController.sendJoinRequest(key);
                 });
             }
+        },
+
+        configurator: function(workspaceId, productId, configSpecType) {
+            App.config.configSpec = configSpecType;
+            App.appView.configuratorMode();
         },
 
         updateRoute: function (context) {
