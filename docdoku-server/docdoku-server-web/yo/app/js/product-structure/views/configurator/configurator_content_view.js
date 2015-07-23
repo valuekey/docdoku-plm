@@ -48,6 +48,7 @@ define(
                     var substituteView = new ConfiguratorPartView({model: substitute}).render();
                     self.partSubstitutesView.push(substituteView);
                     self.partSubstitutes.append(substituteView.$el);
+                    substituteView.setSubstitute();
                 });
 
             },

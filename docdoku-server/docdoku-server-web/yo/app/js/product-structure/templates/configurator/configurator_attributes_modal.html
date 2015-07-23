@@ -1,0 +1,54 @@
+<div id="configurator_attributes_modal" class="modal hide fade" tabindex="-1" role="dialog"
+     aria-hidden="true">
+
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3>Attributes Management</h3>
+    </div>
+
+    <div class="modal-body">
+
+        <form id="attributes-configurator-modal-form" class="form-horizontal">
+            <div class="control-group">
+                <label class="control-label">Choose attribute: </label>
+                <div class="controls">
+                     <span class="help-inline">
+                        <select name="attributeName">
+                            {{#attributeNames}}
+                            <option value="{{.}}">{{.}}</option>
+                            {{/attributeNames}}
+                        </select>
+                     </span>
+                </div>
+            </div>
+            <div class="control-group attribute-modal-control">
+                <label class="control-label">Chosen attributes</label>
+                <div class="controls">
+                    <i class="fa fa-times attribute-remove"></i><span class="label">attribute-1 : <span class="memo"></span></span>
+                    <span class="function-label">sum</span><input type="checkbox">
+                    <span class="function-label">average</span><input type="checkbox">
+                </div>
+                <div class="controls attribute-modal-control">
+                    <i class="fa fa-times attribute-remove"></i><span class="label">attribute-2 : <span class="memo"></span></span>
+                    <span class="function-label">sum</span><input type="checkbox">
+                    <span class="function-label">average</span><input type="checkbox">
+                </div>
+                <div class="controls attribute-modal-control">
+                    <i class="fa fa-times attribute-remove"></i><span class="label">attribute-3 : <span class="memo"></span></span>
+                    <span class="function-label">sum</span><input type="checkbox">
+                    <span class="function-label">average</span><input type="checkbox">
+                </div>
+                <div class="controls attribute-modal-control">
+                    <i class="fa fa-times attribute-remove"></i><span class="label">attribute-4 : <span class="memo"></span></span>
+                    <span class="function-label">sum</span><input type="checkbox">
+                    <span class="function-label">average</span><input type="checkbox">
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">{{i18n.CLOSE}}</button>
+    </div>
+
+</div>

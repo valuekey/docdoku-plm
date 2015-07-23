@@ -15,7 +15,11 @@ define(
 
             render: function() {
                 this.$el.html(Mustache.render(template, {model: this.model, i18n: App.config.i18n}));
-                this.bindDOM().renderHeader().renderContent().renderSideControl();
+                this.bindDOM()
+                    .renderHeader()
+                    .renderContent()
+                    .renderSideControl()
+                    .bindEvents();
 
                 return this;
             },
@@ -33,18 +37,27 @@ define(
 
             renderContent: function() {
                 this.configuratorContent = new ConfiguratorContentView({el: this.partContainer}).render();
-                this.listenTo(this.configuratorHeader,'attribute:add',this.configuratorContent.addAttribute);
                 return this;
             },
 
             renderSideControl: function() {
                 this.sideControlView = new ConfiguratorSideControl({el: this.sideControl}).render();
-                //this.listenTo(this.sideControlView,'attribute:remove',this.removeAttribute);
+                return this;
+            },
+
+            bindEvents: function () {
+                this.listenTo(this.configuratorHeader,'attribute:add',this.configuratorContent.addAttribute);
+                this.listenTo(this.sideControlView,'attribute:remove',this.removeAttribute);
                 return this;
             },
 
             updateContent: function(part) {
                 this.configuratorContent.displayPart(part);
+            },
+
+            removeAttribute: function (attribute) {
+                this.configuratorContent.removeAttribute(attribute);
+                this.configuratorHeader.removeAttribute(attribute);
             }
         });
 

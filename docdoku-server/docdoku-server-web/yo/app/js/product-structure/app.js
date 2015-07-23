@@ -126,6 +126,7 @@ define([
             App.baselineSelectView = new BaselineSelectView({el: '#config_spec_container'}).render();
 
             this.bomControls.append(App.bomView.bomHeaderView.$el);
+            this.configuratorControls.append(App.configuratorView.configuratorHeader.$el);
 
             this.listenEvents();
 
@@ -148,6 +149,7 @@ define([
             this.pathToPathLinkButton = this.$('#path_to_path_link_btn');
             this.bomControls = this.$('.bom-controls');
             this.dmuControls = this.$('.dmu-controls');
+            this.configuratorControls = this.$('.configurator-controls');
             App.$ControlsContainer = this.$('#side_controls_container');
             App.$SceneContainer = this.$('#scene_container');
             this.configuratorContainer = this.$('#configurator_container');

@@ -23,10 +23,11 @@ define([
         initialize: function () {
             _.bindAll(this);
             this.calculationViews = [];
+            this.configurator = false;
         },
 
         render: function () {
-            this.$el.html(Mustache.render(template, {i18n: App.config.i18n}));
+            this.$el.html(Mustache.render(template, {i18n: App.config.i18n, configurator: this.configurator}));
             this.$modal= this.$('#user_defined_function_modal');
             this.$productList = this.$('.user-defined-product-select');
             this.$typeList = this.$('.user-defined-type-select');

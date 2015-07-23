@@ -1,3 +1,17 @@
+//TODO: move that to another file
+#configurator_attributes_modal  {
+    .attribute-remove, .function-label {
+        margin-right: 5px;
+    }
+    .attribute-remove {
+        cursor: pointer;
+    }
+
+    .attribute-modal-control {
+        margin-top: 5px;
+    }
+}
+
 #product-content{
 
     .mode-controls{
@@ -13,6 +27,10 @@
     }
 
     .path_to_path_link{
+        display: inline-block;
+    }
+
+    .configurator-controls {
         display: inline-block;
     }
 
@@ -47,6 +65,18 @@
         top: 50px;
         right: 0;
         height: 100%;
+
+    }
+
+    #control-list-attributes {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+
+        .fa.fa-times {
+            margin-right: 5px;
+            cursor: pointer;
+        }
     }
 
     #side_controls_container{
