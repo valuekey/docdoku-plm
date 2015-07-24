@@ -4,8 +4,8 @@ define(
         'backbone',
         'mustache',
         'text!templates/configurator/configurator_header.html',
-        'views/configurator/configurator_attributes_modal'
-    ], function (Backbone, Mustache, template, ConfiguratorAttributesModal) {
+        'common-objects/views/udf/user_defined_function'
+    ], function (Backbone, Mustache, template, UserDefinedFunctionView) {
 
         'use strict';
 
@@ -51,7 +51,7 @@ define(
             openAttributesModal: function() {
                 debugger;
 
-                var modal = new ConfiguratorAttributesModal();
+                var modal = new UserDefinedFunctionView({configurator: true});
                 modal.render();
                 document.body.appendChild(modal.el);
                 modal.openModal();

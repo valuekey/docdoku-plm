@@ -4,8 +4,8 @@ define([
     'mustache',
     'text!templates/configuration/configuration_creation_view.html',
     'models/configuration',
-    'models/configuration_item',
-    'collections/configuration_items',
+    'common-objects/models/configuration_item',
+    'common-objects/collections/configuration_items',
     'views/baselines/baseline_choice_list',
     'common-objects/views/security/acl',
     'common-objects/views/alert'

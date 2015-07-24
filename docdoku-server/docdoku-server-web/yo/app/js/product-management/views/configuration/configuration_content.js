@@ -4,7 +4,7 @@ define([
     'mustache',
     'text!templates/configuration/configuration_content.html',
     'collections/configurations',
-    'models/configuration_item',
+    'common-objects/models/configuration_item',
     'views/configuration/configuration_list',
     'views/configuration/configuration_creation_view',
     'common-objects/views/security/acl_edit',

@@ -5,7 +5,7 @@ define([
     'text!templates/baselines/baselines_list_item.html',
     'views/baselines/baseline_detail_view',
     'views/product/product_details_view',
-    'models/configuration_item'
+    'common-objects/models/configuration_item'
 ], function (Backbone, Mustache, template, BaselineDetailView, ProductDetailsView, ConfigurationItem) {
     'use strict';
     var BaselineListItemView = Backbone.View.extend({

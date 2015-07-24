@@ -6,7 +6,7 @@ define([
     'selectize',
     '../../utils/query-builder-options',
     'common-objects/views/alert',
-    'collections/configuration_items',
+    'common-objects/collections/configuration_items',
     'common-objects/collections/product_instances',
     'common-objects/views/prompt'
 ], function (Backbone, Mustache, template,  selectize, queryBuilderOptions, AlertView, ConfigurationItemCollection, ProductInstances, PromptView) {

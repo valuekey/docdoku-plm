@@ -5,7 +5,7 @@ define([
     'text!templates/configuration/configuration_list_item.html',
     'views/configuration/configuration_details_view',
     'views/product/product_details_view',
-    'models/configuration_item',
+    'common-objects/models/configuration_item',
     'common-objects/utils/date'
 ], function (Backbone, Mustache, template, ConfigurationDetailsView, ProductDetailsView, ConfigurationItem, date) {
     'use strict';

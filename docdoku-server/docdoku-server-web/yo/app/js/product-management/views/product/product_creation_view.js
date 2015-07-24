@@ -3,7 +3,7 @@ define([
     'backbone',
     'mustache',
     'text!templates/product/product_creation_view.html',
-    'models/configuration_item',
+    'common-objects/models/configuration_item',
     'common-objects/views/alert'
 ], function (Backbone, Mustache, template, ConfigurationItem, AlertView) {
     'use strict';

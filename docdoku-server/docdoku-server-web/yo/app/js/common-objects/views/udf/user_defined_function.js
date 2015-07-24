@@ -3,7 +3,7 @@ define([
     'backbone',
     'mustache',
     'text!common-objects/templates/udf/user_defined_function.html',
-    'collections/configuration_items',
+    'common-objects/collections/configuration_items',
     'common-objects/collections/baselines',
     'common-objects/views/udf/calculation'
 ], function (Backbone, Mustache, template,ConfigurationItemCollection,Baselines, CalculationView) {
@@ -21,12 +21,13 @@ define([
         },
 
         initialize: function () {
+            this.configurator = this.options.configurator ? this.options.configurator : false;
             _.bindAll(this);
             this.calculationViews = [];
-            this.configurator = false;
         },
 
         render: function () {
+            debugger;
             this.$el.html(Mustache.render(template, {i18n: App.config.i18n, configurator: this.configurator}));
             this.$modal= this.$('#user_defined_function_modal');
             this.$productList = this.$('.user-defined-product-select');
