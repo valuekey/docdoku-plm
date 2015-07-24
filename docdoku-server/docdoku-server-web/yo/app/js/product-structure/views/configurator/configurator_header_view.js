@@ -33,7 +33,6 @@ define(
             },
 
             addAttribute: function(attribute) {
-                debugger;
                 if(this.attributes.indexOf(attribute) === -1) {
                     this.attributes.push(attribute);
                     this.trigger('attributes:add',attribute);
@@ -49,8 +48,6 @@ define(
             },
 
             openAttributesModal: function() {
-                debugger;
-
                 var modal = new UserDefinedFunctionView({configurator: true});
                 modal.render();
                 document.body.appendChild(modal.el);

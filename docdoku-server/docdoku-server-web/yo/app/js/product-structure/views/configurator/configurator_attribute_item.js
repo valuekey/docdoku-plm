@@ -4,7 +4,7 @@ define(
         'backbone',
         'mustache',
         'text!templates/configurator/configurator_attribute_item.html',
-    ], function (Backbone, Mustache, template, ConfiguratorPartView) {
+    ], function (Backbone, Mustache, template) {
 
         'use strict';
 

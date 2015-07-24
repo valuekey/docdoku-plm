@@ -31,13 +31,12 @@ define(
             },
 
             addAttribute: function(attribute) {
-                debugger;
                 //useful to store it ?
                 this.attributes.push(attribute);
                 var attributeView = new ConfiguratorAttributeItemView({model: attribute}).render();
                 this.attributeViews[attribute.name] = attributeView;
                 this.listAttributes.append(attributeView.$el);
-                this.listenTo(attributeView,'remove',this.onRemovedView)
+                this.listenTo(attributeView,'remove',this.onRemovedView);
             },
 
             updateAttribute: function (attribute) {
