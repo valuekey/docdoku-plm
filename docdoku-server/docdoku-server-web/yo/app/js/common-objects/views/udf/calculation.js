@@ -12,7 +12,9 @@ define([
         className:'calculation',
 
         events:{
-            'click .remove':'onRemove'
+            'click .remove':'onRemove',
+            'change select[name=operator]': 'operatorChange',
+            'change select[name=attributeName]': 'attributeNameChange'
         },
 
         initialise:function(){
@@ -27,12 +29,19 @@ define([
             this.$assembliesVisited.text('');
             this.$instancesVisited.text('');
             this.$result.hide();
+            return this;
         },
 
         render:function(){
             this.$el.html(Mustache.render(template, {i18n: App.config.i18n, attributeNames:this.options.attributeNames}));
-            this.binDOMElements();
-            this.resetCalculation();
+            this.binDOMElements().resetCalculation().initCalculation();
+
+            return this;
+        },
+
+        initCalculation: function() {
+            this.model.setOperator(this.$operator.val());
+            this.model.setAttributeName(this.$attributeName.val());
             return this;
         },
 
@@ -43,6 +52,7 @@ define([
             this.$memo = this.$('.memo');
             this.$instancesVisited = this.$('.instances-visited');
             this.$assembliesVisited = this.$('.assemblies-visited');
+            return this;
         },
 
         getOperator:function(){
@@ -54,7 +64,15 @@ define([
         },
 
         getMemo:function(){
-            return this.memo;
+            return this.model.getFinalResult();
+        },
+
+        operatorChange: function() {
+            this.model.setOperator(this.$operator.val());
+        },
+
+        attributeNameChange: function() {
+            this.model.setAttributeName(this.$attributeName.val());
         },
 
         setMemo:function(memo){
@@ -70,18 +88,9 @@ define([
         },
 
         onEnd:function(){
-
-            var visitedNodes = this.visitedAssemblies + this.visitedInstances;
-
-            if(visitedNodes){
-                if(this.getOperator() === 'AVG'){
-                    this.memo = this.memo / visitedNodes;
-                }
-            }
-
-            this.$memo.text(this.memo);
-            this.$assembliesVisited.text(this.visitedAssemblies);
-            this.$instancesVisited.text(this.visitedInstances);
+            this.$memo.text(this.getMemo());
+            this.$assembliesVisited.text(this.model.getVisitedAssemblies());
+            this.$instancesVisited.text(this.model.getVisitedInstances());
             this.$result.show();
         },
 

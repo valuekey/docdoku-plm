@@ -49,7 +49,7 @@ define(
 
             openAttributesModal: function() {
                 var modal = new UserDefinedFunctionView({configurator: true});
-                modal.render();
+                modal.render().fetchAttributes();
                 document.body.appendChild(modal.el);
                 modal.openModal();
             },

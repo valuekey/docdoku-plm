@@ -5,8 +5,9 @@ define([
     'text!common-objects/templates/udf/user_defined_function.html',
     'common-objects/collections/configuration_items',
     'common-objects/collections/baselines',
-    'common-objects/views/udf/calculation'
-], function (Backbone, Mustache, template,ConfigurationItemCollection,Baselines, CalculationView) {
+    'common-objects/views/udf/calculation',
+    'common-objects/models/calculation'
+], function (Backbone, Mustache, template,ConfigurationItemCollection,Baselines, CalculationView, Calculation) {
 
     'use strict';
 
@@ -24,10 +25,15 @@ define([
             this.configurator = this.options.configurator ? this.options.configurator : false;
             _.bindAll(this);
             this.calculationViews = [];
+
+            var Caculations = Backbone.Collection.extend({
+                model: Calculation
+            });
+            this.calculations = new Caculations();
         },
 
         render: function () {
-            debugger;
+
             this.$el.html(Mustache.render(template, {i18n: App.config.i18n, configurator: this.configurator}));
             this.$modal= this.$('#user_defined_function_modal');
             this.$productList = this.$('.user-defined-product-select');
@@ -35,7 +41,7 @@ define([
             this.$valueList = this.$('.user-defined-value-select');
             this.$runButton = this.$('.run-udf');
             this.$calculations = this.$('.calculations');
-            this.fetchProducts();
+            //TODO kelto: should create calculationViews for each calculation in array.
             return this;
         },
 
@@ -59,6 +65,7 @@ define([
                 _this.fetchAttributes();
             }});
 
+            return this;
         },
 
         fetchValues: function () {
@@ -82,6 +89,7 @@ define([
 
                 }
             }
+            return this;
         },
 
         fetchAttributes:function(){
@@ -97,11 +105,14 @@ define([
                     });
                 }
             });
+            return this;
         },
 
         addCalculation:function(){
             var _this = this;
-            var calculationView = new CalculationView({attributeNames:this.availableAttributes}).render();
+            var calculation = new Calculation();
+            var calculationView = new CalculationView({attributeNames:this.availableAttributes, model: calculation}).render();
+            this.calculations.push(calculation);
             this.$calculations.append(calculationView.$el);
             this.calculationViews.push(calculationView);
 
@@ -165,39 +176,20 @@ define([
         doUDF:function(pRootComponent){
 
             var calculationViews = this.calculationViews;
+            var calculations = this.calculations;
 
-            var onNodeVisited = function(node){
-
-                _.each(calculationViews,function(view){
-
-                    var operator = view.getOperator();
-                    var attributeName = view.getAttributeName();
-                    var memo = view.getMemo();
-
-                    var attribute = node.attrs[attributeName];
-
-                    if(attribute !== undefined){
-
-                        switch(operator){
-                            case 'SUM':
-                            case 'AVG':
-                                memo += attribute;
-                                break;
-
-                            default:
-                        }
-
+            var compute = function(node) {
+                _.each(calculations.models,function(calculation) {
+                    var attribute = node.attrs[calculation.getAttributeName()];
+                    if(attribute !== undefined) {
+                        calculation.add(attribute);
                         if(node.components.length){
-                            view.incVisitedAssemblies();
+                            calculation.incVisitedAssemblies();
                         }else{
-                            view.incVisitedInstances();
+                            calculation.incVisitedInstances();
                         }
-
-                        view.setMemo(memo);
                     }
-
                 });
-
             };
 
             var visit = function(rootComponent){
@@ -211,7 +203,7 @@ define([
                 });
 
                 for(var i = 0 ; i < rootComponent.amount ; i++) {
-                    onNodeVisited(rootComponent);
+                    compute(rootComponent);
                     _.each(rootComponent.components,visit);
                 }
 

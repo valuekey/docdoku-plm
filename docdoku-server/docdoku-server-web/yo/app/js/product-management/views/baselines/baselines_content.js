@@ -163,7 +163,7 @@ define([
 
         openUdfView:function(){
             var view = new UserDefinedFunctionView();
-            view.render();
+            view.render().fetchProducts();
             view.setBaselineMode();
             document.body.appendChild(view.el);
             view.openModal();
