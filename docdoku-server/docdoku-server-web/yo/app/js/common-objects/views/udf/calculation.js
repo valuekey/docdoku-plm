@@ -95,7 +95,7 @@ define([
         },
 
         onRemove:function(){
-            this.trigger('removed');
+            this.trigger('removed',this.model);
             this.remove();
         }
 

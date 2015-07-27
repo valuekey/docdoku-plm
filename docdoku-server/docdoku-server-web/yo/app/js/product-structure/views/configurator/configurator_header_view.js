@@ -32,23 +32,8 @@ define(
                 this.removeAttributeBtn = this.$('.remove-attribute');
             },
 
-            addAttribute: function(attribute) {
-                if(this.attributes.indexOf(attribute) === -1) {
-                    this.attributes.push(attribute);
-                    this.trigger('attributes:add',attribute);
-                }
-            },
-
-            removeAttribute: function(attribute) {
-                var index = -1;
-                if((index = this.attributes.indexOf(attribute)) !== -1) {
-                    this.attributes.splice(index,1);
-                    this.trigger('attributes:change');
-                }
-            },
-
             openAttributesModal: function() {
-                var modal = new UserDefinedFunctionView({configurator: true});
+                var modal = new UserDefinedFunctionView({configurator: true, collection:this.collection});
                 modal.render().fetchAttributes();
                 document.body.appendChild(modal.el);
                 modal.openModal();

@@ -25,11 +25,13 @@ define([
             this.configurator = this.options.configurator ? this.options.configurator : false;
             _.bindAll(this);
             this.calculationViews = [];
+            if(!this.collection) {
+                var Calculations = Backbone.Collection.extend({
+                    model: Calculation
+                });
+                this.collection = new Calculations();
+            }
 
-            var Caculations = Backbone.Collection.extend({
-                model: Calculation
-            });
-            this.calculations = new Caculations();
         },
 
         render: function () {
@@ -41,7 +43,7 @@ define([
             this.$valueList = this.$('.user-defined-value-select');
             this.$runButton = this.$('.run-udf');
             this.$calculations = this.$('.calculations');
-            //TODO kelto: should create calculationViews for each calculation in array.
+
             return this;
         },
 
@@ -103,31 +105,43 @@ define([
                             self.availableAttributes.push(attribute.name);
                         }
                     });
+                    self.displayCalculations();
                 }
+            });
+        },
+
+        displayCalculations: function() {
+            var self = this;
+            _.each(this.collection.models,function(calculation) {
+                self.createCalculationView(calculation);
             });
             return this;
         },
 
-        addCalculation:function(){
+        createCalculationView:function(calculation){
             var _this = this;
-            var calculation = new Calculation();
             var calculationView = new CalculationView({attributeNames:this.availableAttributes, model: calculation}).render();
-            this.calculations.push(calculation);
             this.$calculations.append(calculationView.$el);
             this.calculationViews.push(calculationView);
 
-            calculationView.on('removed',function(){
+            calculationView.on('removed',function(calc){
 
                 _this.calculationViews.splice(_this.calculationViews.indexOf(calculationView),1);
 
                 if(!_this.calculationViews.length){
                     _this.$runButton.hide();
                 }
-
+                _this.collection.remove(calc.cid);
             });
 
             this.$runButton.show();
 
+        },
+
+        addCalculation:function(){
+            var calculation = new Calculation();
+            this.collection.push(calculation);
+            this.createCalculationView(calculation);
         },
 
         openModal: function () {
@@ -148,12 +162,14 @@ define([
                 view.resetCalculation();
             });
 
-            var productId = this.$productList.val();
-            var valueId = this.$valueList.val();
+            var productId = this.$productList.val() || App.config.productId;
+            var valueId = this.$valueList.val() || App.config.configSpec;
             var runButton = this.$runButton;
 
             runButton.html(App.config.i18n.LOADING +' ...').prop('disabled',true);
 
+            //TODO kelto: should not have to reload it from the configurator, since it already exist
+            // pass it as a parameter.
             var PartCollection = Backbone.Collection.extend({
                 url: function () {
                     return this.urlBase() + '/filter?configSpec=' + valueId + '&depth=10&path=-1';
@@ -176,7 +192,7 @@ define([
         doUDF:function(pRootComponent){
 
             var calculationViews = this.calculationViews;
-            var calculations = this.calculations;
+            var calculations = this.collection;
 
             var compute = function(node) {
                 _.each(calculations.models,function(calculation) {

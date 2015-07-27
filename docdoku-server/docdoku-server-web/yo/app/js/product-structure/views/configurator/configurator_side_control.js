@@ -19,24 +19,37 @@ define(
 
             render: function() {
                 this.$el.html(Mustache.render(template, {i18n: App.config.i18n}));
-                this.bindDom();
-                this.addAttribute({name: 'attribute-1', value: '20'});
-                this.addAttribute({name: 'attribute-2', value: '50'});
-                this.addAttribute({name: 'attribute-3', value: '0.5'});
+                this.bindDom().initAttributeViews();
+                this.listenTo(this.collection,'add',this.addCalculation);
+                this.listenTo(this.collection,'remove',this.removeCalculation);
                 return this;
             },
 
             bindDom: function() {
                 this.listAttributes = this.$('#control-list-attributes');
+                return this;
             },
 
-            addAttribute: function(attribute) {
+            initAttributeViews: function() {
+                _.each(this.collection.models, function(calculation) {
+                    var attributeView = new ConfiguratorAttributeItemView({model: calculation}).render();
+                    this.attributeViews[calculation.cid] = attributeView;
+                    this.listAttributes.append(attributeView.el);
+                });
+
+                return this;
+            },
+
+            addCalculation: function(calculation) {
                 //useful to store it ?
-                this.attributes.push(attribute);
-                var attributeView = new ConfiguratorAttributeItemView({model: attribute}).render();
-                this.attributeViews[attribute.name] = attributeView;
+                this.attributes.push(calculation);
+                var attributeView = new ConfiguratorAttributeItemView({model: calculation}).render();
+                this.attributeViews[calculation.cid] = attributeView;
                 this.listAttributes.append(attributeView.$el);
                 this.listenTo(attributeView,'remove',this.onRemovedView);
+            },
+            removeCalculation: function(calculation) {
+                this.attributeViews[calculation.cid].remove();
             },
 
             updateAttribute: function (attribute) {
@@ -47,7 +60,7 @@ define(
             },
 
             onRemovedView: function(attribute) {
-                this.trigger('attribute:remove',attribute);
+                this.collection.remove(attribute.cid);
                 //might have to remove the view from the attribute
             },
 
