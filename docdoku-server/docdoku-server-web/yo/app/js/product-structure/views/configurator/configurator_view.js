@@ -7,8 +7,9 @@ define(
         'views/configurator/configurator_header_view',
         'views/configurator/configurator_content_view',
         'views/configurator/configurator_side_control',
-        'common-objects/models/calculation'
-    ], function (Backbone, Mustache, template, ConfiguratorHeaderView, ConfiguratorContentView, ConfiguratorSideControl, Calculation) {
+        'common-objects/models/calculation',
+        'models/component_module'
+    ], function (Backbone, Mustache, template, ConfiguratorHeaderView, ConfiguratorContentView, ConfiguratorSideControl, Calculation,ComponentModule) {
 
         'use strict';
 
@@ -20,9 +21,31 @@ define(
                     model: Calculation
                 });
                 this.calculations = new Calculations();
+                var Special = ComponentModule.Collection.extend({
+                    url: function () {
+                        var path = this.path;
+
+                        var url = this.urlBase() + '/filter?configSpec=' + App.config.configSpec + '&depth=1';
+
+                        if (path) {
+                            url += '&path=' + path;
+                        }
+
+                        if (App.config.linkType) {
+                            url += '&linkType=' + App.config.linkType;
+                        }
+
+                        url += '&diverge=true';
+
+
+                        return url;
+                    }
+                });
+                this.collection = new Special([], { isRoot: true });
+                this.collection.fetch({reset: true});
                 this.bindDOM()
                     .renderHeader()
-                    .renderContent()
+                    .renderContent({collection: this.collection})
                     .renderSideControl();
 
                 return this;
@@ -40,7 +63,9 @@ define(
             },
 
             renderContent: function() {
-                this.configuratorContent = new ConfiguratorContentView({el: this.partContainer,collection: this.calculations}).render();
+                this.configuratorContent = new ConfiguratorContentView({el: this.partContainer,collection: this.collection});
+                this.configuratorContent.calculations = this.calculations;
+                this.configuratorContent.render();
                 return this;
             },
 

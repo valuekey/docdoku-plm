@@ -1,4 +1,4 @@
-/*global define,App*/
+/*global _,define,App*/
 define(
     [
         'backbone',
@@ -15,6 +15,8 @@ define(
                 this.constructor.__super__.initialize.apply(this,arguments);
                 this.partSubstitutesView = [];
                 this.attributes = [];
+                this.substitutes = [];
+                _.bindAll(this);
             },
 
             render: function() {
@@ -39,16 +41,17 @@ define(
             },
 
             displayPart: function (part) {
-                this.clearSubstitutes();
-                this.referencePartView = new ConfiguratorPartView({model: part}).render();
+                this.substituteOfPart(part);
+                this.referencePartView = new ConfiguratorPartView({model: part,collection: this.calculations}).render();
+                this.referencePartView.setReference();
                 this.partReference.html(this.referencePartView.$el);
                 var substitutes = part.getSubstituteIds();
                 var self = this;
-                _.each(substitutes,function(substitute){
-                    var substituteView = new ConfiguratorPartView({model: substitute}).render();
+                _.each(this.substitutes,function(substitute){
+                    var substituteView = new ConfiguratorPartView({model: substitute, collection: self.calculations}).render();
                     self.partSubstitutesView.push(substituteView);
                     self.partSubstitutes.append(substituteView.$el);
-                    substituteView.setSubstitute();
+                    substituteView.setSubstitute(part);
                 });
 
             },
@@ -58,7 +61,33 @@ define(
                     substituteView.remove();
                 });
                 this.partSubstitutesView.length = 0;
+            },
+
+            substituteOfPart: function(part) {
+                var self = this;
+                var substitutes = part.getSubstituteIds();
+                if(substitutes) {
+                    this.clearSubstitutes();
+                    var search = function(pPart) {
+                        if(substitutes.indexOf(pPart.partUsageLinkId) !== -1) {
+                            self.substitutes.push(pPart);
+                        }
+                        _.each(pPart.components,function(pComp) {
+                            search(pComp);
+                        });
+                    };
+
+                    _.each(this.collection.component,function(sub) {
+                        _.each(substitutes, function(id) {
+                            //if(sub.)
+                        });
+                    });
+                    _.each(this.collection.models[0].get('components'), function(comp) {
+                        search(comp);
+                    });
+                }
             }
+
         });
 
         return ConfiguratorContentView;
