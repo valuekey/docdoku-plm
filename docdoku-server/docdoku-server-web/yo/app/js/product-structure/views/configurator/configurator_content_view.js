@@ -41,17 +41,17 @@ define(
             },
 
             displayPart: function (part) {
-                debugger;
+                this.partReferenceModel = part;
                 this.clear();
                 this.substituteOfPart(part);
-                this.referencePartView = new ConfiguratorPartView({model: part,collection: this.calculations}).render();
+                this.referencePartView = new ConfiguratorPartView({model: part,collection: this.baselineTemp.calculations}).render();
                 this.referencePartView.setReference();
                 this.partReference.html(this.referencePartView.$el);
                 this.listenTo(this.referencePartView,'part-view:click',this.referenceClicked);
                 var substitutes = part.getSubstituteIds();
                 var self = this;
                 _.each(this.substitutes,function(substitute){
-                    var substituteView = new ConfiguratorPartView({model: substitute, collection: self.calculations}).render();
+                    var substituteView = new ConfiguratorPartView({model: substitute, collection: self.baselineTemp.calculations}).render();
                     self.partSubstitutesView.push(substituteView);
                     self.partSubstitutes.append(substituteView.$el);
                     self.listenTo(substituteView,'part-view:click',self.substituteClick);
@@ -61,9 +61,7 @@ define(
             },
 
             clear: function() {
-                debugger;
                 _.each(this.partSubstitutesView, function(substituteView) {
-                    debugger;
                     substituteView.remove();
                 });
                 this.partSubstitutesView.length = 0;
@@ -73,6 +71,7 @@ define(
                 }
             },
 
+            // TODO kelto: substitute should come from the webservice.
             substituteOfPart: function(part) {
                 var self = this;
                 var substitutes = part.getSubstituteIds();
@@ -86,18 +85,17 @@ define(
                         });
                     };
 
-                    _.each(this.collection.component,function(sub) {
-                        _.each(substitutes, function(id) {
-                            //if(sub.)
-                        });
-                    });
                     _.each(this.collection.models[0].get('components'), function(comp) {
                         search(comp);
                     });
                 }
+                debugger;
             },
 
-            swapReference: function() {
+            swapReference: function(substitute,oldSelected) {
+                //should remove the optional if done.
+                this.baselineTemp.parts.add(substitute);
+                this.baselineTemp.parts.remove(oldSelected);
 
             },
 
@@ -107,11 +105,26 @@ define(
                     this.baselineTemp.optionals.push(referenceView.model);
                 } else {
                     this.baselineTemp.parts.add(referenceView.model);
+                    this.baselineTemp.optionals.splice(this.baselineTemp.optionals.indexOf(referenceView.model));
                 }
             },
 
-            substituteClick: function() {
-
+            substituteClick: function(view) {
+                var oldSubstitute = this.baselineTemp.substitutes[this.partReference.get('path')] || this.partReferenceModel;
+                if(view.model.get('path') === this.partReferenceModel.get('path')) {
+                    delete this.baselineTemp.substitutes[view.model.get('path')];
+                } else {
+                    this.baselineTemp.substitutes[this.partReferenceModel.get('path')] = view.model;
+                }
+                this.swapReference(view.model,oldSubstitute);
+                this.referencePartView.toggleClass();
+                view.toggleClass();
+                debugger;
+                view.$el.remove();
+                this.partReference.html(view.$el);
+                this.partSubstitutes.append(this.referencePartView.$el);
+                view.delegateEvents();
+                this.referencePartView.delegateEvents();
             }
 
         });

@@ -11,6 +11,7 @@ define(
 
         var ConfiguratorPartView = Backbone.View.extend({
 
+            className: 'configurator-part',
             events: {
                 'click': 'onClick'
             },
@@ -53,11 +54,7 @@ define(
                 }
 
                 this.isSubstitute = true;
-                //this.$('.well').css('display','inline-block');
-                this.$('.well').css('margin-left','0').css('width','100%');
-                this.$el.css('display','inline-block');
-                this.$el.css('margin-left','50px');
-                this.$el.css('width','20%');
+                this.$el.toggleClass('inactive');
                 this.attributes = {};
                 this.modelAttributes = {};
                 var refAttributes = {};
@@ -92,6 +89,10 @@ define(
                 });
             },
 
+            toggleClass: function() {
+                this.$el.toggleClass('inactive',500);
+            },
+
             //TODO kelto: set Reference and set Substitute can be refactored
             setReference: function() {
                 // TODO kelto: isSubstitute should be passed in the constructor and used for the constructor.
@@ -114,6 +115,7 @@ define(
             },
 
             onClick: function(e) {
+                debugger;
                 if(this.model.isOptional()) {
                     if(this.isSelected) {
                         this.isSelected = false;
@@ -122,9 +124,9 @@ define(
                         this.isSelected = true;
                         this.$el.fadeTo('fast',1);
                     }
-                    this.trigger('part-view:click',this);
-                }
 
+                }
+                this.trigger('part-view:click',this);
             }
         });
 

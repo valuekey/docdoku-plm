@@ -26,7 +26,7 @@ define(
             },
 
             openAttributesModal: function() {
-                var modal = new UserDefinedFunctionView({configurator: true, collection:this.collection});
+                var modal = new UserDefinedFunctionView({configurator: true, collection: this.baselineTemp.calculations});
                 modal.render().fetchAttributes();
                 document.body.appendChild(modal.el);
                 modal.openModal();

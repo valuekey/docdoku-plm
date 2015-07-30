@@ -20,8 +20,8 @@ define(
             render: function() {
                 this.$el.html(Mustache.render(template, {i18n: App.config.i18n}));
                 this.bindDom().initAttributeViews();
-                this.listenTo(this.collection,'add',this.addCalculation);
-                this.listenTo(this.collection,'remove',this.removeCalculation);
+                this.listenTo(this.baselineTemp.calculations,'add',this.addCalculation);
+                this.listenTo(this.baselineTemp.calculations,'remove',this.removeCalculation);
                 return this;
             },
 
@@ -31,7 +31,7 @@ define(
             },
 
             initAttributeViews: function() {
-                _.each(this.collection.models, function(calculation) {
+                _.each(this.baselineTemp.calculations.models, function(calculation) {
                     var attributeView = new ConfiguratorAttributeItemView({model: calculation}).render();
                     this.attributeViews[calculation.cid] = attributeView;
                     this.listAttributes.append(attributeView.el);
@@ -60,7 +60,7 @@ define(
             },
 
             onRemovedView: function(attribute) {
-                this.collection.remove(attribute.cid);
+                this.baselineTemp.calculations.remove(attribute.cid);
                 //might have to remove the view from the attribute
             },
 

@@ -187,9 +187,6 @@ define([
 
         doUDF:function(pRootComponent){
 
-            _.each(this.collection.models,function(calculation){
-                calculation.reset();
-            });
             var calculationViews = this.calculationViews;
             var calculations = this.collection;
 

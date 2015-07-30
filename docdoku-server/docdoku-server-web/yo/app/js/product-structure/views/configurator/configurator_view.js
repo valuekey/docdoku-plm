@@ -73,7 +73,7 @@ define(
                 //TODO kelto: should have an array of baselineTemp.
                 this.baselineTemp = {
                     parts: baselineTempCollection,
-                    substitutes: [],
+                    substitutes: {},
                     optionals: [],
                     calculations: this.calculations};
                 this.bindDOM()
@@ -91,7 +91,7 @@ define(
             },
 
             renderHeader: function() {
-                this.configuratorHeader = new ConfiguratorHeaderView({collection: this.calculations});
+                this.configuratorHeader = new ConfiguratorHeaderView();
                 this.configuratorHeader.baselineTemp = this.baselineTemp;
                 this.configuratorHeader.render();
                 return this;
@@ -99,14 +99,15 @@ define(
 
             renderContent: function() {
                 this.configuratorContent = new ConfiguratorContentView({el: this.partContainer,collection: this.collection});
-                this.configuratorContent.calculations = this.calculations;
                 this.configuratorContent.baselineTemp = this.baselineTemp;
                 this.configuratorContent.render();
                 return this;
             },
 
             renderSideControl: function() {
-                this.sideControlView = new ConfiguratorSideControl({el: this.sideControl,collection: this.calculations}).render();
+                this.sideControlView = new ConfiguratorSideControl({el: this.sideControl});
+                this.sideControlView.baselineTemp = this.baselineTemp;
+                this.sideControlView.render();
                 return this;
             },
 
