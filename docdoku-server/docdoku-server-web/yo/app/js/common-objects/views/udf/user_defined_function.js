@@ -158,10 +158,6 @@ define([
 
         run: function(e){
 
-            _.each(this.calculationViews,function(view){
-                view.resetCalculation();
-            });
-
             var productId = this.$productList.val() || App.config.productId;
             var valueId = this.$valueList.val() || App.config.configSpec;
             var runButton = this.$runButton;
@@ -191,6 +187,9 @@ define([
 
         doUDF:function(pRootComponent){
 
+            _.each(this.collection.models,function(calculation){
+                calculation.reset();
+            });
             var calculationViews = this.calculationViews;
             var calculations = this.collection;
 

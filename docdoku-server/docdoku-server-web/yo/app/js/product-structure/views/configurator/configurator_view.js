@@ -21,7 +21,8 @@ define(
                     model: Calculation
                 });
                 this.calculations = new Calculations();
-                var Special = ComponentModule.Collection.extend({
+                //TODO kelto: just for prototype should move that.
+                var FullCollection = ComponentModule.Collection.extend({
                     url: function () {
                         var path = this.path;
 
@@ -41,11 +42,43 @@ define(
                         return url;
                     }
                 });
-                this.collection = new Special([], { isRoot: true });
+                //TODO kelto: just for prototype should move that.
+                var BaselineCollection = ComponentModule.Collection.extend({
+                    url: function () {
+                        var path = this.path;
+
+                        var url = this.urlBase() + '/filter?configSpec=' + App.config.configSpec + '&depth=1';
+
+                        if (path) {
+                            url += '&path=' + path;
+                        }
+
+                        if (App.config.linkType) {
+                            url += '&linkType=' + App.config.linkType;
+                        }
+
+                        url += '&diverge=false';
+
+
+                        return url;
+                    }
+                });
+                //this is the collection of the configurator, to display the substitutes
+                // Should not be touched only for display
+                this.collection = new FullCollection([], { isRoot: true });
                 this.collection.fetch({reset: true});
+                // The collection of the baseline, this is dynamic.
+                var baselineTempCollection = new BaselineCollection([], { isRoot: true });
+                baselineTempCollection.fetch();
+                //TODO kelto: should have an array of baselineTemp.
+                this.baselineTemp = {
+                    parts: baselineTempCollection,
+                    substitutes: [],
+                    optionals: [],
+                    calculations: this.calculations};
                 this.bindDOM()
                     .renderHeader()
-                    .renderContent({collection: this.collection})
+                    .renderContent()
                     .renderSideControl();
 
                 return this;
@@ -58,13 +91,16 @@ define(
             },
 
             renderHeader: function() {
-                this.configuratorHeader = new ConfiguratorHeaderView({collection: this.calculations}).render();
+                this.configuratorHeader = new ConfiguratorHeaderView({collection: this.calculations});
+                this.configuratorHeader.baselineTemp = this.baselineTemp;
+                this.configuratorHeader.render();
                 return this;
             },
 
             renderContent: function() {
                 this.configuratorContent = new ConfiguratorContentView({el: this.partContainer,collection: this.collection});
                 this.configuratorContent.calculations = this.calculations;
+                this.configuratorContent.baselineTemp = this.baselineTemp;
                 this.configuratorContent.render();
                 return this;
             },

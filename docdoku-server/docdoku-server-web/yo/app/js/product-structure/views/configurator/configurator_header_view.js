@@ -12,8 +12,6 @@ define(
         var ConfiguratorHeaderView = Backbone.View.extend({
 
             events: {
-                'click .add-attribute': 'addAttribute',
-                'click .remove-attribute': 'removeAttribute',
                 'click .attributes-modal': 'openAttributesModal'
             },
 
@@ -25,11 +23,6 @@ define(
             render: function() {
                 this.$el.html(Mustache.render(template, {i18n: App.config.i18n}));
                 return this;
-            },
-
-            bindDOM: function () {
-                this.addAttributeBtn = this.$('.add-attribute');
-                this.removeAttributeBtn = this.$('.remove-attribute');
             },
 
             openAttributesModal: function() {

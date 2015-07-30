@@ -41,33 +41,42 @@ define(
             },
 
             displayPart: function (part) {
+                debugger;
+                this.clear();
                 this.substituteOfPart(part);
                 this.referencePartView = new ConfiguratorPartView({model: part,collection: this.calculations}).render();
                 this.referencePartView.setReference();
                 this.partReference.html(this.referencePartView.$el);
+                this.listenTo(this.referencePartView,'part-view:click',this.referenceClicked);
                 var substitutes = part.getSubstituteIds();
                 var self = this;
                 _.each(this.substitutes,function(substitute){
                     var substituteView = new ConfiguratorPartView({model: substitute, collection: self.calculations}).render();
                     self.partSubstitutesView.push(substituteView);
                     self.partSubstitutes.append(substituteView.$el);
+                    self.listenTo(substituteView,'part-view:click',self.substituteClick);
                     substituteView.setSubstitute(part);
                 });
 
             },
 
-            clearSubstitutes: function() {
+            clear: function() {
+                debugger;
                 _.each(this.partSubstitutesView, function(substituteView) {
+                    debugger;
                     substituteView.remove();
                 });
                 this.partSubstitutesView.length = 0;
+                this.substitutes.length = 0;
+                if(this.referencePartView) {
+                    this.referencePartView.remove();
+                }
             },
 
             substituteOfPart: function(part) {
                 var self = this;
                 var substitutes = part.getSubstituteIds();
                 if(substitutes) {
-                    this.clearSubstitutes();
                     var search = function(pPart) {
                         if(substitutes.indexOf(pPart.partUsageLinkId) !== -1) {
                             self.substitutes.push(pPart);
@@ -86,6 +95,23 @@ define(
                         search(comp);
                     });
                 }
+            },
+
+            swapReference: function() {
+
+            },
+
+            referenceClicked: function(referenceView) {
+                if(referenceView.isSelected) {
+                    this.baselineTemp.parts.remove(referenceView.model);
+                    this.baselineTemp.optionals.push(referenceView.model);
+                } else {
+                    this.baselineTemp.parts.add(referenceView.model);
+                }
+            },
+
+            substituteClick: function() {
+
             }
 
         });
