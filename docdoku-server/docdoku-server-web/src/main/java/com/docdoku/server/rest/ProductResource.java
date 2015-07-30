@@ -383,6 +383,38 @@ public class ProductResource {
         return Response.ok(partRevisionDTO).build();
     }
 
+    @GET
+    @Path("{ciId}/path-substitutes/{path}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<PartIterationDTO> getPartSubstituteLinksAsPartIterationsForGivenPartLink(@PathParam("workspaceId") String workspaceId, @PathParam("ciId") String ciId,  @PathParam("path") String path, @QueryParam("configSpec") String configSpecType)
+            throws EntityNotFoundException, UserNotActiveException, AccessRightException, NotAllowedException, EntityConstraintException {
+
+        ConfigurationItemKey configurationItemKey = new ConfigurationItemKey(workspaceId, ciId);
+        PSFilter psFilter = productService.getPSFilter(configurationItemKey, configSpecType, true);
+        List<PartLink> partLinks = productService.decodePath(configurationItemKey, path);
+
+        PartLink partLink = partLinks.get(partLinks.size() - 1);
+        Set<PartIteration> partIterations = new HashSet<>();
+
+        if(partLink instanceof PartUsageLink){
+            List<PartSubstituteLink> substitutes = partLink.getSubstitutes();
+            for(PartSubstituteLink partSubstituteLink:substitutes){
+                PartMaster substitute = partSubstituteLink.getSubstitute();
+                List<PartIteration> iterations = psFilter.filter(substitute);
+                partIterations.addAll(iterations);
+            }
+        }
+
+        List<PartIterationDTO> dtos = new ArrayList<>();
+
+        for(PartIteration partIteration:partIterations){
+            dtos.add(mapper.map(partIteration, PartIterationDTO.class));
+        }
+
+        return dtos;
+    }
+
+
     @Path("configurations")
     public ProductConfigurationsResource getAllConfigurations(@PathParam("workspaceId") String workspaceId){
         return productConfigurationsResource;
@@ -525,6 +557,7 @@ public class ProductResource {
         }
         return pathToPathLinkDTOs;
     }
+
     @GET
     @Path("{ciId}/decode-path/{path}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -565,6 +598,8 @@ public class ProductResource {
         }
         return dtos;
     }
+
+
 
     /**
      * Because some AS (like Glassfish) forbids the use of CacheControl
