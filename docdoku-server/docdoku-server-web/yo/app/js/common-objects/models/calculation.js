@@ -72,7 +72,11 @@ define(['backbone'], function (Backbone) {
          * Should used Add and getResult to do a calculation.
          * @param difference
          */
-        update: function(difference) {
+        update: function(difference, updateNumber) {
+            if(updateNumber) {
+                this.set('operands', this.get('operands')+ updateNumber);
+                difference = updateNumber * difference;
+            }
             if(this.getOperator() === 'AVG') {
                 difference = difference / this.getOperands();
             }

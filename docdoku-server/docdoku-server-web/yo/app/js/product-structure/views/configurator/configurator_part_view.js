@@ -15,6 +15,11 @@ define(
             events: {
                 'click': 'onClick'
             },
+            initialize: function() {
+                this.constructor.__super__.initialize.apply(this,arguments);
+                this.isSubstitute = this.options.isSubstitute;
+            },
+
             render: function() {
                 this.isSelected = true;
                 if(!(this.model instanceof Backbone.Model)) {
@@ -33,6 +38,7 @@ define(
             bindEvents: function() {
                 this.listenTo(this.collection,'remove',this.updateAttributes);
                 //change is trigger on adding, so no need to listenTo add.
+                //But the change should be triggered on the calculation level, not rendering everything.
                 this.listenTo(this.collection,'change',this.updateAttributes);
                 return this;
             },
@@ -52,40 +58,36 @@ define(
                 if(reference) {
                     this.reference = reference;
                 }
-
                 this.isSubstitute = true;
-                this.$el.toggleClass('inactive');
+                this.$el.toggleClass('inactive',true);
                 this.attributes = {};
                 this.modelAttributes = {};
                 var refAttributes = {};
                 var self = this;
-                _.each(this.model.get('attributes'), function(attribute) {
-                    debugger;
-                    self.modelAttributes[attribute.name] = attribute.value;
-                });
 
-                _.each(this.reference.get('attributes'), function(attribute) {
-                    refAttributes[attribute.name] = attribute.value;
-                });
-
-                //TODO kelto: #refactorCalculation
-                _.each(this.collection.models, function(calculation) {
-                    var attributeName = calculation.getAttributeName();
-                    if(self.modelAttributes[attributeName] === undefined) {
-                        self.attributes[attributeName] = 0;
-                    } else {
-                        self.attributes[attributeName] = self.modelAttributes[attributeName] - refAttributes[attributeName];
-                    }
-                });
+                this.calculateAttribute();
                 this.renderAttributes();
                 return this;
             },
 
             //TODO kelto: should create a view which will be removed when the calculation is destroyed.
             renderAttributes: function() {
+                this.partListAttributes.empty();
                 var self = this;
                 _.each(this.attributes,function(value, name) {
-                    self.partListAttributes.append('<li>'+name+' : '+value+'</li>');
+                    var html = '<li>'+name+' : '+(self.modelAttributes[name] || 0 );
+                    if(self.isSubstitute) {
+                        html+= '<span style="color: ';
+                        if(value < 0) {
+                            html += 'red"> ( '+value;
+                        } else {
+                            html += 'green"> ( + '+value;
+                        }
+                        html += ' ) </span>';
+                    }
+
+                    html+= '</li>';
+                    self.partListAttributes.append(html);
                 });
             },
 
@@ -100,23 +102,14 @@ define(
                 this.modelAttributes = {};
                 this.attributes = {};
                 var self = this;
-                _.each(this.model.get('attributes'), function(attribute, test) {
-                    self.modelAttributes[attribute.name] = attribute.value;
-                });
-                _.each(this.collection.models, function(calculation) {
-                    var attributeName = calculation.getAttributeName();
-                    if(self.modelAttributes[attributeName] === undefined) {
-                        self.attributes[attributeName] = 0;
-                    } else {
-                        self.attributes[attributeName] = self.modelAttributes[attributeName];
-                    }
-                });
+                //TODO kelto: no need for an extra class ! substitute are separate from ref by a div container
+                this.$el.toggleClass('inactive',false);
+                this.calculateAttribute();
                 this.renderAttributes();
             },
 
             onClick: function(e) {
-                debugger;
-                if(this.model.isOptional()) {
+                if(!this.isSubstitute && this.model.isOptional()) {
                     if(this.isSelected) {
                         this.isSelected = false;
                         this.$el.fadeTo('fast',0.33);
@@ -124,9 +117,43 @@ define(
                         this.isSelected = true;
                         this.$el.fadeTo('fast',1);
                     }
-
+                    this.trigger('part-view:optionalToggle',this);
+                } else {
+                    this.trigger('part-view:substituteToggle',this);
                 }
-                this.trigger('part-view:click',this);
+            },
+
+            removeOptional: function() {
+                this.isSelected = true;
+                this.$el.fadeTo('fast',1);
+            },
+
+            calculateAttribute: function() {
+
+                this.attributes = {};
+                this.modelAttributes = {};
+                var refAttributes = {};
+                var self = this;
+
+                //should filter non number attributes
+                _.each(this.model.get('attributes'), function(attribute, test) {
+                    self.modelAttributes[attribute.name] = attribute.value;
+                });
+
+                //instead of getting everything again and again, could get a reference from the view.
+                if(this.isSubstitute) {
+                    _.each(this.reference.get('attributes'), function(attribute) {
+                        refAttributes[attribute.name] = attribute.value;
+                    });
+                }
+                _.each(this.collection.models, function(calculation) {
+                    var attributeName = calculation.getAttributeName();
+                    self.attributes[attributeName] = self.modelAttributes[attributeName] || 0;
+                    if(self.isSubstitute) {
+                        self.attributes[attributeName] -= refAttributes[attributeName] || 0;
+                    }
+                });
+
             }
         });
 

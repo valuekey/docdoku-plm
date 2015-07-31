@@ -18,7 +18,15 @@ define(
             render: function() {
                 this.$el.html(Mustache.render(template, {model: this.model, i18n: App.config.i18n}));
                 var Calculations = Backbone.Collection.extend({
-                    model: Calculation
+                    model: Calculation,
+
+                    updateCalculations: function(attributes, updateNumber) {
+                        _.each(this.models, function(calculation) {
+                            debugger;
+                            var diff = attributes[calculation.getAttributeName()] || 0;
+                            calculation.update(diff,updateNumber);
+                        });
+                    }
                 });
                 this.calculations = new Calculations();
                 //TODO kelto: just for prototype should move that.
@@ -101,6 +109,8 @@ define(
                 this.configuratorContent = new ConfiguratorContentView({el: this.partContainer,collection: this.collection});
                 this.configuratorContent.baselineTemp = this.baselineTemp;
                 this.configuratorContent.render();
+                this.listenTo(this.configuratorContent,'optionals:update',this.updateOptionals);
+                this.listenTo(this.configuratorContent,'substitutes:update',this.updateSubstitutes);
                 return this;
             },
 
@@ -113,6 +123,14 @@ define(
 
             updateContent: function(part) {
                 this.configuratorContent.displayPart(part);
+            },
+
+            updateSubstitutes: function() {
+                this.sideControlView.updateSubstitutes();
+            },
+
+            updateOptionals: function() {
+                this.sideControlView.updateOptionals();
             }
         });
 

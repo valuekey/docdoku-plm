@@ -11,6 +11,10 @@ define(
 
         var ConfiguratorSideControl = Backbone.View.extend({
 
+            events: {
+                'click .substitutes': 'onSubstituteClick'
+            },
+
             initialize: function() {
                 this.constructor.__super__.initialize.apply(this,arguments);
                 this.attributes = [];
@@ -22,11 +26,14 @@ define(
                 this.bindDom().initAttributeViews();
                 this.listenTo(this.baselineTemp.calculations,'add',this.addCalculation);
                 this.listenTo(this.baselineTemp.calculations,'remove',this.removeCalculation);
+
                 return this;
             },
 
             bindDom: function() {
                 this.listAttributes = this.$('#control-list-attributes');
+                this.listOptionals = this.$('#control-list-optionals');
+                this.listSubstitutes = this.$('#control-list-substitutes');
                 return this;
             },
 
@@ -69,6 +76,31 @@ define(
                     attributeView.remove();
                 });
                 Backbone.View.prototype.remove.apply(this,arguments);
+            },
+
+            updateOptionals: function() {
+                this.renderConfig();
+            },
+
+            updateSubstitutes: function() {
+                this.renderConfig();
+            },
+
+            renderConfig: function() {
+                this.listOptionals.empty();
+                this.listSubstitutes.empty();
+                var self = this;
+                _.each(this.baselineTemp.optionals,function(option) {
+                    self.listOptionals.append('<li>'+option.get('number')+'</li>');
+                });
+                _.each(this.baselineTemp.substitutes,function(option, second) {
+                    self.listSubstitutes.append('<li class="substitutes"><i>'+second+'</i> > '+option.get('number')+'</li>');
+                });
+            },
+
+            onSubstituteClick: function(e) {
+                delete this.baselineTemp.substitutes[$(e.target).find('i').text()];
+                this.trigger('substitutes:update');
             }
         });
 

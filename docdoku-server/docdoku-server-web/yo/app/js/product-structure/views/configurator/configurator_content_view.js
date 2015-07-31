@@ -44,18 +44,11 @@ define(
                 this.partReferenceModel = part;
                 this.clear();
                 this.substituteOfPart(part);
-                this.referencePartView = new ConfiguratorPartView({model: part,collection: this.baselineTemp.calculations}).render();
-                this.referencePartView.setReference();
-                this.partReference.html(this.referencePartView.$el);
-                this.listenTo(this.referencePartView,'part-view:click',this.referenceClicked);
+                this.resetReference(part);
                 var substitutes = part.getSubstituteIds();
                 var self = this;
                 _.each(this.substitutes,function(substitute){
-                    var substituteView = new ConfiguratorPartView({model: substitute, collection: self.baselineTemp.calculations}).render();
-                    self.partSubstitutesView.push(substituteView);
-                    self.partSubstitutes.append(substituteView.$el);
-                    self.listenTo(substituteView,'part-view:click',self.substituteClick);
-                    substituteView.setSubstitute(part);
+                    self.addSubstitute(substitute,part);
                 });
 
             },
@@ -89,7 +82,21 @@ define(
                         search(comp);
                     });
                 }
-                debugger;
+            },
+
+            resetReference: function(reference) {
+                this.referencePartView = new ConfiguratorPartView({model: reference,collection: this.baselineTemp.calculations, isSubstitute: false}).render();
+                this.referencePartView.setReference();
+                this.partReference.html(this.referencePartView.$el);
+                this.listenTo(this.referencePartView,'part-view:optionalToggle',this.referenceClicked);
+            },
+
+            addSubstitute: function(substitute, reference) {
+                var substituteView = new ConfiguratorPartView({model: substitute, collection: this.baselineTemp.calculations, isSubstitute: true}).render();
+                this.partSubstitutesView.push(substituteView);
+                this.partSubstitutes.append(substituteView.$el);
+                this.listenTo(substituteView,'part-view:substituteToggle',this.substituteClick);
+                substituteView.setSubstitute(reference);
             },
 
             swapReference: function(substitute,oldSelected) {
@@ -101,30 +108,51 @@ define(
 
             referenceClicked: function(referenceView) {
                 if(referenceView.isSelected) {
-                    this.baselineTemp.parts.remove(referenceView.model);
-                    this.baselineTemp.optionals.push(referenceView.model);
-                } else {
                     this.baselineTemp.parts.add(referenceView.model);
                     this.baselineTemp.optionals.splice(this.baselineTemp.optionals.indexOf(referenceView.model));
+                    this.baselineTemp.calculations.updateCalculations(referenceView.attributes,+1);
+                } else {
+                    this.baselineTemp.parts.remove(referenceView.model);
+                    this.baselineTemp.optionals.push(referenceView.model);
+                    this.baselineTemp.calculations.updateCalculations(referenceView.attributes,-1);
                 }
+                this.trigger('optionals:update');
             },
 
             substituteClick: function(view) {
-                var oldSubstitute = this.baselineTemp.substitutes[this.partReference.get('path')] || this.partReferenceModel;
+                var oldSubstitute = this.baselineTemp.substitutes[this.partReferenceModel.get('path')] || this.partReferenceModel;
                 if(view.model.get('path') === this.partReferenceModel.get('path')) {
                     delete this.baselineTemp.substitutes[view.model.get('path')];
                 } else {
                     this.baselineTemp.substitutes[this.partReferenceModel.get('path')] = view.model;
                 }
+                this.baselineTemp.calculations.updateCalculations(view.attributes);
                 this.swapReference(view.model,oldSubstitute);
                 this.referencePartView.toggleClass();
                 view.toggleClass();
+                this.removeOptional();
                 debugger;
-                view.$el.remove();
-                this.partReference.html(view.$el);
-                this.partSubstitutes.append(this.referencePartView.$el);
-                view.delegateEvents();
-                this.referencePartView.delegateEvents();
+                var self = this;
+                this.partSubstitutesView =  this.partSubstitutesView.filter(function(sub) {
+                    return view.cid !== sub.cid;
+                });
+                _.each(this.partSubstitutesView,function(sub) {
+                    debugger;
+                    sub.setSubstitute(view.model);
+                });
+                var newRef = view.model;
+                var oldRef = this.partReferenceModel;
+                this.partReferenceModel = newRef;
+                view.remove();
+                this.referencePartView.remove();
+                this.resetReference(newRef);
+                this.addSubstitute(oldRef, newRef);
+                this.trigger('substitutes:update');
+            },
+
+            removeOptional: function() {
+                this.referencePartView.removeOptional();
+                this.baselineTemp.calculations.updateCalculations(this.referencePartView.attributes,+1);
             }
 
         });
