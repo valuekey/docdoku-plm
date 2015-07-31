@@ -131,13 +131,11 @@ define(
                 this.referencePartView.toggleClass();
                 view.toggleClass();
                 this.removeOptional();
-                debugger;
                 var self = this;
                 this.partSubstitutesView =  this.partSubstitutesView.filter(function(sub) {
                     return view.cid !== sub.cid;
                 });
                 _.each(this.partSubstitutesView,function(sub) {
-                    debugger;
                     sub.setSubstitute(view.model);
                 });
                 var newRef = view.model;

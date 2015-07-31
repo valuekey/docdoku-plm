@@ -22,7 +22,6 @@ define(
 
                     updateCalculations: function(attributes, updateNumber) {
                         _.each(this.models, function(calculation) {
-                            debugger;
                             var diff = attributes[calculation.getAttributeName()] || 0;
                             calculation.update(diff,updateNumber);
                         });
@@ -83,7 +82,8 @@ define(
                     parts: baselineTempCollection,
                     substitutes: {},
                     optionals: [],
-                    calculations: this.calculations};
+                    calculations: this.calculations
+                };
                 this.bindDOM()
                     .renderHeader()
                     .renderContent()
