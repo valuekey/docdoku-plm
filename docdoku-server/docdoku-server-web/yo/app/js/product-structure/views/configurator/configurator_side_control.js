@@ -99,8 +99,10 @@ define(
             },
 
             onSubstituteClick: function(e) {
+                /*
                 delete this.baselineTemp.substitutes[$(e.target).find('i').text()];
                 this.trigger('substitutes:update');
+                */
             }
         });
 

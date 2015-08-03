@@ -149,6 +149,7 @@ define(
             },
 
             removeOptional: function() {
+                if(this.referencePartView.isSelected)
                 this.referencePartView.removeOptional();
                 this.baselineTemp.calculations.updateCalculations(this.referencePartView.attributes,+1);
             }
