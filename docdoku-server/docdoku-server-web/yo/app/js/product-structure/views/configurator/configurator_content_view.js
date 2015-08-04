@@ -40,14 +40,21 @@ define(
                 this.partSubstitutes = this.$('#part-substitutes');
             },
 
+            testListen: function(value) {
+                debugger;
+            },
+
             displayPart: function (part) {
+                var self = this;
+                debugger;
                 this.partReferenceModel = part;
                 this.clear();
                 this.substituteOfPart(part);
                 this.resetReference(part);
                 var substitutes = part.getSubstituteIds();
-                var self = this;
+
                 _.each(this.substitutes,function(substitute){
+                    debugger;
                     self.addSubstitute(substitute,part);
                 });
 
@@ -85,18 +92,22 @@ define(
             },
 
             resetReference: function(reference) {
-                this.referencePartView = new ConfiguratorPartView({model: reference,collection: this.baselineTemp.calculations, isSubstitute: false}).render();
+                var configItem = this.model.map[reference.attributes.path];
+                this.referencePartView = new ConfiguratorPartView({model: configItem,collection: this.baselineTemp.calculations, isSubstitute: false});
+                this.referencePartView.render();
                 this.referencePartView.setReference();
                 this.partReference.html(this.referencePartView.$el);
                 this.listenTo(this.referencePartView,'part-view:optionalToggle',this.referenceClicked);
             },
 
             addSubstitute: function(substitute, reference) {
-                var substituteView = new ConfiguratorPartView({model: substitute, collection: this.baselineTemp.calculations, isSubstitute: true}).render();
+                var configItem = this.model.map[reference.attributes.path].getSubstitute(substitute).construct();
+                var substituteView = new ConfiguratorPartView({model: configItem, collection: this.baselineTemp.calculations, isSubstitute: true});
+                substituteView.render();
                 this.partSubstitutesView.push(substituteView);
                 this.partSubstitutes.append(substituteView.$el);
                 this.listenTo(substituteView,'part-view:substituteToggle',this.substituteClick);
-                substituteView.setSubstitute(reference);
+                substituteView.setSubstitute();
             },
 
             swapReference: function(substitute,oldSelected) {

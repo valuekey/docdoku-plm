@@ -18,15 +18,16 @@ define(
             initialize: function() {
                 this.constructor.__super__.initialize.apply(this,arguments);
                 this.isSubstitute = this.options.isSubstitute;
+                _.bindAll(this);
             },
 
             render: function() {
+                //TODO kelto: is selected should not be set to true. Get it this info from the model
                 this.isSelected = true;
-                if(!(this.model instanceof Backbone.Model)) {
-                    this.model = new Component.Model(this.model);
-                }
-                this.$el.html(Mustache.render(template, {model: this.model, i18n: App.config.i18n}));
-                this.bindDom().bindEvents();
+
+                this.$el.html(Mustache.render(template, {model: this.model.config_item, i18n: App.config.i18n}));
+                this.bindDom().bindEvents().renderAttributes();
+
                 return this;
             },
 
@@ -36,37 +37,14 @@ define(
             },
 
             bindEvents: function() {
-                this.listenTo(this.collection,'remove',this.updateAttributes);
-                //change is trigger on adding, so no need to listenTo add.
-                //But the change should be triggered on the calculation level, not rendering everything.
-                this.listenTo(this.collection,'change',this.updateAttributes);
+                this.model.setListener(this.updateContent);
                 return this;
             },
 
-            updateAttributes: function(calculation) {
-                // TODO kelto: should just add or remove a new view instead of rendering everything
-                //split it in two function remove and add.
-                this.partListAttributes.empty();
-                if(this.isSubstitute) {
-                    this.setSubstitute();
-                } else {
-                    this.setReference();
-                }
-            },
-
-            setSubstitute: function(reference) {
-                if(reference) {
-                    this.reference = reference;
-                }
+            setSubstitute: function() {
                 this.isSubstitute = true;
                 this.$el.toggleClass('inactive',true);
-                this.attributes = {};
-                this.modelAttributes = {};
-                var refAttributes = {};
-                var self = this;
 
-                this.calculateAttribute();
-                this.renderAttributes();
                 return this;
             },
 
@@ -74,14 +52,15 @@ define(
             renderAttributes: function() {
                 this.partListAttributes.empty();
                 var self = this;
-                _.each(this.attributes,function(value, name) {
-                    var html = '<li>'+name+' : '+(self.modelAttributes[name] || 0 );
-                    if(self.isSubstitute) {
+                _.each(this.model.values,function(value, name) {
+                    var html = '<li>'+name+' : '+ value;
+                    if(self.model.reference) {
+                        var diff = value - self.model.reference.values[name];
                         html+= '<span style="color: ';
-                        if(value < 0) {
-                            html += 'red"> ( '+value;
+                        if(diff < 0) {
+                            html += 'red"> ( '+diff;
                         } else {
-                            html += 'green"> ( + '+value;
+                            html += 'green"> ( + '+diff;
                         }
                         html += ' ) </span>';
                     }
@@ -99,13 +78,10 @@ define(
             setReference: function() {
                 // TODO kelto: isSubstitute should be passed in the constructor and used for the constructor.
                 this.isSubstitute = false;
-                this.modelAttributes = {};
-                this.attributes = {};
                 var self = this;
                 //TODO kelto: no need for an extra class ! substitute are separate from ref by a div container
                 this.$el.toggleClass('inactive',false);
-                this.calculateAttribute();
-                this.renderAttributes();
+
             },
 
             onClick: function(e) {
@@ -126,34 +102,6 @@ define(
             removeOptional: function() {
                 this.isSelected = true;
                 this.$el.fadeTo('fast',1);
-            },
-
-            calculateAttribute: function() {
-
-                this.attributes = {};
-                this.modelAttributes = {};
-                var refAttributes = {};
-                var self = this;
-
-                //should filter non number attributes
-                _.each(this.model.get('attributes'), function(attribute, test) {
-                    self.modelAttributes[attribute.name] = attribute.value;
-                });
-
-                //instead of getting everything again and again, could get a reference from the view.
-                if(this.isSubstitute) {
-                    _.each(this.reference.get('attributes'), function(attribute) {
-                        refAttributes[attribute.name] = attribute.value;
-                    });
-                }
-                _.each(this.collection.models, function(calculation) {
-                    var attributeName = calculation.getAttributeName();
-                    self.attributes[attributeName] = self.modelAttributes[attributeName] || 0;
-                    if(self.isSubstitute) {
-                        self.attributes[attributeName] -= refAttributes[attributeName] || 0;
-                    }
-                });
-
             }
         });
 

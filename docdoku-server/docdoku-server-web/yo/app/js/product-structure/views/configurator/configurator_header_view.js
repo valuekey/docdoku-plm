@@ -28,6 +28,7 @@ define(
             openAttributesModal: function() {
                 var modal = new UserDefinedFunctionView({configurator: true, collection: this.baselineTemp.calculations});
                 modal.render().fetchAttributes();
+                modal.configItem = this.model;
                 document.body.appendChild(modal.el);
                 modal.openModal();
             },
