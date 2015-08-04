@@ -19,11 +19,14 @@ define(
                 this.constructor.__super__.initialize.apply(this,arguments);
                 this.attributes = [];
                 this.attributeViews = {};
+                _.bindAll(this);
             },
 
             render: function() {
                 this.$el.html(Mustache.render(template, {i18n: App.config.i18n}));
                 this.bindDom().initAttributeViews();
+                //TODO kelto: should be changed to adapt a backbone model, can't have multiple listeners
+                //this.model.setListener(this.updateAttribute)
                 this.listenTo(this.baselineTemp.calculations,'add',this.addCalculation);
                 this.listenTo(this.baselineTemp.calculations,'remove',this.removeCalculation);
 

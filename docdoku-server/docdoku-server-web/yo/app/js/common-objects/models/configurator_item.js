@@ -11,6 +11,8 @@ define([
 
     'use strict';
 
+    // TODO kelto: it might be better to use a backbone model to use the default events implementation
+    // or use a better observer pattern
     var Configurator_item = function(config_item,map, attributes, parent) {
 
         this.children = {};
