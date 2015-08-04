@@ -12,9 +12,7 @@ define([
         className:'calculation',
 
         events:{
-            'click .remove':'onRemove',
-            'change select[name=operator]': 'operatorChange',
-            'change select[name=attributeName]': 'attributeNameChange'
+            'click .remove':'onRemove'
         },
 
         initialise:function(){
@@ -34,16 +32,11 @@ define([
 
         render:function(){
             this.$el.html(Mustache.render(template, {i18n: App.config.i18n, attributeNames:this.options.attributeNames}));
-            this.binDOMElements().resetCalculation().initCalculation();
+            this.binDOMElements().resetCalculation();
 
             return this;
         },
 
-        initCalculation: function() {
-            this.model.setOperator(this.$operator.val());
-            this.model.setAttributeName(this.$attributeName.val());
-            return this;
-        },
 
         binDOMElements:function(){
             this.$operator = this.$('[name="operator"]');
@@ -67,14 +60,6 @@ define([
             return this.model.getFinalResult();
         },
 
-        operatorChange: function() {
-            this.model.setOperator(this.$operator.val());
-        },
-
-        attributeNameChange: function() {
-            this.model.setAttributeName(this.$attributeName.val());
-        },
-
         setMemo:function(memo){
             this.memo = memo;
         },
@@ -88,9 +73,12 @@ define([
         },
 
         onEnd:function(){
-            this.$memo.text(this.getMemo());
-            this.$assembliesVisited.text(this.model.getVisitedAssemblies());
-            this.$instancesVisited.text(this.model.getVisitedInstances());
+            debugger;
+            var val =  this.model.values[this.getAttributeName()];
+            val = this.$operator.val() === 'SUM' ? val : val / ((this.model.visitedAssemblies + this.model.visitedInstances) || 0);
+            this.$memo.text(this.model.values[this.getAttributeName()]);
+            this.$assembliesVisited.text(this.model.visitedAssemblies);
+            this.$instancesVisited.text(this.model.visitedInstances);
             this.$result.show();
         },
 
