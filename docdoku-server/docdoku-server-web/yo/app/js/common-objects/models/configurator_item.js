@@ -23,9 +23,12 @@ define([
         this.parent = parent;
         this.listener = null;
         this.reference = null;
+        this.visitedAssemblies = 0;
+        this.visitedInstances = 0;
 
         this.construct = function() {
-            this.values = {};
+            this.resetValues();
+            this.config_item.components.length > 0 ? this.visitedAssemblies+= this.config_item.amount : this.visitedInstances+=this.config_item.amount;
             this.map[config_item.path] = this;
             var self = this;
             _.each(this.config_item.attributes, function(attribute) {
@@ -41,7 +44,7 @@ define([
                 self.children[component.path] = child;
                 child.construct();
                 _.each(self.attributes, function(attribute) {
-                    self.values[attribute] += (child.values[attribute]* self.config_item.amount);
+                   self.addChildValues(child,attribute);
                 });
             });
             _.each(this.substitutes, function(substitute) {
@@ -49,6 +52,12 @@ define([
             });
             return this.notify();
         };
+
+        this.addChildValues = function(child,attribute) {
+            this.values[attribute] += (child.values[attribute]* this.config_item.amount);
+            this.visitedAssemblies += child.visitedAssemblies * this.config_item.amount;
+            this.visitedInstances += child.visitedInstances * this.config_item.amount;
+        }
 
         this.onSwap = function(newChild, oldChild) {
             var toOrphan = this.parent.children[oldChild.path];
@@ -87,12 +96,10 @@ define([
             return this;
         };
 
-        this.resetAll = function() {
-
-        };
-
         this.resetValues = function() {
             this.values = {};
+            this.visitedInstances = 0;
+            this.visitedAssemblies = 0;
         };
 
         this.notify = function () {
