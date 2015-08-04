@@ -6,8 +6,8 @@ define([
     'common-objects/collections/configuration_items',
     'common-objects/collections/baselines',
     'common-objects/views/udf/calculation',
-    'common-objects/models/calculation'
-], function (Backbone, Mustache, template,ConfigurationItemCollection,Baselines, CalculationView, Calculation) {
+    'common-objects/models/configurator_item'
+], function (Backbone, Mustache, template,ConfigurationItemCollection,Baselines, CalculationView, ConfiguratorItem) {
 
     'use strict';
 
@@ -25,13 +25,6 @@ define([
             this.configurator = this.options.configurator ? this.options.configurator : false;
             _.bindAll(this);
             this.calculationViews = [];
-            if(!this.collection) {
-                var Calculations = Backbone.Collection.extend({
-                    model: Calculation
-                });
-                this.collection = new Calculations();
-            }
-
         },
 
         render: function () {
@@ -112,15 +105,18 @@ define([
 
         displayCalculations: function() {
             var self = this;
-            _.each(this.collection.models,function(calculation) {
-                self.createCalculationView(calculation);
-            });
+            if(this.configItem) {
+                _.each(this.configItem.attributes, function(attribute) {
+                    self.createCalculationView();
+                });
+            }
+
             return this;
         },
 
-        createCalculationView:function(calculation){
+        createCalculationView:function(){
             var _this = this;
-            var calculationView = new CalculationView({attributeNames:this.availableAttributes, model: calculation}).render();
+            var calculationView = new CalculationView({attributeNames:this.availableAttributes}).render();
             this.$calculations.append(calculationView.$el);
             this.calculationViews.push(calculationView);
 
@@ -131,7 +127,6 @@ define([
                 if(!_this.calculationViews.length){
                     _this.$runButton.hide();
                 }
-                _this.collection.remove(calc.cid);
             });
 
             this.$runButton.show();
@@ -139,9 +134,7 @@ define([
         },
 
         addCalculation:function(){
-            var calculation = new Calculation();
-            this.collection.push(calculation);
-            this.createCalculationView(calculation);
+            this.createCalculationView();
         },
 
         openModal: function () {
@@ -187,41 +180,17 @@ define([
 
         doUDF:function(pRootComponent){
 
+            var self = this;
             var calculationViews = this.calculationViews;
-            var calculations = this.collection;
-
-            var compute = function(node) {
-                _.each(calculations.models,function(calculation) {
-                    var attribute = node.attrs[calculation.getAttributeName()];
-                    if(attribute !== undefined) {
-                        calculation.add(attribute);
-                        if(node.components.length){
-                            calculation.incVisitedAssemblies();
-                        }else{
-                            calculation.incVisitedInstances();
-                        }
-                    }
-                });
-            };
-
-            var visit = function(rootComponent){
-
-                rootComponent.attrs = {};
-
-                _.each(rootComponent.attributes,function(attr){
-                    if(attr.type === 'NUMBER'){
-                        rootComponent.attrs[attr.name] = parseFloat(attr.value);
-                    }
-                });
-
-                for(var i = 0 ; i < rootComponent.amount ; i++) {
-                    compute(rootComponent);
-                    _.each(rootComponent.components,visit);
-                }
-
-            };
-
-            visit(pRootComponent.first().attributes);
+            if(! this.configItem) {
+                this.configItem = new ConfiguratorItem(pRootComponent.first().attributes, {},[],null);
+            }
+            this.configItem.attributes.length = 0;
+            _.each(this.calculationViews,function(calculation) {
+                calculation.model = self.configItem;
+                self.configItem.attributes.push(calculation.getAttributeName());
+            });
+            this.configItem.construct();
 
             _.each(calculationViews,function(view){
                 view.onEnd();
