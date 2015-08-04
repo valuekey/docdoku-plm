@@ -123,10 +123,10 @@ define([
             App.partsTreeView = new PartsTreeView({resultPathCollection: App.searchView.collection}).render();
             App.bomView = new BomView().render();
             App.configuratorView = new ConfiguratorView({el: this.configuratorContainer}).render();
+            this.listenTo(App.configuratorView,'rendered',this.configuratorRendered);
             App.baselineSelectView = new BaselineSelectView({el: '#config_spec_container'}).render();
 
             this.bomControls.append(App.bomView.bomHeaderView.$el);
-            this.configuratorControls.append(App.configuratorView.configuratorHeader.$el);
 
             this.listenEvents();
 
@@ -136,6 +136,11 @@ define([
 
             return this;
 
+        },
+
+        configuratorRendered: function() {
+            this.configuratorControls.append(App.configuratorView.configuratorHeader.$el);
+            this.updateBom();
         },
 
         bindDomElements: function () {

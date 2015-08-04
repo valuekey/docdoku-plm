@@ -8,8 +8,9 @@ define(
         'views/configurator/configurator_content_view',
         'views/configurator/configurator_side_control',
         'common-objects/models/calculation',
-        'models/component_module'
-    ], function (Backbone, Mustache, template, ConfiguratorHeaderView, ConfiguratorContentView, ConfiguratorSideControl, Calculation,ComponentModule) {
+        'models/component_module',
+        'common-objects/models/configurator_item'
+    ], function (Backbone, Mustache, template, ConfiguratorHeaderView, ConfiguratorContentView, ConfiguratorSideControl, Calculation,ComponentModule, ConfiguratorItem) {
 
         'use strict';
 
@@ -73,23 +74,30 @@ define(
                 //this is the collection of the configurator, to display the substitutes
                 // Should not be touched only for display
                 this.collection = new FullCollection([], { isRoot: true });
+                debugger;
                 this.collection.fetch({reset: true});
-                // The collection of the baseline, this is dynamic.
-                var baselineTempCollection = new BaselineCollection([], { isRoot: true });
-                baselineTempCollection.fetch();
-                //TODO kelto: should have an array of baselineTemp.
-                this.baselineTemp = {
-                    parts: baselineTempCollection,
-                    substitutes: {},
-                    optionals: [],
-                    calculations: this.calculations
-                };
-                this.bindDOM()
-                    .renderHeader()
-                    .renderContent()
-                    .renderSideControl();
 
+                // The collection of the baseline, this is dynamic.
+                this.baselineTempCollection = new BaselineCollection([], { isRoot: true });
+                var self = this;
+                this.baselineTempCollection.fetch({reset: true}).success(function() {
+                    self.configItem = new ConfiguratorItem(self.baselineTempCollection.first().attributes, {},[],null).construct();
+                    //TODO kelto: should have an array of baselineTemp.
+                    self.baselineTemp = {
+                        parts: self.baselineTempCollection,
+                        substitutes: {},
+                        optionals: [],
+                        calculations: self.calculations
+                    };
+                    self.bindDOM()
+                        .renderHeader()
+                        .renderContent()
+                        .renderSideControl();
+                    self.trigger('rendered');
+
+                });
                 return this;
+
             },
 
             bindDOM: function() {
@@ -99,14 +107,14 @@ define(
             },
 
             renderHeader: function() {
-                this.configuratorHeader = new ConfiguratorHeaderView();
+                this.configuratorHeader = new ConfiguratorHeaderView({model: this.configItem});
                 this.configuratorHeader.baselineTemp = this.baselineTemp;
                 this.configuratorHeader.render();
                 return this;
             },
 
             renderContent: function() {
-                this.configuratorContent = new ConfiguratorContentView({el: this.partContainer,collection: this.collection});
+                this.configuratorContent = new ConfiguratorContentView({el: this.partContainer,collection: this.collection, model: this.configItem});
                 this.configuratorContent.baselineTemp = this.baselineTemp;
                 this.configuratorContent.render();
                 this.listenTo(this.configuratorContent,'optionals:update',this.updateOptionals);
@@ -115,14 +123,17 @@ define(
             },
 
             renderSideControl: function() {
-                this.sideControlView = new ConfiguratorSideControl({el: this.sideControl});
+                this.sideControlView = new ConfiguratorSideControl({el: this.sideControl, model: this.configItem});
                 this.sideControlView.baselineTemp = this.baselineTemp;
                 this.sideControlView.render();
                 return this;
             },
 
             updateContent: function(part) {
-                this.configuratorContent.displayPart(part);
+                // TODO kelto: this function should be called only when the configurator is ready
+                if(this.configItem) {
+                    this.configuratorContent.displayPart(part);
+                }
             },
 
             updateSubstitutes: function() {
