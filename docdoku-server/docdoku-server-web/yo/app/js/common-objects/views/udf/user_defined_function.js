@@ -106,7 +106,7 @@ define([
         displayCalculations: function() {
             var self = this;
             if(this.configItem) {
-                _.each(this.configItem.attributes, function(attribute) {
+                _.each(this.configItem.getAttributes(), function(attribute) {
                     self.createCalculationView();
                 });
             }
@@ -185,13 +185,13 @@ define([
             if(! this.configItem) {
                 this.configItem = new ConfiguratorItem(pRootComponent.first().attributes, {},[],null);
             }
-            this.configItem.attributes.length = 0;
+            this.configItem.getAttributes().length = 0;
             _.each(this.calculationViews,function(calculation) {
                 calculation.model = self.configItem;
-                self.configItem.attributes.push(calculation.getAttributeName());
+                self.configItem.addAttribute(calculation.getAttributeName());
             });
             this.configItem.construct();
-
+            debugger;
             _.each(calculationViews,function(view){
                 view.onEnd();
             });

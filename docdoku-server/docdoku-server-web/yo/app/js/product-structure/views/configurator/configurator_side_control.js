@@ -27,9 +27,9 @@ define(
                 this.bindDom().initAttributeViews();
                 //TODO kelto: should be changed to adapt a backbone model, can't have multiple listeners
                 //this.model.setListener(this.updateAttribute)
-                this.listenTo(this.baselineTemp.calculations,'add',this.addCalculation);
-                this.listenTo(this.baselineTemp.calculations,'remove',this.removeCalculation);
-
+                //this.listenTo(this.baselineTemp.calculations,'add',this.addCalculation);
+                //this.listenTo(this.baselineTemp.calculations,'remove',this.removeCalculation);
+                this.listenTo(this.model,'change:values',this.initAttributeViews);
                 return this;
             },
 
@@ -40,29 +40,37 @@ define(
                 return this;
             },
 
-            initAttributeViews: function() {
-                _.each(this.baselineTemp.calculations.models, function(calculation) {
-                    var attributeView = new ConfiguratorAttributeItemView({model: calculation}).render();
-                    this.attributeViews[calculation.cid] = attributeView;
-                    this.listAttributes.append(attributeView.el);
-                });
 
-                return this;
+            initAttributeViews: function() {
+                debugger;
+                _.each(this.attributeViews, function(view) {
+                    view.remove();
+                });
+                _.each(this.model.getAttributes(),this.addAttribute);
             },
 
-            addCalculation: function(calculation) {
-                //useful to store it ?
-                this.attributes.push(calculation);
-                var attributeView = new ConfiguratorAttributeItemView({model: calculation}).render();
-                this.attributeViews[calculation.cid] = attributeView;
+            addAttribute: function(attribute) {
+                //TODO kelto: useful to store it ?
+                this.attributes.push(attribute);
+                var attributeView = new ConfiguratorAttributeItemView(
+                    {model:
+                        {
+                            name: attribute,
+                            value: this.model.getValues()[attribute]
+                        }
+                    }).render();
+                this.attributeViews[attribute] = attributeView;
+                attributeView.configItem = this.model;
                 this.listAttributes.append(attributeView.$el);
                 this.listenTo(attributeView,'remove',this.onRemovedView);
             },
-            removeCalculation: function(calculation) {
-                this.attributeViews[calculation.cid].remove();
+
+            removeAttribute: function(attribute) {
+                this.attributeViews[attribute].remove();
             },
 
             updateAttribute: function (attribute) {
+                debugger;
                 var view = this.attributeViews[attribute.name];
                 if(view) {
                     view.updateValue(attribute.value);

@@ -14,11 +14,12 @@ define(
             tagName: 'li',
 
             events: {
-                'click .attribute-remove': 'remove'
+                'click .attribute-remove': 'removeAttribute'
             },
 
             render: function () {
-                this.$el.html(Mustache.render(template, {i18n: App.config.i18n, calculation: this.model}));
+                debugger;
+                this.$el.html(Mustache.render(template, {i18n: App.config.i18n, model: this.model}));
                 this.bindDOM().bindEvents();
                 return this;
             },
@@ -32,16 +33,16 @@ define(
             updateValue: function (calculation) {
                 // TODO kelto: this method is called on each operation
                 // should only be called at the end
-                this.attributeValue.text(calculation.getFinalResult());
+                this.attributeValue.text(this.model.value);
             },
 
             updateName: function(calculation) {
-                this.attributeName.text(calculation.getAttributeName());
+                this.attributeName.text(this.model.name);
             },
 
             bindEvents: function() {
-                this.listenTo(this.model,'change:attributeName',this.updateName);
-                this.listenTo(this.model,'change:result',this.updateValue);
+                //this.listenTo(this.model,'change:attributeName',this.updateName);
+                //this.listenTo(this.model,'change:result',this.updateValue);
             },
 
             remove: function() {
@@ -49,6 +50,9 @@ define(
                 //Trigger a remove event to notify the Parent then unbind.
                 this.trigger('remove',this.model);
                 this.unbind();
+            },
+            removeAttribute: function() {
+                this.configItem.removeAttribute(this.model.name);
             }
         });
 

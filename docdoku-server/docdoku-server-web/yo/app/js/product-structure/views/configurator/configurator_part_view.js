@@ -25,7 +25,7 @@ define(
                 //TODO kelto: is selected should not be set to true. Get it this info from the model
                 this.isSelected = true;
 
-                this.$el.html(Mustache.render(template, {model: this.model.config_item, i18n: App.config.i18n}));
+                this.$el.html(Mustache.render(template, {model: this.model.getConfigItem(), i18n: App.config.i18n}));
                 this.bindDom().bindEvents().renderAttributes();
 
                 return this;
@@ -37,7 +37,11 @@ define(
             },
 
             bindEvents: function() {
-                this.model.setListener(this.updateContent);
+                debugger;
+                this.listenTo(this.model,'change:values',this.renderAttributes);
+
+                this.listenTo(this.model,'change:reference',this.renderAttributes);
+                //this.model.setListener(this.updateContent);
                 return this;
             },
 
@@ -52,10 +56,11 @@ define(
             renderAttributes: function() {
                 this.partListAttributes.empty();
                 var self = this;
-                _.each(this.model.values,function(value, name) {
+                _.each(this.model.getValues(),function(value, name) {
                     var html = '<li>'+name+' : '+ value;
-                    if(self.model.reference) {
-                        var diff = value - self.model.reference.values[name];
+                    if(self.model.getReference()) {
+                        debugger;
+                        var diff = value - self.model.getReference().getValues()[name];
                         html+= '<span style="color: ';
                         if(diff < 0) {
                             html += 'red"> ( '+diff;

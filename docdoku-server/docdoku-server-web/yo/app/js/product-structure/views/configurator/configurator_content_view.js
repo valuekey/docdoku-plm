@@ -40,10 +40,6 @@ define(
                 this.partSubstitutes = this.$('#part-substitutes');
             },
 
-            testListen: function(value) {
-                debugger;
-            },
-
             displayPart: function (part) {
                 var self = this;
                 debugger;
@@ -92,7 +88,7 @@ define(
             },
 
             resetReference: function(reference) {
-                var configItem = this.model.map[reference.attributes.path];
+                var configItem = this.model.getMap()[reference.attributes.path];
                 this.referencePartView = new ConfiguratorPartView({model: configItem,collection: this.baselineTemp.calculations, isSubstitute: false});
                 this.referencePartView.render();
                 this.referencePartView.setReference();
@@ -101,7 +97,7 @@ define(
             },
 
             addSubstitute: function(substitute, reference) {
-                var configItem = this.model.map[reference.attributes.path].getSubstitute(substitute).construct();
+                var configItem = this.model.getMap()[reference.attributes.path].createSubstitute(substitute).construct();
                 var substituteView = new ConfiguratorPartView({model: configItem, collection: this.baselineTemp.calculations, isSubstitute: true});
                 substituteView.render();
                 this.partSubstitutesView.push(substituteView);
