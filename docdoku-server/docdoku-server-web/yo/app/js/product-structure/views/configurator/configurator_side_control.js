@@ -29,7 +29,8 @@ define(
                 //this.model.setListener(this.updateAttribute)
                 //this.listenTo(this.baselineTemp.calculations,'add',this.addCalculation);
                 //this.listenTo(this.baselineTemp.calculations,'remove',this.removeCalculation);
-                this.listenTo(this.model,'change:values',this.initAttributeViews);
+                this.listenTo(this.model.model,'change',this.updateAttributesViews);
+
                 return this;
             },
 
@@ -42,27 +43,37 @@ define(
 
 
             initAttributeViews: function() {
-                debugger;
-                _.each(this.attributeViews, function(view) {
-                    view.remove();
+
+                _.each(this.baselineTemp.calculations.models, function(calculation) {
+                    var attributeView = new ConfiguratorAttributeItemView({model: calculation}).render();
+                    this.attributeViews[calculation.cid] = attributeView;
+                    this.listAttributes.append(attributeView.el);
                 });
-                _.each(this.model.getAttributes(),this.addAttribute);
+
+
+                return this;
             },
 
-            addAttribute: function(attribute) {
-                //TODO kelto: useful to store it ?
-                this.attributes.push(attribute);
-                var attributeView = new ConfiguratorAttributeItemView(
-                    {model:
-                        {
-                            name: attribute,
-                            value: this.model.getValues()[attribute]
-                        }
-                    }).render();
-                this.attributeViews[attribute] = attributeView;
-                attributeView.configItem = this.model;
+            updateAttributesViews: function() {
+                var self = this;
+                _.each(this.model.model.changedAttributes(),function(value,attribute) {
+                    if(self.model.model.has(attribute,value) ) {
+                        var attributeView = self.attributeViews[attribute] ||new ConfiguratorAttributeItemView({model: {name: attribute, value: value}}).render();
+                        attributeView.updateValue(value);
+                        self.attributeViews[attribute] = attributeView;
+                        self.listAttributes.append(attributeView.el);
+                        self.listenTo(attributeView,'remove',self.onRemovedView)
+                    } else {
+                        delete self.attributeViews[attribute].remove();
+                    }
+                });
+
+                /*
+                var attributeView = new ConfiguratorAttributeItemView({model: this.model.model}).render();
+                //this.attributeViews[calculation.cid] = attributeView;
                 this.listAttributes.append(attributeView.$el);
-                this.listenTo(attributeView,'remove',this.onRemovedView);
+                //this.listenTo(attributeView,'remove',this.onRemovedView);
+                */
             },
 
             removeAttribute: function(attribute) {
@@ -78,7 +89,8 @@ define(
             },
 
             onRemovedView: function(attribute) {
-                this.baselineTemp.calculations.remove(attribute.cid);
+                this.model.model.unset(attribute.name);
+                //this.baselineTemp.calculations.remove(attribute.cid);
                 //might have to remove the view from the attribute
             },
 

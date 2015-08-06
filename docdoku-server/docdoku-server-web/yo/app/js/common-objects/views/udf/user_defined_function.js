@@ -185,10 +185,18 @@ define([
             if(! this.configItem) {
                 this.configItem = new ConfiguratorItem(pRootComponent.first().attributes, {},[],null);
             }
-            this.configItem.getAttributes().length = 0;
+
+            this.configItem.attributes.length = 0;
+            var seen = {};
             _.each(this.calculationViews,function(calculation) {
                 calculation.model = self.configItem;
-                self.configItem.addAttribute(calculation.getAttributeName());
+                //filter to remove duplicate
+                //TODO kelto: should add operation property to the filter
+                if(!seen.hasOwnProperty(calculation.getAttributeName())) {
+                    self.configItem.attributes.push(calculation.getAttributeName());
+                    seen[calculation.getAttributeName()] = true;
+                }
+
             });
             this.configItem.construct();
             debugger;

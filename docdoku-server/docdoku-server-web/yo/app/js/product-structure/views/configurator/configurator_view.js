@@ -81,12 +81,9 @@ define(
                 this.baselineTempCollection = new BaselineCollection([], { isRoot: true });
                 var self = this;
                 this.baselineTempCollection.fetch({reset: true}).success(function() {
-                    self.configItem = new ConfiguratorItem({
-                        config_item:self.baselineTempCollection.first().attributes,
-                    map: {},
-                        attributes:[],
-                        parent:null
-                }).construct();
+;
+                    self.configItem = new ConfiguratorItem(self.baselineTempCollection.first().attributes, {},[],null).construct();
+
                     //TODO kelto: should have an array of baselineTemp.
                     self.baselineTemp = {
                         parts: self.baselineTempCollection,
@@ -135,6 +132,7 @@ define(
             },
 
             updateContent: function(part) {
+                debugger;
                 // TODO kelto: this function should be called only when the configurator is ready
                 if(this.configItem) {
                     this.configuratorContent.displayPart(part);

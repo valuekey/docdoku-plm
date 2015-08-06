@@ -38,9 +38,9 @@ define(
 
             bindEvents: function() {
                 debugger;
-                this.listenTo(this.model,'change:values',this.renderAttributes);
 
-                this.listenTo(this.model,'change:reference',this.renderAttributes);
+                var val = this.model.model;
+                this.listenTo(this.model.model,'change',this.renderAttributes);
                 //this.model.setListener(this.updateContent);
                 return this;
             },
@@ -54,6 +54,7 @@ define(
 
             //TODO kelto: should create a view which will be removed when the calculation is destroyed.
             renderAttributes: function() {
+                debugger;
                 this.partListAttributes.empty();
                 var self = this;
                 _.each(this.model.getValues(),function(value, name) {

@@ -30,19 +30,23 @@ define(
                 return this;
             },
 
-            updateValue: function (calculation) {
+            updateValue: function (value) {
                 // TODO kelto: this method is called on each operation
                 // should only be called at the end
-                this.attributeValue.text(this.model.value);
+
+                this.attributeValue.text(value);
             },
 
+            /*
             updateName: function(calculation) {
                 this.attributeName.text(this.model.name);
             },
-
+            */
             bindEvents: function() {
-                //this.listenTo(this.model,'change:attributeName',this.updateName);
-                //this.listenTo(this.model,'change:result',this.updateValue);
+                /*
+                this.listenTo(this.model,'change:attributeName',this.updateName);
+                this.listenTo(this.model,'change:result',this.updateValue);
+                */
             },
 
             remove: function() {
@@ -50,9 +54,8 @@ define(
                 //Trigger a remove event to notify the Parent then unbind.
                 this.trigger('remove',this.model);
                 this.unbind();
-            },
-            removeAttribute: function() {
                 this.configItem.removeAttribute(this.model.name);
+                return this;
             }
         });
 

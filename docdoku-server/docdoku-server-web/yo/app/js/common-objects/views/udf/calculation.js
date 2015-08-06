@@ -83,6 +83,8 @@ define([
         },
 
         onRemove:function(){
+            debugger;
+            this.model.model.unset(this.getAttributeName());
             this.trigger('removed',this.model);
             this.remove();
         }
