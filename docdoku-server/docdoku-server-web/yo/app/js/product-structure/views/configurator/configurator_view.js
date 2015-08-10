@@ -74,7 +74,6 @@ define(
                 //this is the collection of the configurator, to display the substitutes
                 // Should not be touched only for display
                 this.collection = new FullCollection([], { isRoot: true });
-                debugger;
                 this.collection.fetch({reset: true});
 
                 // The collection of the baseline, this is dynamic.
@@ -82,7 +81,7 @@ define(
                 var self = this;
                 this.baselineTempCollection.fetch({reset: true}).success(function() {
 ;
-                    self.configItem = new ConfiguratorItem(self.baselineTempCollection.first().attributes, {},[],null).construct();
+                    self.configItem = new ConfiguratorItem(self.baselineTempCollection.first().attributes, {},new Backbone.Collection(),null).construct();
 
                     //TODO kelto: should have an array of baselineTemp.
                     self.baselineTemp = {
@@ -128,23 +127,25 @@ define(
                 this.sideControlView = new ConfiguratorSideControl({el: this.sideControl, model: this.configItem});
                 this.sideControlView.baselineTemp = this.baselineTemp;
                 this.sideControlView.render();
+                this.listenTo(this.sideControlView,'substitutes:update',this.updateSubstitutes);
                 return this;
             },
 
             updateContent: function(part) {
-                debugger;
                 // TODO kelto: this function should be called only when the configurator is ready
                 if(this.configItem) {
-                    this.configuratorContent.displayPart(part);
+                    this.configuratorContent.displayPart(part.attributes);
                 }
             },
 
             updateSubstitutes: function() {
                 this.sideControlView.updateSubstitutes();
+                this.configuratorContent.displayPart(this.configuratorContent.partReferenceModel);
             },
 
             updateOptionals: function() {
                 this.sideControlView.updateOptionals();
+                this.configuratorContent.displayPart(this.configuratorContent.partReferenceModel);
             }
         });
 

@@ -74,11 +74,11 @@ define([
 
         onEnd:function(){
             debugger;
-            var val =  this.model.getValues()[this.getAttributeName()];
+            var val =  this.model.model.get(this.getAttributeName());
             val = this.$operator.val() === 'SUM' ? val : val / ((this.model.getVisitedAssemblies() + this.model.getVisitedInstances()) || 0);
             this.$memo.text(val);
-            this.$assembliesVisited.text(this.model.getVisitedAssemblies());
-            this.$instancesVisited.text(this.model.getVisitedInstances());
+            this.$assembliesVisited.text(this.model.visitedAssemblies);
+            this.$instancesVisited.text(this.model.visitedInstances);
             this.$result.show();
         },
 

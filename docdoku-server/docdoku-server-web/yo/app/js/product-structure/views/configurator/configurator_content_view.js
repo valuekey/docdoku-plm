@@ -42,15 +42,12 @@ define(
 
             displayPart: function (part) {
                 var self = this;
-                debugger;
                 this.partReferenceModel = part;
                 this.clear();
                 this.substituteOfPart(part);
                 this.resetReference(part);
-                var substitutes = part.getSubstituteIds();
 
                 _.each(this.substitutes,function(substitute){
-                    debugger;
                     self.addSubstitute(substitute,part);
                 });
 
@@ -69,8 +66,11 @@ define(
 
             // TODO kelto: substitute should come from the webservice.
             substituteOfPart: function(part) {
+                if(this.substitutes.length) {
+                    return;
+                }
                 var self = this;
-                var substitutes = part.getSubstituteIds();
+                var substitutes = part.substituteIds;
                 if(substitutes) {
                     var search = function(pPart) {
                         if(substitutes.indexOf(pPart.partUsageLinkId) !== -1) {
@@ -88,7 +88,20 @@ define(
             },
 
             resetReference: function(reference) {
-                var configItem = this.model.getMap()[reference.attributes.path];
+                var configItem;
+                var path = this.baselineTemp.substitutes[reference.path];
+                if(path) {
+                    configItem = this.model.map[path];
+                    var index = -1;
+                    _.some(this.substitutes, function(substitute,i) {
+                        index = i;
+                        return substitute.path === path;
+                    });
+                    this.substitutes.splice(index,1);
+                    this.substitutes.push(reference);
+                } else {
+                    configItem = this.model.map[reference.path];
+                }
                 this.referencePartView = new ConfiguratorPartView({model: configItem,collection: this.baselineTemp.calculations, isSubstitute: false});
                 this.referencePartView.render();
                 this.referencePartView.setReference();
@@ -97,7 +110,7 @@ define(
             },
 
             addSubstitute: function(substitute, reference) {
-                var configItem = this.model.getMap()[reference.attributes.path].createSubstitute(substitute).construct();
+                var configItem = this.model.map[reference.path].getSubstitute(substitute);
                 var substituteView = new ConfiguratorPartView({model: configItem, collection: this.baselineTemp.calculations, isSubstitute: true});
                 substituteView.render();
                 this.partSubstitutesView.push(substituteView);
@@ -108,8 +121,7 @@ define(
 
             swapReference: function(substitute,oldSelected) {
                 //should remove the optional if done.
-                this.baselineTemp.parts.add(substitute);
-                this.baselineTemp.parts.remove(oldSelected);
+
 
             },
 
@@ -127,38 +139,19 @@ define(
             },
 
             substituteClick: function(view) {
-                var oldSubstitute = this.baselineTemp.substitutes[this.partReferenceModel.get('path')] || this.partReferenceModel;
-                if(view.model.get('path') === this.partReferenceModel.get('path')) {
-                    delete this.baselineTemp.substitutes[view.model.get('path')];
+
+                this.referencePartView.model.swap(view.model,this.referencePartView.model);
+                if(view.model.config_item.substitute) {
+                    this.baselineTemp.substitutes[this.partReferenceModel.path] = view.model.config_item.path;
                 } else {
-                    this.baselineTemp.substitutes[this.partReferenceModel.get('path')] = view.model;
+                    delete this.baselineTemp.substitutes[view.model.config_item.path];
                 }
-                this.baselineTemp.calculations.updateCalculations(view.attributes);
-                this.swapReference(view.model,oldSubstitute);
-                this.referencePartView.toggleClass();
-                view.toggleClass();
-                this.removeOptional();
-                var self = this;
-                this.partSubstitutesView =  this.partSubstitutesView.filter(function(sub) {
-                    return view.cid !== sub.cid;
-                });
-                _.each(this.partSubstitutesView,function(sub) {
-                    sub.setSubstitute(view.model);
-                });
-                var newRef = view.model;
-                var oldRef = this.partReferenceModel;
-                this.partReferenceModel = newRef;
-                view.remove();
-                this.referencePartView.remove();
-                this.resetReference(newRef);
-                this.addSubstitute(oldRef, newRef);
+
                 this.trigger('substitutes:update');
             },
 
             removeOptional: function() {
-                if(this.referencePartView.isSelected)
-                this.referencePartView.removeOptional();
-                this.baselineTemp.calculations.updateCalculations(this.referencePartView.attributes,+1);
+
             }
 
         });

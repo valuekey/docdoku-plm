@@ -25,11 +25,9 @@ define(
             render: function() {
                 this.$el.html(Mustache.render(template, {i18n: App.config.i18n}));
                 this.bindDom().initAttributeViews();
-                //TODO kelto: should be changed to adapt a backbone model, can't have multiple listeners
-                //this.model.setListener(this.updateAttribute)
-                //this.listenTo(this.baselineTemp.calculations,'add',this.addCalculation);
-                //this.listenTo(this.baselineTemp.calculations,'remove',this.removeCalculation);
                 this.listenTo(this.model.model,'change',this.updateAttributesViews);
+                this.listenTo(this.model.attributes,'add',this.addAttributes);
+                this.listenTo(this.model.attributes,'remove',this.removeAttribute);
 
                 return this;
             },
@@ -62,26 +60,20 @@ define(
                         attributeView.updateValue(value);
                         self.attributeViews[attribute] = attributeView;
                         self.listAttributes.append(attributeView.el);
-                        self.listenTo(attributeView,'remove',self.onRemovedView)
+                        self.listenTo(attributeView,'onRemove',self.onRemovedView)
                     } else {
-                        delete self.attributeViews[attribute].remove();
+                        self.attributeViews[attribute].remove();
+                        delete self.attributeViews[attribute]
                     }
                 });
 
-                /*
-                var attributeView = new ConfiguratorAttributeItemView({model: this.model.model}).render();
-                //this.attributeViews[calculation.cid] = attributeView;
-                this.listAttributes.append(attributeView.$el);
-                //this.listenTo(attributeView,'remove',this.onRemovedView);
-                */
             },
 
             removeAttribute: function(attribute) {
-                this.attributeViews[attribute].remove();
+                //this.attributeViews[attribute].remove();
             },
 
             updateAttribute: function (attribute) {
-                debugger;
                 var view = this.attributeViews[attribute.name];
                 if(view) {
                     view.updateValue(attribute.value);
@@ -89,7 +81,7 @@ define(
             },
 
             onRemovedView: function(attribute) {
-                this.model.model.unset(attribute.name);
+                this.model.unset(attribute);
                 //this.baselineTemp.calculations.remove(attribute.cid);
                 //might have to remove the view from the attribute
             },
@@ -114,18 +106,18 @@ define(
                 this.listSubstitutes.empty();
                 var self = this;
                 _.each(this.baselineTemp.optionals,function(option) {
-                    self.listOptionals.append('<li>'+option.get('number')+'</li>');
+                    self.listOptionals.append('<li>'+option+'</li>');
                 });
                 _.each(this.baselineTemp.substitutes,function(option, second) {
-                    self.listSubstitutes.append('<li class="substitutes"><i>'+second+'</i> > '+option.get('number')+'</li>');
+                    self.listSubstitutes.append('<li class="substitutes"><i>'+second+'</i> > '+option+'</li>');
                 });
             },
 
             onSubstituteClick: function(e) {
-                /*
+
                 delete this.baselineTemp.substitutes[$(e.target).find('i').text()];
                 this.trigger('substitutes:update');
-                */
+
             }
         });
 

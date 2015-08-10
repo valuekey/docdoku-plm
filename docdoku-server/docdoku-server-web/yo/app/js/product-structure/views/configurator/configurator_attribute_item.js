@@ -14,13 +14,13 @@ define(
             tagName: 'li',
 
             events: {
-                'click .attribute-remove': 'removeAttribute'
+                'click .attribute-remove': 'onRemove'
             },
 
             render: function () {
-                debugger;
+                //TODO kelto: bind values change to updateValue
                 this.$el.html(Mustache.render(template, {i18n: App.config.i18n, model: this.model}));
-                this.bindDOM().bindEvents();
+                this.bindDOM();
                 return this;
             },
 
@@ -37,24 +37,16 @@ define(
                 this.attributeValue.text(value);
             },
 
-            /*
-            updateName: function(calculation) {
-                this.attributeName.text(this.model.name);
-            },
-            */
-            bindEvents: function() {
-                /*
-                this.listenTo(this.model,'change:attributeName',this.updateName);
-                this.listenTo(this.model,'change:result',this.updateValue);
-                */
+
+            onRemove: function() {
+                this.trigger('onRemove',this.model.name);
             },
 
             remove: function() {
+                this.trigger('remove',this.model);
                 Backbone.View.prototype.remove.apply(this,arguments);
                 //Trigger a remove event to notify the Parent then unbind.
-                this.trigger('remove',this.model);
                 this.unbind();
-                this.configItem.removeAttribute(this.model.name);
                 return this;
             }
         });

@@ -24,8 +24,7 @@ define(
             render: function() {
                 //TODO kelto: is selected should not be set to true. Get it this info from the model
                 this.isSelected = true;
-
-                this.$el.html(Mustache.render(template, {model: this.model.getConfigItem(), i18n: App.config.i18n}));
+                this.$el.html(Mustache.render(template, {model: this.model.config_item, i18n: App.config.i18n}));
                 this.bindDom().bindEvents().renderAttributes();
 
                 return this;
@@ -37,11 +36,10 @@ define(
             },
 
             bindEvents: function() {
-                debugger;
 
-                var val = this.model.model;
                 this.listenTo(this.model.model,'change',this.renderAttributes);
-                //this.model.setListener(this.updateContent);
+                this.listenTo(this.model.attributes,'add',this.renderAttributes);
+                this.listenTo(this.model.attributes,'remove',this.renderAttributes);
                 return this;
             },
 
@@ -54,14 +52,13 @@ define(
 
             //TODO kelto: should create a view which will be removed when the calculation is destroyed.
             renderAttributes: function() {
-                debugger;
                 this.partListAttributes.empty();
                 var self = this;
-                _.each(this.model.getValues(),function(value, name) {
-                    var html = '<li>'+name+' : '+ value;
-                    if(self.model.getReference()) {
-                        debugger;
-                        var diff = value - self.model.getReference().getValues()[name];
+                _.each(this.model.attributes.models,function(attribute) {
+                    var name = attribute.get('name');
+                    var html = '<li>'+name+' : '+ self.model.model.get(name);
+                    if(self.model.reference) {
+                        var diff = self.model.model.get(name) - self.model.reference.model.get(name);
                         html+= '<span style="color: ';
                         if(diff < 0) {
                             html += 'red"> ( '+diff;
@@ -91,7 +88,7 @@ define(
             },
 
             onClick: function(e) {
-                if(!this.isSubstitute && this.model.isOptional()) {
+                if(!this.isSubstitute && this.model.config_item.optional) {
                     if(this.isSelected) {
                         this.isSelected = false;
                         this.$el.fadeTo('fast',0.33);

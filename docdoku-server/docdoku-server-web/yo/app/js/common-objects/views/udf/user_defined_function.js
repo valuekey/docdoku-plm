@@ -106,7 +106,7 @@ define([
         displayCalculations: function() {
             var self = this;
             if(this.configItem) {
-                _.each(this.configItem.getAttributes(), function(attribute) {
+                _.each(this.configItem.attributes, function(attribute) {
                     self.createCalculationView();
                 });
             }
@@ -185,21 +185,12 @@ define([
             if(! this.configItem) {
                 this.configItem = new ConfiguratorItem(pRootComponent.first().attributes, {},[],null);
             }
-
-            this.configItem.attributes.length = 0;
-            var seen = {};
             _.each(this.calculationViews,function(calculation) {
                 calculation.model = self.configItem;
-                //filter to remove duplicate
-                //TODO kelto: should add operation property to the filter
-                if(!seen.hasOwnProperty(calculation.getAttributeName())) {
-                    self.configItem.attributes.push(calculation.getAttributeName());
-                    seen[calculation.getAttributeName()] = true;
-                }
-
+                self.configItem.attributes.add({id: calculation.getAttributeName(),name: calculation.getAttributeName()});
             });
             this.configItem.construct();
-            debugger;
+
             _.each(calculationViews,function(view){
                 view.onEnd();
             });
