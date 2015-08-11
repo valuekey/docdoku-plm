@@ -69,24 +69,33 @@ define([
             //delete this.substitutes[newChild.path];
 
             //TODO kelto: should we update the children ?
-            //this.parent.children[newChild.path] = toChild;
-            //delete this.parent.children[oldChild.path];
+            this.parent.children[toChild.config_item.path] = toChild;
+            delete this.parent.children[toOrphan.config_item.path];
 
-            var oldValue = toOrphan.values;
-            this.parent.sumUpdate(toChild,oldValue);
+            this.parent.sumUpdate(toChild.values,toOrphan.values);
 
             return this;
         };
 
-        this.sumUpdate = function(child,oldValue) {
+        this.setOptional = function() {
+            delete this.parent.children[this.config_item.path];
+            this.parent.sumUpdate({},this.values);
+        };
+
+        this.unsetOptional = function() {
+            this.parent.children[this.config_item.path] = this;
+            this.parent.sumUpdate(this.values,{});
+        };
+
+        this.sumUpdate = function(newValues,oldValue) {
             var self = this;
             var old = _.clone(this.values);
             _.each(this.attributes.models, function(attribute) {
-                self.values[attribute.get('name')] -= oldValue[attribute.get('name')];
-                self.values[attribute.get('name')] += child.values[attribute.get('name')];
+                self.values[attribute.get('name')] -= oldValue[attribute.get('name')] || 0;
+                self.values[attribute.get('name')] += newValues[attribute.get('name')] || 0;
             });
             if(parent) {
-                parent.sumUpdate(this,old);
+                parent.sumUpdate(this.values,old);
             }
             this.model.set(this.values);
         };

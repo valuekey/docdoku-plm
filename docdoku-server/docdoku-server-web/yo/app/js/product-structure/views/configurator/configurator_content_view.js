@@ -138,7 +138,9 @@ define(
             referenceClicked: function(referenceView) {
                 if(referenceView.isSelected) {
                     this.baselineTemp.optionals.push(referenceView.model.config_item.path);
+                    referenceView.model.setOptional();
                 } else {
+                    referenceView.model.unsetOptional();
                     var index = this.indexOfComponent(this.baselineTemp.optionals,referenceView.model.config_item);
                     index = _.indexOf(this.baselineTemp.optionals,referenceView.model.config_item.path);
                     this.baselineTemp.optionals.splice(index,1);
@@ -161,6 +163,7 @@ define(
             removeOptional: function() {
                 var index = _.indexOf(this.baselineTemp.optionals, this.referencePartView.model.config_item.path);
                 if(index > -1) {
+                    this.model.map[this.baselineTemp.optionals[index]].unsetOptional();
                     this.baselineTemp.optionals.splice(index,1);
                 }
             }
