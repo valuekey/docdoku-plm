@@ -73,7 +73,6 @@ define([
         },
 
         onEnd:function(){
-            debugger;
             var val =  this.model.model.get(this.getAttributeName());
             val = this.$operator.val() === 'SUM' ? val : val / ((this.model.getVisitedAssemblies() + this.model.getVisitedInstances()) || 0);
             this.$memo.text(val);
