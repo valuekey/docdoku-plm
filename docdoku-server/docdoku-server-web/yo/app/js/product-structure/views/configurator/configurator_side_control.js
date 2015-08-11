@@ -12,7 +12,8 @@ define(
         var ConfiguratorSideControl = Backbone.View.extend({
 
             events: {
-                'click .substitutes': 'onSubstituteClick'
+                'click .substitutes': 'onSubstituteClick',
+                'click #create_baseline': 'create_baseline'
             },
 
             initialize: function() {
@@ -106,7 +107,7 @@ define(
                 this.listSubstitutes.empty();
                 var self = this;
                 _.each(this.baselineTemp.optionals,function(option) {
-                    self.listOptionals.append('<li>'+option+'</li>');
+                    self.listOptionals.append('<li class="optionals">'+option+'</li>');
                 });
                 _.each(this.baselineTemp.substitutes,function(option, second) {
                     self.listSubstitutes.append('<li class="substitutes"><i>'+second+'</i> > '+option+'</li>');
@@ -118,6 +119,35 @@ define(
                 delete this.baselineTemp.substitutes[$(e.target).find('i').text()];
                 this.trigger('substitutes:update');
 
+            },
+
+            create_baseline: function() {
+                var url = App.config.contextPath + '/api/workspaces/' + App.config.workspaceId + '/products';
+                debugger;
+                var data = {
+                    baselinedParts: [],
+                    description: this.$('#inputBaselineDescription').val(),
+                    name: this.$('#inputBaselineName').val(),
+                    optionalUsageLinks: this.baselineTemp.optionals,
+                    substituteLinks: _.values(this.baselineTemp.substitutes),
+                    type: "LATEST"
+                };
+                var callbacks = {
+                    success: function() {
+                        console.log('yeaaaaah');
+                    },
+                    error: function() {
+                        console.log('aaaargh');
+                    }
+                };
+                return $.ajax({
+                    type: 'POST',
+                    url: url + '/' + App.config.productId + '/baselines',
+                    data: JSON.stringify(data),
+                    contentType: 'application/json; charset=utf-8',
+                    success: callbacks.success,
+                    error: callbacks.error
+                });
             }
         });
 
