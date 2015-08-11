@@ -99,7 +99,7 @@ define(
                     configItem = this.model.map[reference.path];
                 }
                 var isSelected = _.indexOf(this.baselineTemp.optionals, configItem.config_item.path) === -1;
-                this.referencePartView = new ConfiguratorPartView({model: configItem,collection: this.baselineTemp.calculations, isSubstitute: false, isSelected: isSelected});
+                this.referencePartView = new ConfiguratorPartView({model: configItem, isSubstitute: false, isSelected: isSelected});
                 this.referencePartView.render();
                 this.referencePartView.setReference();
                 this.partReference.html(this.referencePartView.$el);
