@@ -18,14 +18,14 @@ define(
             initialize: function() {
                 this.constructor.__super__.initialize.apply(this,arguments);
                 this.isSubstitute = this.options.isSubstitute;
+                this.isSelected = this.options.isSelected === undefined ? true : this.options.isSelected;
                 _.bindAll(this);
             },
 
             render: function() {
                 //TODO kelto: is selected should not be set to true. Get it this info from the model
-                this.isSelected = true;
                 this.$el.html(Mustache.render(template, {model: this.model.config_item, i18n: App.config.i18n}));
-                this.bindDom().bindEvents().renderAttributes();
+                this.bindDom().bindEvents().activateOptional().renderAttributes();
 
                 return this;
             },
@@ -40,6 +40,12 @@ define(
                 this.listenTo(this.model.model,'change',this.renderAttributes);
                 this.listenTo(this.model.attributes,'add',this.renderAttributes);
                 this.listenTo(this.model.attributes,'remove',this.renderAttributes);
+                return this;
+            },
+
+            activateOptional: function() {
+                this.$el.toggleClass('configurator_fade',!this.isSelected);
+
                 return this;
             },
 
@@ -89,13 +95,6 @@ define(
 
             onClick: function(e) {
                 if(!this.isSubstitute && this.model.config_item.optional) {
-                    if(this.isSelected) {
-                        this.isSelected = false;
-                        this.$el.fadeTo('fast',0.33);
-                    } else {
-                        this.isSelected = true;
-                        this.$el.fadeTo('fast',1);
-                    }
                     this.trigger('part-view:optionalToggle',this);
                 } else {
                     this.trigger('part-view:substituteToggle',this);
