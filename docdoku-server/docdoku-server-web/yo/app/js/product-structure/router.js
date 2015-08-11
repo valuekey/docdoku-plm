@@ -59,6 +59,9 @@ function (Backbone, singletonDecorator) {
         configurator: function(workspaceId, productId, configSpecType) {
             App.config.configSpec = configSpecType;
             App.appView.configuratorMode();
+            App.appView.once('app:ready',function() {
+                App.partsTreeView.$el.trigger('load:root');
+            });
         },
 
         updateRoute: function (context) {

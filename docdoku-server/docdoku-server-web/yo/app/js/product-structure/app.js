@@ -123,15 +123,29 @@ define([
             App.partsTreeView = new PartsTreeView({resultPathCollection: App.searchView.collection}).render();
             App.bomView = new BomView().render();
             App.configuratorView = new ConfiguratorView({el: this.configuratorContainer}).render();
-            this.listenTo(App.configuratorView,'rendered',this.configuratorRendered);
             App.baselineSelectView = new BaselineSelectView({el: '#config_spec_container'}).render();
 
             this.bomControls.append(App.bomView.bomHeaderView.$el);
 
             this.listenEvents();
 
+            this.loaded = 0;
+            var self = this;
+            //TODO kelto: should refactor into function or other way around
             App.partsTreeView.once('collection:fetched',function(){
-                App.appView.trigger('app:ready');
+                self.loaded += 1;
+                if(self.loaded === 2) {
+                    App.appView.trigger('app:ready');
+
+                }
+            });
+            App.configuratorView.once('rendered',function(){
+                self.loaded += 1;
+                if(self.loaded === 2) {
+                    self.configuratorRendered();
+                    App.appView.trigger('app:ready');
+
+                }
             });
 
             return this;
@@ -191,8 +205,6 @@ define([
             this.bomModeButton.removeClass('active');
             this.sceneModeButton.addClass('active');
             App.sceneManager.onContainerShown();
-            this.sceneModeButton.removeClass('active');
-            this.configuratorModeButton.addClass('active');
             this.configuratorModeButton.removeClass('active');
         },
 
@@ -200,6 +212,8 @@ define([
             this.$contentContainer.attr('class','configurator-mode');
             this.$productMenu.attr('class','bom-mode');
             this.bomModeButton.removeClass('active');
+            this.sceneModeButton.removeClass('active');
+            this.configuratorModeButton.addClass('active');
         },
 
         listenEvents: function () {
