@@ -25,7 +25,7 @@ define(
 
             render: function() {
                 this.$el.html(Mustache.render(template, {i18n: App.config.i18n}));
-                this.bindDom().initAttributeViews();
+                this.bindDom();
                 this.listenTo(this.model.model,'change',this.updateAttributesViews);
                 this.listenTo(this.model.attributes,'add',this.addAttributes);
                 this.listenTo(this.model.attributes,'remove',this.removeAttribute);
@@ -37,19 +37,6 @@ define(
                 this.listAttributes = this.$('#control-list-attributes');
                 this.listOptionals = this.$('#control-list-optionals');
                 this.listSubstitutes = this.$('#control-list-substitutes');
-                return this;
-            },
-
-
-            initAttributeViews: function() {
-
-                _.each(this.baselineTemp.calculations.models, function(calculation) {
-                    var attributeView = new ConfiguratorAttributeItemView({model: calculation}).render();
-                    this.attributeViews[calculation.cid] = attributeView;
-                    this.listAttributes.append(attributeView.el);
-                });
-
-
                 return this;
             },
 

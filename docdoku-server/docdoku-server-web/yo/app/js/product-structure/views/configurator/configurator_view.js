@@ -18,23 +18,13 @@ define(
 
             render: function() {
                 this.$el.html(Mustache.render(template, {model: this.model, i18n: App.config.i18n}));
-                var Calculations = Backbone.Collection.extend({
-                    model: Calculation,
 
-                    updateCalculations: function(attributes, updateNumber) {
-                        _.each(this.models, function(calculation) {
-                            var diff = attributes[calculation.getAttributeName()] || 0;
-                            calculation.update(diff,updateNumber);
-                        });
-                    }
-                });
-                this.calculations = new Calculations();
                 //TODO kelto: just for prototype should move that.
                 var FullCollection = ComponentModule.Collection.extend({
                     url: function () {
                         var path = this.path;
 
-                        var url = this.urlBase() + '/filter?configSpec=' + App.config.configSpec + '&depth=1';
+                        var url = this.urlBase() + '/filter?configSpec=latest&depth=1';
 
                         if (path) {
                             url += '&path=' + path;
@@ -87,8 +77,7 @@ define(
                     self.baselineTemp = {
                         parts: self.baselineTempCollection,
                         substitutes: {},
-                        optionals: [],
-                        calculations: self.calculations
+                        optionals: []
                     };
                     self.bindDOM()
                         .renderHeader()
