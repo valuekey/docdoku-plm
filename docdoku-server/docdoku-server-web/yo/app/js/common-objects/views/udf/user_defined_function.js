@@ -182,14 +182,20 @@ define([
 
             var self = this;
             var calculationViews = this.calculationViews;
+            var isNew = false;
             if(! this.configItem) {
                 this.configItem = new ConfiguratorItem(pRootComponent.first().attributes, {},[],null);
+                isNew = true;
             }
             _.each(this.calculationViews,function(calculation) {
                 calculation.model = self.configItem;
                 self.configItem.attributes.add({id: calculation.getAttributeName(),name: calculation.getAttributeName()});
             });
-            this.configItem.construct();
+            if(isNew) {
+                this.configItem.construct();
+            } else {
+                this.configItem.calculate();
+            }
 
             _.each(calculationViews,function(view){
                 view.onEnd();
