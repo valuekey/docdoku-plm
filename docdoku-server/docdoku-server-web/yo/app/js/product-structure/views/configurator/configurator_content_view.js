@@ -92,17 +92,14 @@ define(
                 var path = this.baselineTemp.substitutes[reference.path];
                 if(path) {
                     configItem = this.model.map[path];
-                    var index = -1;
-                    _.some(this.substitutes, function(substitute,i) {
-                        index = i;
-                        return substitute.path === path;
-                    });
+                    var index = this.indexOfComponent(this.substitutes, configItem.config_item);
                     this.substitutes.splice(index,1);
                     this.substitutes.push(reference);
                 } else {
                     configItem = this.model.map[reference.path];
                 }
-                this.referencePartView = new ConfiguratorPartView({model: configItem,collection: this.baselineTemp.calculations, isSubstitute: false});
+                var isSelected = _.indexOf(this.baselineTemp.optionals, configItem.config_item.path) === -1;
+                this.referencePartView = new ConfiguratorPartView({model: configItem,collection: this.baselineTemp.calculations, isSubstitute: false, isSelected: isSelected});
                 this.referencePartView.render();
                 this.referencePartView.setReference();
                 this.partReference.html(this.referencePartView.$el);
@@ -125,21 +122,32 @@ define(
 
             },
 
+            indexOfComponent: function(array,component) {
+                var index = -1;
+                _.some(array, function(item,i) {
+                    if(item.path === component.path) {
+                        index = i;
+                        return true;
+                    }
+                    return false;
+                });
+
+                return index;
+            },
+
             referenceClicked: function(referenceView) {
                 if(referenceView.isSelected) {
-                    this.baselineTemp.parts.add(referenceView.model);
-                    this.baselineTemp.optionals.splice(this.baselineTemp.optionals.indexOf(referenceView.model));
-                    this.baselineTemp.calculations.updateCalculations(referenceView.attributes,+1);
+                    this.baselineTemp.optionals.push(referenceView.model.config_item.path);
                 } else {
-                    this.baselineTemp.parts.remove(referenceView.model);
-                    this.baselineTemp.optionals.push(referenceView.model);
-                    this.baselineTemp.calculations.updateCalculations(referenceView.attributes,-1);
+                    var index = this.indexOfComponent(this.baselineTemp.optionals,referenceView.model.config_item);
+                    index = _.indexOf(this.baselineTemp.optionals,referenceView.model.config_item.path);
+                    this.baselineTemp.optionals.splice(index,1);
                 }
                 this.trigger('optionals:update');
             },
 
             substituteClick: function(view) {
-
+                this.removeOptional();
                 this.referencePartView.model.swap(view.model,this.referencePartView.model);
                 if(view.model.config_item.substitute) {
                     this.baselineTemp.substitutes[this.partReferenceModel.path] = view.model.config_item.path;
@@ -151,7 +159,10 @@ define(
             },
 
             removeOptional: function() {
-
+                var index = _.indexOf(this.baselineTemp.optionals, this.referencePartView.model.config_item.path);
+                if(index > -1) {
+                    this.baselineTemp.optionals.splice(index,1);
+                }
             }
 
         });
