@@ -17,7 +17,8 @@ define([
     var Configurator_item = function(config_item,map, attributes, parent) {
 
         this.children = {};
-        this.substitutes = [];
+        this.substitutes = {};
+        this.orphans = {};
         this.config_item = config_item;
         this.values = {};
         this.attributesValues = {};
@@ -34,7 +35,7 @@ define([
             this.config_item.components.length > 0 ? this.visitedAssemblies += this.config_item.amount : this.visitedInstances += this.config_item.amount;
             this.map[config_item.path] = this;
             var self = this;
-            //TODO kelto: should do that in constructor
+            //TODO kelto: could refactor that with calculate
             _.each(this.config_item.attributes, function (attribute) {
                 if (attribute.type === 'NUMBER') {
                     self.attributesValues[attribute.name] = parseFloat(attribute.value);
@@ -56,21 +57,61 @@ define([
             _.each(this.substitutes, function (substitute) {
                 substitute.construct();
             });
+            _.each(this.orphans, function(orphan) {
+                orphan.construct();
+            });
 
             return this;
         };
 
+        this.calculate = function() {
+            var self = this;
+            //TODO kelto: should do that in constructor
+            _.each(this.config_item.attributes, function (attribute) {
+                if (attribute.type === 'NUMBER') {
+                    self.attributesValues[attribute.name] = parseFloat(attribute.value);
+                }
+            });
+            _.each(this.attributes.models, function(attribute) {
+                self.values[attribute.get('name')] = (self.attributesValues[attribute.get('name')] || 0 ) * self.config_item.amount;
+            });
+            _.each(this.children, function (child) {
+                child.calculate();
+                _.each(self.attributes.models, function (attribute) {
+                    self.addChildValues(child, attribute.get('name'));
+                });
+            });
 
+            //should always set the model before the substitutes: the reference should be fully initialized to be use.
+            this.model.set(this.values);
+            _.each(this.substitutes, function (substitute) {
+                substitute.calculate();
+            });
+            _.each(this.orphans, function(orphan) {
+                orphan.calculate();
+            });
+
+            return this;
+        };
 
         this.swap = function (toChild, toOrphan) {
 
-            //TODO kelto: should we update the substitutes ?
-            //this.substitutes[oldChild.path] = toOrphan;
-            //delete this.substitutes[newChild.path];
+            var childPath = toChild.config_item.path;
+            var orphanPath = toOrphan.config_item.path;
+
+            this.substitutes[orphanPath] = toOrphan;
+            delete this.substitutes[childPath];
 
             //TODO kelto: should we update the children ?
-            this.parent.children[toChild.config_item.path] = toChild;
-            delete this.parent.children[toOrphan.config_item.path];
+            this.parent.children[childPath] = toChild;
+            delete this.parent.children[orphanPath];
+            toChild.reference = toChild;
+            _.each(this.substitutes, function(substitute) {
+                substitute.reference = toChild;
+            });
+            var emptySubstitutes = toChild.substitutes;
+            toChild.substitutes = toOrphan.substitutes;
+            toOrphan.substitutes = emptySubstitutes;
 
             this.parent.sumUpdate(toChild.values,toOrphan.values);
 
@@ -79,6 +120,7 @@ define([
 
         this.setOptional = function() {
             delete this.parent.children[this.config_item.path];
+            this.parent.orphans[this.config_item.path] = this;
             this.parent.sumUpdate({},this.values);
         };
 
@@ -121,10 +163,9 @@ define([
         this.getSubstitute = function(substitute) {
             if(!this.map[substitute.path]) {
                 this.map[substitute.path] = new Configurator_item(substitute,this.map,this.attributes,this.parent).construct();
-                this.substitutes.push(this.map[substitute.path]);
+                this.substitutes[substitute.path] = this.map[substitute.path];
+                this.map[substitute.path].reference = this;
             }
-
-            this.map[substitute.path].reference = this;
 
             return this.map[substitute.path];
         };
