@@ -18,7 +18,7 @@
         display: inline-block;
     }
 
-    .dmu-controls,.bom-controls,#side_controls_container,#scene_container,#bom_table_container{
+    .dmu-controls,.bom-controls,#side_controls_container,#scene_container,#bom_table_container, #configurator_container, .configurator-controls{
         display: none;
     }
 
@@ -27,10 +27,6 @@
     }
 
     .path_to_path_link{
-        display: inline-block;
-    }
-
-    .configurator-controls {
         display: inline-block;
     }
 
@@ -48,6 +44,14 @@
         }
         .dmu-controls{
             display: inline;
+        }
+    }
+    &.configurator-mode{
+        #configurator_container {
+            display: block;
+        }
+        .configurator-controls {
+            display: inline-block;
         }
     }
 
