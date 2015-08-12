@@ -65,6 +65,8 @@ define([
         };
 
         this.calculate = function() {
+            this.resetValues();
+            this.config_item.components.length > 0 ? this.visitedAssemblies += this.config_item.amount : this.visitedInstances += this.config_item.amount;
             var self = this;
             //TODO kelto: should do that in constructor
             _.each(this.config_item.attributes, function (attribute) {
