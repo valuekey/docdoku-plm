@@ -36,7 +36,9 @@
                 <div class="controls">
                     <div class="calculations"></div>
                     <button type="button" class="btn btn-info add-calculation">{{i18n.ADD_CALCULATION}}</button>
+                    {{^configurator}}
                     <button class="btn btn-primary run-udf" aria-hidden="true">{{i18n.RUN}}</button>
+                    {{/configurator}}
                 </div>
             </div>
 
@@ -45,6 +47,9 @@
     </div>
 
     <div class="modal-footer">
+        {{#configurator}}
+        <button class="btn btn-primary" id="save">{{i18n.SAVE}}</button>
+        {{/configurator}}
         <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">{{i18n.CLOSE}}</button>
     </div>
 

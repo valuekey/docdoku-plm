@@ -44,7 +44,8 @@ define(
                 var self = this;
                 _.each(this.model.model.changedAttributes(),function(value,attribute) {
                     if(self.model.model.has(attribute,value) ) {
-                        var attributeView = self.attributeViews[attribute] ||new ConfiguratorAttributeItemView({model: {name: attribute, value: value}}).render();
+                        var operators = self.model.attributes.get(attribute).get('operators');
+                        var attributeView = self.attributeViews[attribute] ||new ConfiguratorAttributeItemView({model: {name: attribute, value: value, operator: operators}}).render();
                         attributeView.updateValue(value);
                         self.attributeViews[attribute] = attributeView;
                         self.listAttributes.append(attributeView.el);

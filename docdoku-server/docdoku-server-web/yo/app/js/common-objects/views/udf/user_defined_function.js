@@ -18,7 +18,8 @@ define([
             'submit #user_defined_function_form':'run',
             'change .user-defined-product-select':'fetchValues',
             'change .user-defined-type-select':'fetchValues',
-            'click .add-calculation':'addCalculation'
+            'click .add-calculation':'addCalculation',
+            'click #save': 'onSave'
         },
 
         initialize: function () {
@@ -178,6 +179,11 @@ define([
             return false;
         },
 
+        onSave: function() {
+            this.doUDF();
+            this.closeModal();
+        },
+
         doUDF:function(pRootComponent){
 
             var self = this;
@@ -187,9 +193,18 @@ define([
                 this.configItem = new ConfiguratorItem(pRootComponent.first().attributes, {},[],null);
                 isNew = true;
             }
+
             _.each(this.calculationViews,function(calculation) {
                 calculation.model = self.configItem;
-                self.configItem.attributes.add({id: calculation.getAttributeName(),name: calculation.getAttributeName()});
+                var attributeName = calculation.getAttributeName();
+                if(self.configItem.attributes.get(attributeName)) {
+                    self.configItem.attributes.get(attributeName).get('operators').push(calculation.getOperator());
+                    self.configItem.attributes.get(attributeName).trigger('change');
+                } else {
+                    var model =  {id: attributeName, name: attributeName, operators: [calculation.getOperator()]};
+                    self.configItem.attributes.add(model);
+                }
+
             });
             if(isNew) {
                 this.configItem.construct();
