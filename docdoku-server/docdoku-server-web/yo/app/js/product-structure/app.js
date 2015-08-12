@@ -139,6 +139,7 @@ define([
 
                 }
             });
+            //TODO kelto: should change name of the event
             App.configuratorView.once('rendered',function(){
                 self.loaded += 1;
                 if(self.loaded === 2) {
@@ -191,28 +192,45 @@ define([
             });
         },
 
+        changeMode: function() {
+            this.resetMode();
+            switch (App.config.mode) {
+                case App.router.mode.Bom:
+                    this.bomMode();
+                    break;
+                case App.router.mode.Scene:
+                    this.sceneMode();
+                    break;
+                case App.router.mode.Configurator:
+                    this.configuratorMode();
+                    break;
+            }
+        },
+
+        resetMode: function() {
+            this.$contentContainer.attr('class', '');
+            this.$productMenu.attr('class', '');
+            this.bomModeButton.removeClass('active');
+            this.sceneModeButton.removeClass('active');
+            this.configuratorModeButton.removeClass('active');
+        },
+
         bomMode: function () {
             this.$contentContainer.attr('class', 'bom-mode');
             this.$productMenu.attr('class', 'bom-mode');
             this.bomModeButton.addClass('active');
-            this.sceneModeButton.removeClass('active');
-            this.configuratorModeButton.removeClass('active');
         },
 
         sceneMode: function () {
             this.$contentContainer.attr('class', 'scene-mode');
             this.$productMenu.attr('class', 'scene-mode');
-            this.bomModeButton.removeClass('active');
             this.sceneModeButton.addClass('active');
             App.sceneManager.onContainerShown();
-            this.configuratorModeButton.removeClass('active');
         },
 
         configuratorMode: function () {
             this.$contentContainer.attr('class','configurator-mode');
             this.$productMenu.attr('class','bom-mode');
-            this.bomModeButton.removeClass('active');
-            this.sceneModeButton.removeClass('active');
             this.configuratorModeButton.addClass('active');
         },
 
@@ -282,7 +300,11 @@ define([
         },
 
         configuratorButton: function () {
-            App.router.navigate(App.config.workspaceId + '/' + App.config.productId + '/config-spec/' + App.config.configSpec + '/configurator', {trigger: true});
+            debugger;
+            if(App.config.productConfigSpec === 'wip') {
+                App.config.productConfigSpec = 'latest';
+            }
+            App.router.navigate(App.config.workspaceId + '/' + App.config.productId + '/config-spec/' + App.config.productConfigSpec + '/configurator', {trigger: true});
         },
 
         bomButton: function () {

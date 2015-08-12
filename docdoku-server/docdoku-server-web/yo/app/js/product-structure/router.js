@@ -16,6 +16,12 @@ function (Backbone, singletonDecorator) {
             ':workspaceId/:productId/config-spec/:configSpecType/configurator': 'configurator'
         },
 
+        mode: {
+            Configurator: 'Configurator',
+            Bom: 'Bom',
+            Scene: 'Scene'
+        },
+
         defaults: function (workspaceId, productId, configSpecType) {
             if(!configSpecType){
                 configSpecType = 'wip';
@@ -25,7 +31,8 @@ function (Backbone, singletonDecorator) {
 
         scene:function(workspaceId, productId, configSpecType, camera, target, up){
             App.config.productConfigSpec = configSpecType;
-            App.appView.sceneMode();
+            App.config.mode = this.mode.Scene;
+            App.appView.changeMode();
             if (camera && target && up) {
                 var c = camera.split(';');
                 var t = target.split(';');
@@ -39,16 +46,18 @@ function (Backbone, singletonDecorator) {
         },
 
         bom:function(workspaceId, productId, configSpecType){
+            App.config.mode = this.mode.Bom;
             App.config.productConfigSpec = configSpecType;
-            App.appView.bomMode();
+            App.appView.changeMode();
             App.appView.once('app:ready',function() {
                 App.partsTreeView.$el.trigger('load:root');
             });
         },
 
         joinCollaborative: function (workspaceId, productId, configSpecType,  key) {
+            App.config.mode = this.mode.Scene;
             App.config.productConfigSpec = configSpecType;
-            App.appView.sceneMode();
+            App.appView.changeMode();
             if (!App.collaborativeView.isMaster) {
                 App.appView.once('app:ready',function(){
                     App.collaborativeController.sendJoinRequest(key);
@@ -57,8 +66,10 @@ function (Backbone, singletonDecorator) {
         },
 
         configurator: function(workspaceId, productId, configSpecType) {
-            App.config.configSpec = configSpecType;
-            App.appView.configuratorMode();
+            //You can not be in wip in the configurator
+            App.config.configSpec = configSpecType === 'wip' ? 'latest' : configSpecType;
+            App.config.mode = this.mode.Configurator;
+            App.appView.changeMode();
             App.appView.once('app:ready',function() {
                 App.partsTreeView.$el.trigger('load:root');
             });
