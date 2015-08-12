@@ -75,7 +75,6 @@ define(
 
                     //TODO kelto: should have an array of baselineTemp.
                     self.baselineTemp = {
-                        parts: self.baselineTempCollection,
                         substitutes: {},
                         optionals: []
                     };
