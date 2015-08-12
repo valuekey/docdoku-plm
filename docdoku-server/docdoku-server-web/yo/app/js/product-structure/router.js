@@ -22,6 +22,8 @@ function (Backbone, singletonDecorator) {
             Scene: 'Scene'
         },
 
+        availableConfiguratorConfig: ['latest','latest-released'],
+
         defaults: function (workspaceId, productId, configSpecType) {
             if(!configSpecType){
                 configSpecType = 'wip';
@@ -66,8 +68,7 @@ function (Backbone, singletonDecorator) {
         },
 
         configurator: function(workspaceId, productId, configSpecType) {
-            //You can not be in wip in the configurator
-            App.config.configSpec = configSpecType === 'wip' ? 'latest' : configSpecType;
+            App.config.configSpec = _.contains(this.availableConfiguratorConfig,configSpecType) ? configSpecType : 'latest';
             App.config.mode = this.mode.Configurator;
             App.appView.changeMode();
             App.appView.once('app:ready',function() {

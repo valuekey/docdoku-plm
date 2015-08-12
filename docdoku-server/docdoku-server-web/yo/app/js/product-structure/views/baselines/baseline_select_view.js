@@ -29,6 +29,7 @@ define([
             this.productInstanceCollection = new ProductInstances({},{productId : App.config.productId});
             this.listenToOnce(this.productInstanceCollection,'reset',this.onProductInstanceCollectionReset);
             this.showSubstitutes = true;
+            _.bindAll(this);
 		},
 
 		render:function(){
@@ -74,8 +75,6 @@ define([
                 }
             },this);
 
-            this.$selectConfSpec.find('[value="baseline"]').prop('disabled',!this.baselineCollection.size());
-
             if(selected){
                 this.$selectConfSpec.val('baseline');
                 this.$selectProdInstSpec.hide();
@@ -84,6 +83,7 @@ define([
                 this.$divergeSwitchContainer.hide();
                 this.setDescription(selected.getDescription());
             }
+            this.onChangedMode();
 		},
 
         onProductInstanceCollectionReset:function(){
@@ -105,6 +105,32 @@ define([
                 this.$selectProdInstSpec.val('pi-'+selected.getSerialNumber()).show();
                 this.setDescription('');
             }
+        },
+
+        onChangedMode: function() {
+            switch (App.config.mode) {
+                case App.router.mode.Bom:
+                case App.router.mode.Scene:
+                    this.defaultMode();
+                    break;
+                case App.router.mode.Configurator:
+                    this.configuratorMode();
+                    break;
+
+                default:
+                    throw 'This mode does not exist';
+            }
+        },
+
+        configuratorMode: function() {
+            this.$selectConfSpec.find('[value="baseline"]').prop('disabled',true);
+            this.$selectLatestFilter.find('[value="wip"]').prop('disabled',true);
+            this.$selectLatestFilter.val(App.config.configSpec);
+        },
+
+        defaultMode: function() {
+            this.$selectConfSpec.find('[value="baseline"]').prop('disabled',!this.baselineCollection.size());
+            this.$selectLatestFilter.find('[value="wip"]').prop('disabled',false);
         },
 
         onTypeChanged:function(){

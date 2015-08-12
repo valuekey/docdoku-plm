@@ -193,6 +193,7 @@ define([
         },
 
         changeMode: function() {
+            this.trigger('mode:change');
             this.resetMode();
             switch (App.config.mode) {
                 case App.router.mode.Bom:
@@ -236,6 +237,7 @@ define([
 
         listenEvents: function () {
             App.baselineSelectView.on('config_spec:changed', this.onConfigSpecChange, this);
+            App.baselineSelectView.listenTo(this,'mode:change', App.baselineSelectView.onChangedMode)
             Backbone.Events.on('object:selected', this.onObjectSelected, this);
             Backbone.Events.on('selection:reset', this.onResetSelection, this);
             Backbone.Events.on('part:saved', this.refreshTree, this);
@@ -300,10 +302,7 @@ define([
         },
 
         configuratorButton: function () {
-            debugger;
-            if(App.config.productConfigSpec === 'wip') {
-                App.config.productConfigSpec = 'latest';
-            }
+            App.config.productConfigSpec = _.contains(App.router.availableConfiguratorConfig,App.config.productConfigSpec) ? App.config.productConfigSpec : 'latest';
             App.router.navigate(App.config.workspaceId + '/' + App.config.productId + '/config-spec/' + App.config.productConfigSpec + '/configurator', {trigger: true});
         },
 
@@ -414,6 +413,7 @@ define([
             App.instancesManager.clear();
             App.partsTreeView.refreshAll();
             this.updateBom();
+            this.updateConfigurator();
         },
 
         onObjectSelected: function (object) {
