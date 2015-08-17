@@ -83,10 +83,7 @@ define(
                     optional.getPartLinks(partLinks);
 
                     var template = $(Mustache.render(linkTemplate, {number: optional.config_item.number}));
-                    self.addPopover(template.next(), Mustache.render(pathTemplate, {
-                        i18n: App.config.i18n,
-                        partLinks:partLinks
-                    }));
+                    self.addPopover(template.next(), partLinks);
                     template.first().click({option: option, ref: ref},onRemoveCallback);
                     list.push(template);
                 });
@@ -99,11 +96,16 @@ define(
 
             },
 
-            addPopover: function(node,template) {
+            addPopover: function(node,partLinks) {
+                var popoverTemplate = $(Mustache.render(pathTemplate, {
+                    i18n: App.config.i18n,
+                    partLinks:partLinks
+                }));
+                popoverTemplate.find('i.fa-long-arrow-right').last().remove();
                 node.popover({
                     title: '<b> Links </b>',
                     html: true,
-                    content: template,
+                    content: popoverTemplate,
                     trigger: 'manual',
                     placement: 'left',
                     container: '#configurator_container',
