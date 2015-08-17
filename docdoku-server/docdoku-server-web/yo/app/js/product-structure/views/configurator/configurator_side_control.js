@@ -4,8 +4,10 @@ define(
         'backbone',
         'mustache',
         'text!templates/configurator/configurator_side_control.html',
-        'views/configurator/configurator_attribute_item'
-    ], function (Backbone, Mustache, template, ConfiguratorAttributeItemView) {
+        'views/configurator/configurator_attribute_item',
+        'text!common-objects/templates/path/path.html',
+        'text!templates/configurator/configurator_link.html'
+    ], function (Backbone, Mustache, template, ConfiguratorAttributeItemView, pathTemplate,linkTemplate) {
 
         'use strict';
 
@@ -25,9 +27,9 @@ define(
 
             render: function() {
                 this.$el.html(Mustache.render(template, {i18n: App.config.i18n}));
-                this.bindDom();
-                this.listenTo(this.model.model,'change',this.updateAttributesViews);
-                this.listenTo(this.model.attributes,'add',this.addAttributes);
+                this.bindDom().renderConfig();
+
+                this.listenTo(this.model.attributes,'add',this.addAttribute);
                 this.listenTo(this.model.attributes,'remove',this.removeAttribute);
 
                 return this;
@@ -40,39 +42,21 @@ define(
                 return this;
             },
 
-            updateAttributesViews: function() {
-                var self = this;
-                _.each(this.model.model.changedAttributes(),function(value,attribute) {
-                    if(self.model.model.has(attribute,value) ) {
-                        var operators = self.model.attributes.get(attribute).get('operators');
-                        var attributeView = self.attributeViews[attribute] ||new ConfiguratorAttributeItemView({model: {name: attribute, value: value, operator: operators}}).render();
-                        attributeView.updateValue(value);
-                        self.attributeViews[attribute] = attributeView;
-                        self.listAttributes.append(attributeView.el);
-                        self.listenTo(attributeView,'onRemove',self.onRemovedView)
-                    } else {
-                        self.attributeViews[attribute].remove();
-                        delete self.attributeViews[attribute]
-                    }
-                });
+            addAttribute: function(attribute) {
 
+                var attributeView =new ConfiguratorAttributeItemView({model: attribute, item: this.model}).render();
+                this.attributeViews[attribute.get('name')] = attributeView;
+                this.listAttributes.append(attributeView.el);
+                this.listenTo(attributeView,'onRemove',this.onRemovedView);
             },
 
             removeAttribute: function(attribute) {
-                //this.attributeViews[attribute].remove();
-            },
-
-            updateAttribute: function (attribute) {
-                var view = this.attributeViews[attribute.name];
-                if(view) {
-                    view.updateValue(attribute.value);
-                }
+                this.attributeViews[attribute.get('name')].remove();
+                delete this.attributeViews[attribute.get('name')];
             },
 
             onRemovedView: function(attribute) {
                 this.model.unset(attribute);
-                //this.baselineTemp.calculations.remove(attribute.cid);
-                //might have to remove the view from the attribute
             },
 
             remove: function() {
@@ -83,49 +67,86 @@ define(
             },
 
             updateOptionals: function() {
-                this.renderConfig();
+               this.updateConfigList(this.baselineTemp.optionals,this.listOptionals,this.removeOptional);
             },
 
             updateSubstitutes: function() {
-                this.renderConfig();
+                this.updateConfigList(this.baselineTemp.substitutes,this.listSubstitutes,this.onSubstituteClick);
+            },
+
+            updateConfigList: function(baselineList, html, onRemoveCallback) {
+                var self = this;
+                var list = [];
+                _.each(baselineList,function(option,ref) {
+                    var optional = self.model.map[option];
+                    var partLinks = [];
+                    optional.getPartLinks(partLinks);
+
+                    var template = $(Mustache.render(linkTemplate, {number: optional.config_item.number}));
+                    self.addPopover(template.next(), Mustache.render(pathTemplate, {
+                        i18n: App.config.i18n,
+                        partLinks:partLinks
+                    }));
+                    template.first().click({option: option, ref: ref},onRemoveCallback);
+                    list.push(template);
+                });
+                html.html(list);
             },
 
             renderConfig: function() {
-                this.listOptionals.empty();
-                this.listSubstitutes.empty();
-                var self = this;
-                _.each(this.baselineTemp.optionals,function(option) {
-                    self.listOptionals.append('<li class="optionals">'+option+'</li>');
-                });
-                _.each(this.baselineTemp.substitutes,function(option, second) {
-                    self.listSubstitutes.append('<li class="substitutes"><i>'+second+'</i> > '+option+'</li>');
+                this.updateSubstitutes();
+                this.updateOptionals();
+
+            },
+
+            addPopover: function(node,template) {
+                node.popover({
+                    title: '<b> Links </b>',
+                    html: true,
+                    content: template,
+                    trigger: 'manual',
+                    placement: 'left',
+                    container: '#configurator_container',
+                }).click(function (e) {
+                    node.popover('show');
+                    e.stopPropagation();
+                    e.preventDefault();
+                    return false;
                 });
             },
 
             onSubstituteClick: function(e) {
-
-                delete this.baselineTemp.substitutes[$(e.target).find('i').text()];
+                var pathRef = e.data.ref;
+                var pathSub = this.baselineTemp.substitutes[pathRef];
+                this.model.undoSubstitute(pathRef,pathSub);
+                delete this.baselineTemp.substitutes[pathRef];
                 this.trigger('substitutes:update');
 
             },
 
+            removeOptional: function(e) {
+                this.model.map[e.data.option].unsetOptional();
+                this.baselineTemp.optionals.splice(_.indexOf(this.baselineTemp.optionals, e.data.option));
+                this.trigger('optionals:update');
+            },
+
             create_baseline: function() {
                 var url = App.config.contextPath + '/api/workspaces/' + App.config.workspaceId + '/products';
-                debugger;
                 var data = {
                     baselinedParts: [],
                     description: this.$('#inputBaselineDescription').val(),
                     name: this.$('#inputBaselineName').val(),
                     optionalUsageLinks: this.baselineTemp.optionals,
                     substituteLinks: _.values(this.baselineTemp.substitutes),
-                    type: "LATEST"
+                    type: App.config.configSpec.toUpperCase()
                 };
+                // TODO kelto: use better callbacks
                 var callbacks = {
                     success: function() {
-                        console.log('yeaaaaah');
+
                     },
                     error: function() {
-                        console.log('aaaargh');
+
                     }
                 };
                 return $.ajax({

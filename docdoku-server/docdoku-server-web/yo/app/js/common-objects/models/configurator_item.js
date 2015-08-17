@@ -96,6 +96,7 @@ define([
             return this;
         };
 
+        // TODO kelto: Should define if this function use the reference or the substitutes
         this.swap = function (toChild, toOrphan) {
 
             var childPath = toChild.config_item.path;
@@ -104,7 +105,7 @@ define([
             this.substitutes[orphanPath] = toOrphan;
             delete this.substitutes[childPath];
 
-            //TODO kelto: should we update the children ?
+
             this.parent.children[childPath] = toChild;
             delete this.parent.children[orphanPath];
             toChild.reference = toChild;
@@ -118,6 +119,10 @@ define([
             this.parent.sumUpdate(toChild.values,toOrphan.values);
 
             return this;
+        };
+
+        this.undoSubstitute = function(pathRef, pathSubstitute) {
+            this.map[pathSubstitute].swap(this.map[pathRef],this.map[pathSubstitute]);
         };
 
         this.setOptional = function() {
@@ -172,10 +177,24 @@ define([
             return this.map[substitute.path];
         };
 
-        this.unset = function(attribute) {
-            this.attributes.remove(attribute);
-            this.model.unset(attribute);
-        }
+        this.unset = function(attribute,operator) {
+            if(!operator) {
+                this.attributes.remove(attribute);
+            } else {
+                this.attributes.removeOperator(attribute,operator);
+            }
+        };
+
+        this.getPartLinks = function(array) {
+            array.unshift({
+                name: this.config_item.name,
+                number: this.config_item.number,
+                referenceDescription: this.config_item.partUsageLinkReferenceDescription
+            });
+            if(this.parent) {
+                this.parent.getPartLinks(array);
+            }
+        };
     };
 
 
