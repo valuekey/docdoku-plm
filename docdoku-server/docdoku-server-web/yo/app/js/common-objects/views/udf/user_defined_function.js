@@ -6,8 +6,9 @@ define([
     'common-objects/collections/configuration_items',
     'common-objects/collections/baselines',
     'common-objects/views/udf/calculation',
-    'common-objects/models/configurator_item'
-], function (Backbone, Mustache, template,ConfigurationItemCollection,Baselines, CalculationView, ConfiguratorItem) {
+    'common-objects/models/configurator_item',
+    'common-objects/collections/calculations/attributes_calculation'
+], function (Backbone, Mustache, template,ConfigurationItemCollection,Baselines, CalculationView, ConfiguratorItem, AttributesCalculations) {
 
     'use strict';
 
@@ -107,23 +108,28 @@ define([
         displayCalculations: function() {
             var self = this;
             if(this.configItem) {
-                _.each(this.configItem.attributes, function(attribute) {
-                    self.createCalculationView();
+                this.configItem.attributes.each(function(attribute) {
+                    _.each(attribute.get('operators'), function(operator){
+                        self.createCalculationView({name: attribute.get('name'), operator: operator});
+                    });
                 });
             }
 
             return this;
         },
 
-        createCalculationView:function(){
+        createCalculationView:function(attribute){
             var _this = this;
-            var calculationView = new CalculationView({attributeNames:this.availableAttributes}).render();
+            var calculationView = new CalculationView({attributeNames:this.availableAttributes, model: this.configItem, attribute: attribute}).render();
             this.$calculations.append(calculationView.$el);
             this.calculationViews.push(calculationView);
 
-            calculationView.on('removed',function(calc){
+            calculationView.on('removed',function(){
 
                 _this.calculationViews.splice(_this.calculationViews.indexOf(calculationView),1);
+                if(calculationView.attribute) {
+                    _this.configItem.unset(calculationView.attribute.name,calculationView.attribute.operator);
+                }
 
                 if(!_this.calculationViews.length){
                     _this.$runButton.hide();
@@ -190,21 +196,16 @@ define([
             var calculationViews = this.calculationViews;
             var isNew = false;
             if(! this.configItem) {
-                this.configItem = new ConfiguratorItem(pRootComponent.first().attributes, {},[],null);
+                this.configItem = new ConfiguratorItem(pRootComponent.first().attributes, {},new AttributesCalculations(),null);
                 isNew = true;
             }
 
             _.each(this.calculationViews,function(calculation) {
                 calculation.model = self.configItem;
-                var attributeName = calculation.getAttributeName();
-                if(self.configItem.attributes.get(attributeName)) {
-                    self.configItem.attributes.get(attributeName).get('operators').push(calculation.getOperator());
-                    self.configItem.attributes.get(attributeName).trigger('change');
-                } else {
-                    var model =  {id: attributeName, name: attributeName, operators: [calculation.getOperator()]};
-                    self.configItem.attributes.add(model);
+                if(calculation.hasChanged()) {
+                    self.configItem.attributes.removeOperator(calculation.attribute.name,calculation.attribute.operator);
                 }
-
+                self.configItem.attributes.addOperator(calculation.getAttributeName(),calculation.getOperator());
             });
             if(isNew) {
                 this.configItem.construct();

@@ -15,7 +15,8 @@ define([
             'click .remove':'onRemove'
         },
 
-        initialise:function(){
+        initialize:function(){
+            this.attribute = this.options.attribute;
             _.bindAll(this);
         },
 
@@ -27,6 +28,10 @@ define([
             this.$assembliesVisited.text('');
             this.$instancesVisited.text('');
             this.$result.hide();
+            if(this.attribute) {
+                this.$operator.val(this.attribute.operator);
+                this.$attributeName.val(this.attribute.name);
+            }
             return this;
         },
 
@@ -35,6 +40,15 @@ define([
             this.binDOMElements().resetCalculation();
 
             return this;
+        },
+
+        // return a boolean to test if the current attribute has been changed or created
+        hasChanged: function() {
+            if(this.attribute) {
+                return this.attribute.operator !== this.getOperator() || this.attribute.name !== this.getAttributeName();
+            }
+
+            return false;
         },
 
 
@@ -82,8 +96,7 @@ define([
         },
 
         onRemove:function(){
-            debugger;
-            this.model.model.unset(this.getAttributeName());
+            this.model.model.unset(this.getAttributeName(),this.getOperator());
             this.trigger('removed',this.model);
             this.remove();
         }
