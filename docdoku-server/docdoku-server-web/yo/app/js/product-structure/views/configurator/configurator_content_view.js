@@ -17,23 +17,12 @@ define(
                 this.partSubstitutesView = [];
                 this.attributes = [];
                 this.substitutes = [];
-                this.listenTo(this.model.attributes,'remove',this.notifyAttribute);
                 _.bindAll(this);
             },
 
             render: function() {
                 this.$el.html(Mustache.render(template, {i18n: App.config.i18n}));
-                this.bindDOM().notifyAttribute();
-                return this;
-            },
-
-            notifyAttribute: function() {
-                if(!this.model.attributes.length) {
-                    this.$notifications.html(new AlertView({
-                        type: 'info',
-                        message: 'No calculation present. Add a new one through the user function button'
-                    }).render().$el);
-                }
+                this.bindDOM();
                 return this;
             },
 

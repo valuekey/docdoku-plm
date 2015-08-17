@@ -10,8 +10,9 @@ define(
         'common-objects/models/calculation',
         'models/component_module',
         'common-objects/models/configurator_item',
-        'common-objects/collections/calculations/attributes_calculation'
-    ], function (Backbone, Mustache, template, ConfiguratorHeaderView, ConfiguratorContentView, ConfiguratorSideControl, Calculation,ComponentModule, ConfiguratorItem, AttributesCalculation) {
+        'common-objects/collections/calculations/attributes_calculation',
+        'common-objects/views/alert'
+    ], function (Backbone, Mustache, template, ConfiguratorHeaderView, ConfiguratorContentView, ConfiguratorSideControl, Calculation,ComponentModule, ConfiguratorItem, AttributesCalculation, AlertView) {
 
         'use strict';
 
@@ -82,7 +83,8 @@ define(
                     self.bindDOM()
                         .renderHeader()
                         .renderContent()
-                        .renderSideControl();
+                        .renderSideControl()
+                        .notifyAttribute();
                     self.trigger('rendered');
 
                 });
@@ -93,6 +95,14 @@ define(
             bindDOM: function() {
                 this.partContainer = this.$('#part_container');
                 this.sideControl = this.$('#configurator-side-control');
+                this.$notifications = this.$('.notifications').first();
+                return this;
+            },
+
+            notifyAttribute: function() {
+                if(!this.configItem.attributes.length) {
+                    this.alert('info','No calculation present. Add a new one through the user function button');
+                }
                 return this;
             },
 
@@ -118,8 +128,16 @@ define(
                 this.sideControlView.render();
                 this.listenTo(this.sideControlView,'substitutes:update',this.updateSubstitutes);
                 this.listenTo(this.sideControlView,'optionals:update',this.updateOptionals);
+                this.listenTo(this.sideControlView,'baseline:create',this.alert);
 
                 return this;
+            },
+
+            alert: function(type,message) {
+                this.$notifications.append(new AlertView({
+                    type: type,
+                    message: message
+                }).render().$el);
             },
 
             updateContent: function(part) {

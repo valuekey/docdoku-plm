@@ -39,6 +39,8 @@ define(
                 this.listAttributes = this.$('#control-list-attributes');
                 this.listOptionals = this.$('#control-list-optionals');
                 this.listSubstitutes = this.$('#control-list-substitutes');
+                this.$baselineName = this.$('#inputBaselineName');
+                this.$baselineDescription = this.$('#inputBaselineDescription');
                 return this;
             },
 
@@ -136,29 +138,32 @@ define(
                 var url = App.config.contextPath + '/api/workspaces/' + App.config.workspaceId + '/products';
                 var data = {
                     baselinedParts: [],
-                    description: this.$('#inputBaselineDescription').val(),
-                    name: this.$('#inputBaselineName').val(),
+                    description: this.$baselineDescription.val(),
+                    name: this.$baselineName.val(),
                     optionalUsageLinks: this.baselineTemp.optionals,
                     substituteLinks: _.values(this.baselineTemp.substitutes),
                     type: App.config.configSpec.toUpperCase()
                 };
                 // TODO kelto: use better callbacks
-                var callbacks = {
-                    success: function() {
-
-                    },
-                    error: function() {
-
-                    }
-                };
-                return $.ajax({
+                var self = this;
+                $.ajax({
                     type: 'POST',
                     url: url + '/' + App.config.productId + '/baselines',
                     data: JSON.stringify(data),
                     contentType: 'application/json; charset=utf-8',
-                    success: callbacks.success,
-                    error: callbacks.error
+                    success: self.onBaselineCreated,
+                    error: self.onBaselineCreationError
                 });
+            },
+
+            onBaselineCreated: function() {
+                this.trigger('baseline:create','success','Baseline Created');
+                this.$baselineName.val('');
+                this.$baselineDescription.val('');
+            },
+
+            onBaselineCreationError: function(err) {
+                this.trigger('baseline:create','error',err.responseText);
             }
         });
 
