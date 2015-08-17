@@ -9,8 +9,9 @@ define(
         'views/configurator/configurator_side_control',
         'common-objects/models/calculation',
         'models/component_module',
-        'common-objects/models/configurator_item'
-    ], function (Backbone, Mustache, template, ConfiguratorHeaderView, ConfiguratorContentView, ConfiguratorSideControl, Calculation,ComponentModule, ConfiguratorItem) {
+        'common-objects/models/configurator_item',
+        'common-objects/collections/calculations/attributes_calculation'
+    ], function (Backbone, Mustache, template, ConfiguratorHeaderView, ConfiguratorContentView, ConfiguratorSideControl, Calculation,ComponentModule, ConfiguratorItem, AttributesCalculation) {
 
         'use strict';
 
@@ -71,7 +72,7 @@ define(
                 var self = this;
                 this.baselineTempCollection.fetch({reset: true}).success(function() {
 ;
-                    self.configItem = new ConfiguratorItem(self.baselineTempCollection.first().attributes, {},new Backbone.Collection(),null).construct();
+                    self.configItem = new ConfiguratorItem(self.baselineTempCollection.first().attributes, {},new AttributesCalculation(),null).construct();
 
                     //TODO kelto: should have an array of baselineTemp.
                     self.baselineTemp = {
@@ -116,6 +117,8 @@ define(
                 this.sideControlView.baselineTemp = this.baselineTemp;
                 this.sideControlView.render();
                 this.listenTo(this.sideControlView,'substitutes:update',this.updateSubstitutes);
+                this.listenTo(this.sideControlView,'optionals:update',this.updateOptionals);
+
                 return this;
             },
 
