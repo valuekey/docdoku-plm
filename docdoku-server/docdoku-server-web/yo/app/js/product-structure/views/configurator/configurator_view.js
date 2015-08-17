@@ -26,7 +26,7 @@ define(
                     url: function () {
                         var path = this.path;
 
-                        var url = this.urlBase() + '/filter?configSpec=latest&depth=1';
+                        var url = this.urlBase() + '/filter?configSpec='+App.config.configSpec+'&depth=5000';
 
                         if (path) {
                             url += '&path=' + path;
@@ -47,7 +47,7 @@ define(
                     url: function () {
                         var path = this.path;
 
-                        var url = this.urlBase() + '/filter?configSpec=latest&depth=1';
+                        var url = this.urlBase() + '/filter?configSpec=latest&depth=5000';
 
                         if (path) {
                             url += '&path=' + path;
