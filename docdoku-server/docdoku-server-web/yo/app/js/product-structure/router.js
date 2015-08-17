@@ -68,7 +68,7 @@ function (Backbone, singletonDecorator) {
         },
 
         configurator: function(workspaceId, productId, configSpecType) {
-            App.config.configSpec = _.contains(this.availableConfiguratorConfig,configSpecType) ? configSpecType : 'latest';
+            App.config.productConfigSpec = _.contains(this.availableConfiguratorConfig,configSpecType) ? configSpecType : 'latest';
             App.config.mode = this.mode.Configurator;
             App.appView.changeMode();
             App.appView.once('app:ready',function() {

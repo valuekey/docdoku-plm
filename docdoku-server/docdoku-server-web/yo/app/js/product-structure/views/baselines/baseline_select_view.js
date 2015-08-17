@@ -125,7 +125,11 @@ define([
         configuratorMode: function() {
             this.$selectConfSpec.find('[value="baseline"]').prop('disabled',true);
             this.$selectLatestFilter.find('[value="wip"]').prop('disabled',true);
-            this.$selectLatestFilter.val(App.config.configSpec);
+            //TODO kelto: should use an array for configurator available filters
+            if(this.$selectConfSpec.val() !== 'latest-filters') {
+                this.$selectConfSpec.val('latest-filters').change();
+                this.onTypeChanged();
+            }
         },
 
         defaultMode: function() {

@@ -142,7 +142,7 @@ define(
                     name: this.$baselineName.val(),
                     optionalUsageLinks: this.baselineTemp.optionals,
                     substituteLinks: _.values(this.baselineTemp.substitutes),
-                    type: App.config.configSpec.toUpperCase()
+                    type: App.config.productConfigSpec.toUpperCase()
                 };
                 // TODO kelto: use better callbacks
                 var self = this;

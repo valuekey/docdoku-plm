@@ -406,7 +406,7 @@ define([
             if(App.collaborativeView.roomKey){
                 App.router.navigate(App.config.workspaceId + '/' + App.config.productId + '/config-spec/' + App.config.productConfigSpec + '/room/' + App.collaborativeView.roomKey, {trigger: false});
             }else{
-                App.router.navigate(App.config.workspaceId + '/' + App.config.productId + '/config-spec/' + App.config.productConfigSpec + '/bom', {trigger: false});
+                App.router.navigate(App.config.workspaceId + '/' + App.config.productId + '/config-spec/' + App.config.productConfigSpec + '/'+App.config.mode, {trigger: false});
             }
 
             App.sceneManager.clear();
