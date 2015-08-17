@@ -4,8 +4,9 @@ define(
         'backbone',
         'mustache',
         'text!templates/configurator/configurator_content.html',
+        'common-objects/views/alert',
         'views/configurator/configurator_part_view'
-    ], function (Backbone, Mustache, template, ConfiguratorPartView) {
+    ], function (Backbone, Mustache, template, AlertView, ConfiguratorPartView) {
 
         'use strict';
 
@@ -16,12 +17,23 @@ define(
                 this.partSubstitutesView = [];
                 this.attributes = [];
                 this.substitutes = [];
+                this.listenTo(this.model.attributes,'remove',this.notifyAttribute);
                 _.bindAll(this);
             },
 
             render: function() {
                 this.$el.html(Mustache.render(template, {i18n: App.config.i18n}));
-                this.bindDOM();
+                this.bindDOM().notifyAttribute();
+                return this;
+            },
+
+            notifyAttribute: function() {
+                if(!this.model.attributes.length) {
+                    this.$notifications.html(new AlertView({
+                        type: 'info',
+                        message: 'No calculation present. Add a new one through the user function button'
+                    }).render().$el);
+                }
                 return this;
             },
 
@@ -38,6 +50,8 @@ define(
             bindDOM: function() {
                 this.partReference = this.$('#part-reference');
                 this.partSubstitutes = this.$('#part-substitutes');
+                this.$notifications = this.$('.notifications').first();
+                return this;
             },
 
             displayPart: function (part) {
