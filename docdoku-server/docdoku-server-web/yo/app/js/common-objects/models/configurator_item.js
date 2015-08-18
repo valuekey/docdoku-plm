@@ -1,13 +1,7 @@
 /*global _,define*/
 define([
-    'backbone',
-    'mustache',
-    'text!common-objects/templates/udf/user_defined_function.html',
-    'common-objects/collections/configuration_items',
-    'common-objects/collections/baselines',
-    'common-objects/views/udf/calculation',
-    'common-objects/models/calculation'
-], function (Backbone, Mustache, template,ConfigurationItemCollection,Baselines, CalculationView, Calculation) {
+    'backbone'
+], function (Backbone) {
 
     'use strict';
 
@@ -195,6 +189,21 @@ define([
                 this.parent.getPartLinks(array);
             }
         };
+
+        this.getResult = function(operator, attribute) {
+            switch(operator) {
+                case 'SUM':
+                    return this.getValue(attribute);
+                case 'AVG':
+                    return this.getValue(attribute) / ((this.visitedAssemblies * this.visitedInstances) || 1);
+            }
+        }
+
+        this.getValue = function(attribute) {
+            return this.model.get(attribute) || 0;
+        }
+
+
     };
 
 
