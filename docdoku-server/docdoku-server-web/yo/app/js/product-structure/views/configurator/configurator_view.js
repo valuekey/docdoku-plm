@@ -7,12 +7,11 @@ define(
         'views/configurator/configurator_header_view',
         'views/configurator/configurator_content_view',
         'views/configurator/configurator_side_control',
-        'common-objects/models/calculation',
         'models/component_module',
         'common-objects/models/configurator_item',
         'common-objects/collections/calculations/attributes_calculation',
         'common-objects/views/alert'
-    ], function (Backbone, Mustache, template, ConfiguratorHeaderView, ConfiguratorContentView, ConfiguratorSideControl, Calculation,ComponentModule, ConfiguratorItem, AttributesCalculation, AlertView) {
+    ], function (Backbone, Mustache, template, ConfiguratorHeaderView, ConfiguratorContentView, ConfiguratorSideControl,ComponentModule, ConfiguratorItem, AttributesCalculation, AlertView) {
 
         'use strict';
 
