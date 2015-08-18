@@ -1,13 +1,57 @@
 .configurator-part.inactive {
-    margin-left: 0;
     display: inline-block;
-    margin-left : 50px;
+
 }
 
 .configurator-part {
     width: 25%;
-    margin: auto;
-    margin-top: 50px
+    margin-top: 50px;
+    margin-left : 50px;
+
+    .well {
+        cursor: pointer;
+    }
+}
+
+
+.part-header {
+    text-align: center;
+
+    .info {
+        text-align: left;
+        margin-right: 15px;
+        display: inline-block;
+
+        i {
+            margin-left: 5px;
+        }
+    }
+}
+
+.configurator_fade {
+    opacity: 0.33;
+}
+
+.part-container {
+    margin-left: 50px;
+    margin-top: 50px;
+
+    h5 {
+        text-align: center;
+    }
+}
+
+.part-actual {
+    text-align: center;
+    .well {
+        border-color: green;
+    }
+}
+
+.substitutes {
+    .well {
+        border-color: red;
+    }
 }
 
 #configurator_container {
@@ -21,5 +65,12 @@
 #configurator-side-control {
     input , textarea {
         width: 100%;;
+    }
+    float: right;
+    margin-top: 50px;
+
+    header {
+        text-decoration: underline;
+        margin-bottom: 15px;
     }
  }

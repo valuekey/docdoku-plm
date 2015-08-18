@@ -11,7 +11,6 @@ define(
         //TODO kelto: should rename to match calculation
         var ConfiguratorAttributeItem = Backbone.View.extend({
 
-            tagName: 'li',
 
             events: {
                 'click .attribute-remove': 'onRemove'
@@ -38,19 +37,19 @@ define(
             },
 
             renderValues: function() {
+                //TODO kelto: should not empty then append, create in array then html(array)
                 this.attributeValues.empty();
                 var self = this;
-                var val = this.item.model.get(this.model.get('name'));
+                var name = this.model.get('name');
+                var ref = this.item.reference.getValue(name);
+
                 _.each(this.model.get('operators'), function(operator) {
-                    switch (operator) {
-                        case 'SUM':
-                            self.attributeValues.append('<span> SUM: '+ val);
-                            break;
-                        case 'AVG':
-                            val = val / (self.item.visitedAssemblies + self.item.visitedInstances);
-                            self.attributeValues.append('<span> Average: '+ val);
+                    var diffRef = '';
+                    var result = self.item.getResult(operator,name);
+                    if(self.options.displayRef) {
+                        diffRef = '(' +(self.item.reference.getResult(operator,name) - result)+')';
                     }
-                    self.attributeValues.append('</span>');
+                    self.attributeValues.append('<div>'+operator+ ': ' + result + diffRef + '<div>');
                 });
             },
 
@@ -60,7 +59,7 @@ define(
 
                 //this.attributeValue.text(value);
                 this.model.value = value;
-                this.renderValues()
+                this.renderValues();
             },
 
 

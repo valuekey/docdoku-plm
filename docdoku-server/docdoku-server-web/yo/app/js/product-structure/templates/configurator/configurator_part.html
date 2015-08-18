@@ -1,10 +1,14 @@
 <div class="well">
 
-    <div class="part-header" style="text-align: center">
-        {{model.name}}{{model.getName}} < <strong>{{model.number}}{{model.getNumber}}</strong> >
+    <div class="part-header">
+        <span class="info">{{# model.optional}}<i class="fa fa-question" title="Is Optional"></i>{{/model.optional}}
+        {{#model.substitute}}<i class="fa fa-arrows-h" title="Is Substitute"></i>{{/model.substitute}}
+        {{^model.substitute}}<i class="fa fa-certificate" title="Is Nominal"></i>{{/model.substitute}}
+            </span>
+            {{model.name}}{{model.getName}} < <strong>{{model.number}}{{model.getNumber}}</strong> >
     </div>
     <hr/>
-    <ul id="part-attributes-list">
+    <div id="part-attributes-list">
 
-    </ul>
+    </div>
 </div>

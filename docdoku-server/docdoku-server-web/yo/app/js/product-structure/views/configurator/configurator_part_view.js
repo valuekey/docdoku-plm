@@ -4,8 +4,8 @@ define(
         'backbone',
         'mustache',
         'text!templates/configurator/configurator_part.html',
-        'models/component_module'
-    ], function (Backbone, Mustache, template, Component) {
+        'views/configurator/configurator_attribute_item'
+    ], function (Backbone, Mustache, template, AttributeItem) {
 
         'use strict';
 
@@ -25,7 +25,7 @@ define(
             render: function() {
                 //TODO kelto: is selected should not be set to true. Get it this info from the model
                 this.$el.html(Mustache.render(template, {model: this.model.config_item, i18n: App.config.i18n}));
-                this.bindDom().bindEvents().activateOptional().renderAttributes();
+                this.bindDom().bindEvents().activateOptional().renderAttributes().activateTooltip();
 
                 return this;
             },
@@ -43,6 +43,11 @@ define(
                 return this;
             },
 
+            activateTooltip: function() {
+                this.$('[data-toggle="tooltip"]').tooltip();
+                return this;
+            },
+
             activateOptional: function() {
                 this.$el.toggleClass('configurator_fade',!this.isSelected);
 
@@ -56,11 +61,18 @@ define(
                 return this;
             },
 
-            //TODO kelto: should create a view which will be removed when the calculation is destroyed.
+            //TODO kelto:should called this only on creation and use a add function to be bound to the attributes:add event
             renderAttributes: function() {
-                this.partListAttributes.empty();
+                //this.partListAttributes.empty();
                 var self = this;
+                var listElement = [];
+                this.model.attributes.each(function(attribute) {
+                    var attributeView = new AttributeItem({model: attribute,item: self.model, displayRef: true}).render();
+                    listElement.push(attributeView.el);
+                });
                 _.each(this.model.attributes.models,function(attribute) {
+
+                    /*
                     var name = attribute.get('name');
                     var html = '<li>'+name+' : '+ self.model.model.get(name);
                     if(self.model.reference) {
@@ -75,8 +87,15 @@ define(
                     }
 
                     html+= '</li>';
-                    self.partListAttributes.append(html);
+                    listElement.push(html);
+                    */
                 });
+                if(listElement.length) {
+                    this.partListAttributes.html(listElement);
+                } else {
+                    this.partListAttributes.html('<div>No calculation available</div>');
+                }
+                return this;
             },
 
             toggleClass: function() {

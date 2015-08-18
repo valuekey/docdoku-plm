@@ -85,8 +85,8 @@ define(
                     optional.getPartLinks(partLinks);
 
                     var template = $(Mustache.render(linkTemplate, {number: optional.config_item.number}));
-                    self.addPopover(template.next(), partLinks);
-                    template.first().click({option: option, ref: ref},onRemoveCallback);
+                    self.addPopover(template.find('a'), partLinks);
+                    template.find('button').click({option: option, ref: ref},onRemoveCallback);
                     list.push(template);
                 });
                 html.html(list);
