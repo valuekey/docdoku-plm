@@ -25,7 +25,7 @@ define(
             render: function() {
                 //TODO kelto: is selected should not be set to true. Get it this info from the model
                 this.$el.html(Mustache.render(template, {model: this.model.config_item, i18n: App.config.i18n}));
-                this.bindDom().bindEvents().activateOptional().renderAttributes().activateTooltip();
+                this.bindDom().bindEvents().activateOptional().renderAttributes();
 
                 return this;
             },
@@ -40,11 +40,6 @@ define(
                 this.listenTo(this.model.model,'change',this.renderAttributes);
                 this.listenTo(this.model.attributes,'add',this.renderAttributes);
                 this.listenTo(this.model.attributes,'remove',this.renderAttributes);
-                return this;
-            },
-
-            activateTooltip: function() {
-                this.$('[data-toggle="tooltip"]').tooltip();
                 return this;
             },
 
@@ -63,32 +58,11 @@ define(
 
             //TODO kelto:should called this only on creation and use a add function to be bound to the attributes:add event
             renderAttributes: function() {
-                //this.partListAttributes.empty();
                 var self = this;
                 var listElement = [];
                 this.model.attributes.each(function(attribute) {
                     var attributeView = new AttributeItem({model: attribute,item: self.model, displayRef: true}).render();
                     listElement.push(attributeView.el);
-                });
-                _.each(this.model.attributes.models,function(attribute) {
-
-                    /*
-                    var name = attribute.get('name');
-                    var html = '<li>'+name+' : '+ self.model.model.get(name);
-                    if(self.model.reference) {
-                        var diff = self.model.model.get(name) - self.model.reference.model.get(name);
-                        html+= '<span style="color: ';
-                        if(diff < 0) {
-                            html += 'red"> ( '+diff;
-                        } else {
-                            html += 'green"> ( + '+diff;
-                        }
-                        html += ' ) </span>';
-                    }
-
-                    html+= '</li>';
-                    listElement.push(html);
-                    */
                 });
                 if(listElement.length) {
                     this.partListAttributes.html(listElement);

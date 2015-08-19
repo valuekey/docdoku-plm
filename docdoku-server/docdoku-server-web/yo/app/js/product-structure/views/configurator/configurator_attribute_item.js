@@ -37,36 +37,34 @@ define(
             },
 
             renderValues: function() {
-                //TODO kelto: should not empty then append, create in array then html(array)
-                this.attributeValues.empty();
                 var self = this;
                 var name = this.model.get('name');
                 var ref = this.item.reference.getValue(name);
-
+                var listHtml = [];
                 _.each(this.model.get('operators'), function(operator) {
-                    var diffRef = '';
+                    var html = $('<div></div>');
+
                     var result = self.item.getResult(operator,name);
+                    html.append(operator + ': ' + result);
                     if(self.options.displayRef) {
-                        diffRef = '(' +(self.item.reference.getResult(operator,name) - result)+')';
+                        html.append(self.renderDifference(result, self.item.reference.getResult(operator,name)));
                     }
-                    self.attributeValues.append('<div>'+operator+ ': ' + result + diffRef + '<div>');
+                    listHtml.push(html);
                 });
+                this.attributeValues.html(listHtml);
             },
 
-            updateValue: function (value) {
-                // TODO kelto: this method is called on each operation
-                // should only be called at the end
-
-                //this.attributeValue.text(value);
-                this.model.value = value;
-                this.renderValues();
+            renderDifference: function(result, referenceResult) {
+                var difference = result - referenceResult;
+                var signClassName = difference >= 0 ? 'positive-difference' : 'negative-difference';
+                return '<span class="'+signClassName+'"> (<span class="difference">'+Math.abs(difference).toFixed(2)+'</span>)</span>';
             },
-
 
             onRemove: function() {
                 this.item.unset(this.model.get('name'));
             },
 
+            //TODO kelto: usefull to override ?
             remove: function() {
                 this.trigger('remove',this.model);
                 Backbone.View.prototype.remove.apply(this,arguments);

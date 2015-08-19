@@ -42,15 +42,8 @@
 }
 
 .part-actual {
-    text-align: center;
     .well {
-        border-color: green;
-    }
-}
-
-.substitutes {
-    .well {
-        border-color: red;
+       border-width: 3px;
     }
 }
 
@@ -74,3 +67,19 @@
         margin-bottom: 15px;
     }
  }
+
+.positive-difference {
+    color: green;
+
+    .difference:before {
+        content: '+';
+    }
+}
+
+.negative-difference {
+    color: red;
+
+    .difference:before {
+        content: '-';
+    }
+}
