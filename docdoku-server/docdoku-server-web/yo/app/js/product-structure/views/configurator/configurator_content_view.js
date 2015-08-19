@@ -168,6 +168,7 @@ define(
                 if(index > -1) {
                     this.model.map[this.baselineTemp.optionals[index]].unsetOptional();
                     this.baselineTemp.optionals.splice(index,1);
+                    this.trigger('optionals:update');
                 }
             }
 
