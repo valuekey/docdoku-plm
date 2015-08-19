@@ -195,7 +195,7 @@ define([
                 case 'SUM':
                     return this.getValue(attribute);
                 case 'AVG':
-                    return this.getValue(attribute) / ((this.visitedAssemblies * this.visitedInstances) || 1);
+                    return (this.getValue(attribute) / ((this.visitedAssemblies * this.visitedInstances) || 1)).toFixed(2);
             }
         }
 
