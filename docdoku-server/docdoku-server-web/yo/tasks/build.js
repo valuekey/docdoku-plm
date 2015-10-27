@@ -5,7 +5,6 @@ module.exports = function(grunt) {
 	 * */
 	grunt.registerTask('build', [
 		'clean:dist',
-		'less',
 		'copy:libs',
 		'copy:assets',
 		'copy:dmu',

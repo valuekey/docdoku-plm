@@ -10,7 +10,7 @@ module.exports = function(grunt) {
 				'clean:documentManagement',
 				'requirejs:documentManagement',
 				'uglify:documentManagement',
-				'cssmin:documentManagement',
+				'less:documentManagement',
 				'htmlmin:documentManagement',
 				'usemin:documentManagement'
 			]);
@@ -21,7 +21,7 @@ module.exports = function(grunt) {
 				'clean:productManagement',
 				'requirejs:productManagement',
 				'uglify:productManagement',
-				'cssmin:productManagement',
+				'less:productManagement',
 				'htmlmin:productManagement',
 				'usemin:productManagement'
 			]);
@@ -32,7 +32,7 @@ module.exports = function(grunt) {
 				'clean:productStructure',
 				'requirejs:productStructure',
 				'uglify:productStructure',
-				'cssmin:productStructure',
+				'less:productStructure',
 				'htmlmin:productStructure',
 				'usemin:productStructure'
 			]);
@@ -43,7 +43,7 @@ module.exports = function(grunt) {
 				'clean:changeManagement',
 				'requirejs:changeManagement',
 				'uglify:changeManagement',
-				'cssmin:changeManagement',
+				'less:changeManagement',
 				'htmlmin:changeManagement',
 				'usemin:changeManagement'
 			]);
@@ -54,7 +54,7 @@ module.exports = function(grunt) {
 				'clean:productFrame',
 				'requirejs:productFrame',
 				'uglify:productFrame',
-				'cssmin:productFrame',
+				'less:productFrame',
 				'htmlmin:productFrame',
 				'usemin:productFrame'
 			]);

@@ -133,7 +133,8 @@ module.exports = function (grunt) {
                     mainConfigFile: '<%= yeoman.app %>/document-management/main.js',
                     out: '<%= yeoman.dist %>/document-management/main.js',
                     paths:{localization: 'empty:'},
-                    findNestedDependencies: true
+                    findNestedDependencies: true,
+                    generateSourceMaps: true
                 }
             },
 
@@ -149,7 +150,8 @@ module.exports = function (grunt) {
                     mainConfigFile: '<%= yeoman.app %>/product-management/main.js',
                     out: '<%= yeoman.dist %>/product-management/main.js',
                     paths:{localization: 'empty:'},
-                    findNestedDependencies: true
+                    findNestedDependencies: true,
+                    generateSourceMaps: true
                 }
 
             },
@@ -166,7 +168,8 @@ module.exports = function (grunt) {
                     mainConfigFile: '<%= yeoman.app %>/product-structure/main.js',
                     out: '<%= yeoman.dist %>/product-structure/main.js',
                     paths:{localization: 'empty:'},
-                    findNestedDependencies: true
+                    findNestedDependencies: true,
+                    generateSourceMaps: true
                 }
             },
 
@@ -182,7 +185,8 @@ module.exports = function (grunt) {
                     mainConfigFile: '<%= yeoman.app %>/visualization/main.js',
                     out: '<%= yeoman.dist %>/visualization/main.js',
                     paths:{localization: 'empty:'},
-                    findNestedDependencies: true
+                    findNestedDependencies: true,
+                    generateSourceMaps: true
                 }
             },
 
@@ -198,85 +202,100 @@ module.exports = function (grunt) {
                     mainConfigFile: '<%= yeoman.app %>/change-management/main.js',
                     out: '<%= yeoman.dist %>/change-management/main.js',
                     paths:{localization: 'empty:'},
-                    findNestedDependencies: true
+                    findNestedDependencies: true,
+                    generateSourceMaps: true
                 }
             }
 
         },
         uglify: {
+            options: {
+                sourceMap: true,
+                sourceMapIncludeSources: true
+            },
             documentManagement: {
+
+                options: {
+                    sourceMapIn: '<%= yeoman.dist %>/document-management/main.js.map'
+                },
                 files: {
                     '<%= yeoman.dist %>/document-management/main.js': ['<%= yeoman.dist %>/document-management/main.js']
                 }
             },
             productManagement: {
+
+                options: {
+                    sourceMapIn: '<%= yeoman.dist %>/product-management/main.js.map'
+                },
                 files: {
                     '<%= yeoman.dist %>/product-management/main.js': ['<%= yeoman.dist %>/product-management/main.js']
                 }
             },
             productStructure: {
+                options: {
+                    sourceMapIn: '<%= yeoman.dist %>/product-structure/main.js.map'
+                },
                 files: {
                     '<%= yeoman.dist %>/product-structure/main.js': ['<%= yeoman.dist %>/product-structure/main.js']
                 }
             },
             productFrame: {
+                options: {
+                    sourceMapIn: '<%= yeoman.dist %>/visualization/main.js.map'
+                },
                 files: {
                     '<%= yeoman.dist %>/visualization/main.js': ['<%= yeoman.dist %>/visualization/main.js']
                 }
             },
             changeManagement: {
+                options: {
+                    sourceMapIn: '<%= yeoman.dist %>/change-management/main.js.map'
+                },
                 files: {
                     '<%= yeoman.dist %>/change-management/main.js': ['<%= yeoman.dist %>/change-management/main.js']
                 }
             }
         },
         less: {
-            dist: {
-                options: {
-                    strictImports: false,
-                    paths: [
-                        '<%= yeoman.app %>/less/document-management/',
-                        '<%= yeoman.app %>/less/product-management/',
-                        '<%= yeoman.app %>/less/product-structure/',
-                        '<%= yeoman.app %>/less/change-management/'
-                    ]
-                },
-                files: {
-                    '<%= yeoman.app %>/document-management/main.css': '<%= yeoman.app %>/less/document-management/style.less',
-                    '<%= yeoman.app %>/product-management/main.css': '<%= yeoman.app %>/less/product-management/style.less',
-                    '<%= yeoman.app %>/product-structure/main.css': '<%= yeoman.app %>/less/product-structure/style.less',
-                    '<%= yeoman.app %>/visualization/main.css': '<%= yeoman.app %>/less/product-structure/style_frame.less',
-                    '<%= yeoman.app %>/change-management/main.css': '<%= yeoman.app %>/less/change-management/style.less'
-                }
-            }
-        },
-        cssmin: {
             options: {
-                keepSpecialComments: 0
+                strictImports: false,
+                sourceMap: true,
+                sourceMapURL: 'main.css.map',
+                sourceMapFileInline:true,
+                outputSourceFiles: true,
+                plugins: [
+                    new (require('less-plugin-clean-css'))({keepSpecialComments:0})
+                ],
+                paths: [
+                    '<%= yeoman.app %>/less/document-management/',
+                    '<%= yeoman.app %>/less/product-management/',
+                    '<%= yeoman.app %>/less/product-structure/',
+                    '<%= yeoman.app %>/less/change-management/'
+                ]
             },
             documentManagement: {
                 files: {
-                    '<%= yeoman.dist %>/document-management/main.css': ['<%= yeoman.app %>/document-management/main.css']
+                    '<%= yeoman.dist %>/document-management/main.css': '<%= yeoman.app %>/less/document-management/style.less'
                 }
             },
             productManagement: {
                 files: {
-                    '<%= yeoman.dist %>/product-management/main.css': ['<%= yeoman.app %>/product-management/main.css']
+                    '<%= yeoman.dist %>/product-management/main.css': '<%= yeoman.app %>/less/product-management/style.less'
                 }
             },
             productStructure: {
                 files: {
-                    '<%= yeoman.dist %>/product-structure/main.css': ['<%= yeoman.app %>/product-structure/main.css']
+                    '<%= yeoman.dist %>/product-structure/main.css': '<%= yeoman.app %>/less/product-structure/style.less'
                 }
             },
             productFrame: {
                 files: {
-                    '<%= yeoman.dist %>/visualization/main.css': ['<%= yeoman.app %>/visualization/main.css']
+                    '<%= yeoman.dist %>/visualization/main.css': '<%= yeoman.app %>/less/product-structure/style_frame.less'
                 }
             },
             changeManagement: {
                 files: {
-                    '<%= yeoman.dist %>/change-management/main.css': ['<%= yeoman.app %>/change-management/main.css']
+                    '<%= yeoman.dist %>/change-management/main.css': '<%= yeoman.app %>/less/change-management/style.less'
                 }
             }
         },
