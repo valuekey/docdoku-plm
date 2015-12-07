@@ -21,24 +21,53 @@
 
             <h3>#{i18nDownload['section1.title1']}</h3>
 
-            <p>
-                #{i18nDownload['section.supported']}<br/>
-                <img src="#{request.contextPath}/images/windows.gif" alt="Windows"/> windows<br/>
-                <img src="#{request.contextPath}/images/linux.gif" alt="Linux"/> linux<br/>
-                <img src="#{request.contextPath}/images/apple.gif" alt="Mac"/> mac<br/>
-            </p>
             <p><h:outputText value="#{i18nDownload['section1.text1']}" escape="false" /></p>
-            <p>#{i18nDownload['section1.text2']}</p>
-            <!--
-            <script type="text/javascript" src="http://java.com/js/deployJava.js"></script>
-            <script type="text/javascript">
-                deployJava.createWebStartLaunchButton('#{request.requestURL.substring(0, request.requestURL.length() - request.requestURI.length())}#{request.contextPath}/apps/docdoku_client.jnlp','1.6.0_10');
-            </script>
-            -->
-            <br/>
-            <a href="#{request.contextPath}/apps/docdoku_client.jnlp">Java 6</a> | <a href="#{request.contextPath}/apps/docdoku_clientJ7.jnlp">Java 7</a>
 
-
+            <h4>#{i18nDownload['section.supported']}</h4>
+            <ul class="download-dplm-plateform-list">
+                <li>
+                    <a href="/download/dplm/dplm-win-32.zip">
+                        <img src="#{request.contextPath}/images/windows.gif" alt="Windows"/>
+                        <span>Windows - 32bit</span>
+                        <i class="fa fa-download"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="/download/dplm/dplm-win-64.zip">
+                        <img src="#{request.contextPath}/images/windows.gif" alt="Windows"/>
+                        <span>Windows - 64bit</span>
+                        <i class="fa fa-download"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="/download/dplm/dplm-linux-32.zip">
+                        <img src="#{request.contextPath}/images/linux.gif" alt="Linux"/>
+                        <span>Linux - 32bits</span>
+                        <i class="fa fa-download"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="/download/dplm/dplm-linux-64.zip">
+                        <img src="#{request.contextPath}/images/linux.gif" alt="Linux"/>
+                        <span>Linux - 64bit</span>
+                        <i class="fa fa-download"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="/download/dplm/dplm-osx-32.zip">
+                        <img src="#{request.contextPath}/images/apple.gif" alt="Mac"/>
+                        <span>Mac - 32 bit</span>
+                        <i class="fa fa-download"></i>
+                    </a>
+                </li>
+                <li>
+                    <a href="/download/dplm/dplm-osx-64.zip">
+                        <img src="#{request.contextPath}/images/apple.gif" alt="Mac"/>
+                        <span>Mac - 64bit</span>
+                        <i class="fa fa-download"></i>
+                    </a>
+                </li>
+            </ul>
         </ui:define>
 
     </ui:composition>

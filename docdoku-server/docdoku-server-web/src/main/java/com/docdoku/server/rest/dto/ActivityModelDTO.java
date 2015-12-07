@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,7 +20,7 @@
 
 package com.docdoku.server.rest.dto;
 
-import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.XmlElement;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +28,11 @@ import java.util.List;
 public class ActivityModelDTO implements Serializable {
 
     private int step;
+    private Integer relaunchStep;
+
+    @XmlElement(nillable = false, required = true)
     private List<TaskModelDTO> taskModels;
+
     private String lifeCycleState;
     private Type type;
     public enum Type {
@@ -41,8 +45,9 @@ public class ActivityModelDTO implements Serializable {
         this.taskModels = new ArrayList<TaskModelDTO>();
     }
 
-    public ActivityModelDTO(int step, List<TaskModelDTO> taskModels, String lifeCycleState, Type type, Integer tasksToComplete) {
+    public ActivityModelDTO(int step, List<TaskModelDTO> taskModels, String lifeCycleState, Type type, Integer tasksToComplete, Integer relaunchStep) {
         this.step = step;
+        this.relaunchStep = relaunchStep;
         this.taskModels = taskModels;
         this.lifeCycleState = lifeCycleState;
         this.type = type;
@@ -91,5 +96,13 @@ public class ActivityModelDTO implements Serializable {
 
     public String getLifeCycleState() {
         return lifeCycleState;
+    }
+
+    public Integer getRelaunchStep() {
+        return relaunchStep;
+    }
+
+    public void setRelaunchStep(Integer relaunchStep) {
+        this.relaunchStep = relaunchStep;
     }
 }

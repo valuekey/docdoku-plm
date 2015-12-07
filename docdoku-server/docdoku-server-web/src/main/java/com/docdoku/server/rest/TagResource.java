@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,19 +19,21 @@
  */
 package com.docdoku.server.rest;
 
-import com.docdoku.core.document.TagKey;
+import com.docdoku.core.exceptions.*;
+import com.docdoku.core.meta.TagKey;
 import com.docdoku.core.security.UserGroupMapping;
 import com.docdoku.core.services.IDocumentManagerLocal;
 import com.docdoku.server.rest.dto.TagDTO;
-import javax.annotation.PostConstruct;
+
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.dozer.DozerBeanMapperSingletonWrapper;
-import org.dozer.Mapper;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -48,38 +50,7 @@ public class TagResource {
     @EJB
     private DocumentsResource documentsResource;
 
-    @EJB
-    private DocumentResource documentResource;
-
-    private Mapper mapper;
-
     public TagResource() {
-    }
-
-    @PostConstruct
-    public void init() {
-        mapper = DozerBeanMapperSingletonWrapper.getInstance();
-    } 
-
-    @GET
-    @Produces("application/json;charset=UTF-8")
-    public TagDTO[] getTagsInWorkspace (@PathParam("workspaceId") String workspaceId){
-        
-        try{    
-        
-            String[] tagsName = documentService.getTags(workspaceId);
-            TagDTO[] tagDtos = new TagDTO[tagsName.length];
-            for (int i = 0; i < tagsName.length; i++) {                
-                tagDtos[i] = new TagDTO();
-                tagDtos[i].setWorkspaceId(workspaceId);
-                tagDtos[i].setLabel(tagsName[i]);
-            }            
-            
-            return tagDtos;
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-        
-            throw new RestApiException(ex.toString(), ex.getMessage());
-        }          
     }
 
     @Path("{tagId}/documents/")
@@ -87,54 +58,47 @@ public class TagResource {
         return documentsResource;
     }
 
-    @POST
-    @Consumes("application/json;charset=UTF-8")
-    @Produces("application/json;charset=UTF-8")
-    public TagDTO createTag(@PathParam("workspaceId") String workspaceId, TagDTO tag) {
-        try {
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<TagDTO> getTagsInWorkspace (@PathParam("workspaceId") String workspaceId)
+            throws EntityNotFoundException, UserNotActiveException {
 
-            documentService.createTag(workspaceId, tag.getLabel());
-            return new TagDTO(tag.getLabel());
-            
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
+        String[] tagsName = documentService.getTags(workspaceId);
+        List<TagDTO> tagsDTO = new ArrayList<>();
+        for (String tagName : tagsName) {
+            tagsDTO.add(new TagDTO(tagName,workspaceId));
         }
+        return tagsDTO;
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public TagDTO createTag(@PathParam("workspaceId") String workspaceId, TagDTO tag)
+            throws EntityNotFoundException, EntityAlreadyExistsException, UserNotActiveException, AccessRightException, CreationException {
+
+        documentService.createTag(workspaceId, tag.getLabel());
+        return new TagDTO(tag.getLabel());
     }
 
     @POST
     @Path("/multiple")
-    @Consumes("application/json;charset=UTF-8")
-    @Produces("application/json;charset=UTF-8")
-    public Response createTags(@PathParam("workspaceId") String workspaceId, TagDTO[] tagsDTO) {
-        try {
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createTags(@PathParam("workspaceId") String workspaceId, List<TagDTO> tagsDTO)
+            throws EntityNotFoundException, EntityAlreadyExistsException, UserNotActiveException, AccessRightException, CreationException {
 
-            for(TagDTO tagDTO : tagsDTO){
-                documentService.createTag(workspaceId, tagDTO.getLabel());
-            }
-
-            return Response.ok().build();
-
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
+        for(TagDTO tagDTO : tagsDTO){
+            documentService.createTag(workspaceId, tagDTO.getLabel());
         }
+        return Response.ok().build();
     }
-    
-    /**
-     * DELETE method for deleting an instance of TagResource
-     */
+
     @DELETE
     @Path("{tagId}")
-    @Produces("application/json;charset=UTF-8")
-    public Response deleteTag(@PathParam("workspaceId") String workspaceId, @PathParam("tagId") String tagId) {
-        try {
-            
-            documentService.deleteTag(new TagKey(workspaceId, tagId));
-            
-            return Response.status(Response.Status.OK).build();
-            
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
-        }
-    }
+    public Response deleteTag(@PathParam("workspaceId") String workspaceId, @PathParam("tagId") String tagId)
+            throws EntityNotFoundException, AccessRightException {
 
+        documentService.deleteTag(new TagKey(workspaceId, tagId));
+        return Response.ok().build();
+    }
 }

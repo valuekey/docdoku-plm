@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,19 +19,18 @@
  */
 package com.docdoku.server.dao;
 
-import com.docdoku.core.services.CreationException;
-import com.docdoku.core.services.TagAlreadyExistsException;
-import com.docdoku.core.services.TagNotFoundException;
-import com.docdoku.core.document.Tag;
-import com.docdoku.core.document.TagKey;
-import java.util.List;
-import java.util.Locale;
+import com.docdoku.core.exceptions.CreationException;
+import com.docdoku.core.exceptions.TagAlreadyExistsException;
+import com.docdoku.core.exceptions.TagNotFoundException;
+import com.docdoku.core.meta.Tag;
+import com.docdoku.core.meta.TagKey;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
+import java.util.List;
+import java.util.Locale;
 
 public class TagDAO {
 

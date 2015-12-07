@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,17 +19,22 @@
  */
 package com.docdoku.server.rest;
 
+import com.docdoku.core.exceptions.EntityNotFoundException;
+import com.docdoku.core.exceptions.NotAllowedException;
+import com.docdoku.core.exceptions.UserNotActiveException;
 import com.docdoku.core.security.UserGroupMapping;
-import com.docdoku.core.services.IDocumentManagerLocal;
+import com.docdoku.core.services.IDocumentWorkflowManagerLocal;
+import com.docdoku.core.services.IPartWorkflowManagerLocal;
 import com.docdoku.core.workflow.ActivityKey;
 import com.docdoku.core.workflow.TaskKey;
-import com.docdoku.server.rest.dto.TaskDTO;
+import com.docdoku.server.rest.dto.TaskProcessDTO;
 
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
@@ -43,9 +48,10 @@ public class TaskResource {
 
     @EJB
     private DocumentsResource documentsResource;
-
     @EJB
-    private IDocumentManagerLocal documentService;
+    private IDocumentWorkflowManagerLocal documentWorkflowService;
+    @EJB
+    private IPartWorkflowManagerLocal partWorkflowService;
 
     public TaskResource() {
     }
@@ -56,28 +62,42 @@ public class TaskResource {
     }
 
     @POST
-    @Consumes("text/plain")
-    @Path("process")
-    public Response processTask(@PathParam("workspaceId") String workspaceId, @QueryParam("activityWorkflowId") int activityWorkflowId, @QueryParam("activityStep") int activityStep, @QueryParam("index") int index, @QueryParam("action") String action, String comment){
+    @Path("documents/process")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response processTaskForDocuments(@PathParam("workspaceId") String workspaceId, @QueryParam("activityWorkflowId") int activityWorkflowId, @QueryParam("activityStep") int activityStep, @QueryParam("index") int index, @QueryParam("action") String action, TaskProcessDTO taskProcessDTO)
+            throws EntityNotFoundException, NotAllowedException, UserNotActiveException {
 
-        try {
-
-            if (action.equals("approve")) {
-                documentService.approve(workspaceId, new TaskKey(new ActivityKey(activityWorkflowId, activityStep), index), comment);
-            } else if (action.equals("reject")) {
-                documentService.reject(workspaceId, new TaskKey(new ActivityKey(activityWorkflowId, activityStep), index), comment);
-            }else{
+        switch (action) {
+            case "approve":
+                documentWorkflowService.approveTaskOnDocument(workspaceId, new TaskKey(new ActivityKey(activityWorkflowId, activityStep), index), taskProcessDTO.getComment(), taskProcessDTO.getSignature());
+                break;
+            case "reject":
+                documentWorkflowService.rejectTaskOnDocument(workspaceId, new TaskKey(new ActivityKey(activityWorkflowId, activityStep), index), taskProcessDTO.getComment(), taskProcessDTO.getSignature());
+                break;
+            default:
                 return Response.status(Response.Status.BAD_REQUEST).build();
-            }
-
-
-
-            return Response.ok().build();
-
-        } catch (Exception ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
         }
 
+        return Response.ok().build();
     }
 
+    @POST
+    @Path("parts/process")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response processTaskForParts(@PathParam("workspaceId") String workspaceId, @QueryParam("activityWorkflowId") int activityWorkflowId, @QueryParam("activityStep") int activityStep, @QueryParam("index") int index, @QueryParam("action") String action, TaskProcessDTO taskProcessDTO)
+            throws EntityNotFoundException, NotAllowedException, UserNotActiveException {
+
+        switch (action) {
+            case "approve":
+                partWorkflowService.approveTaskOnPart(workspaceId, new TaskKey(new ActivityKey(activityWorkflowId, activityStep), index), taskProcessDTO.getComment(), taskProcessDTO.getSignature());
+                break;
+            case "reject":
+                partWorkflowService.rejectTaskOnPart(workspaceId, new TaskKey(new ActivityKey(activityWorkflowId, activityStep), index), taskProcessDTO.getComment(), taskProcessDTO.getSignature());
+                break;
+            default:
+                return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
+        return Response.ok().build();
+    }
 }

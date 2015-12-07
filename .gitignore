@@ -5,5 +5,12 @@ rebel.xml
 private.properties
 target/
 dist/
-build/
 private/
+classes/
+build/
+node_modules/
+bower_components/
+derby.log
+gcm.properties
+npm-debug.log
+docdoku-server/docdoku-server-web/yo/app/download/

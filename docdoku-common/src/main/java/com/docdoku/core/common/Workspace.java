@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -21,70 +21,60 @@
 package com.docdoku.core.common;
 
 
+import javax.persistence.*;
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.FetchType;
-import javax.persistence.Table;
 
 /**
- * The context in which documents, workflow models, document templates and all
+ * The context in which documents, workflow models, parts, products, templates and all
  * the other objects reside.  
  * 
  * @author Florent Garin
  * @version 1.0, 02/06/08
- * @since   V1.0
+ * @since V1.0
  */
 @Table(name="WORKSPACE")
 @javax.persistence.Entity
+@NamedQueries({
+        @NamedQuery(name="Workspace.findWorkspacesWhereUserIsActive", query="SELECT w FROM Workspace w WHERE EXISTS (SELECT u.workspace FROM WorkspaceUserMembership u WHERE u.workspace = w AND u.member.login = :userLogin) OR EXISTS (SELECT g FROM WorkspaceUserGroupMembership g WHERE g.workspace = w AND EXISTS (SELECT gr FROM UserGroup gr, User us WHERE us.workspace = gr.workspace AND g.workspace = gr.workspace AND us.login = :userLogin AND us member of gr.users))"),
+        @NamedQuery(name="Workspace.findAllWorkspaces", query="SELECT w FROM Workspace w")        
+})
 public class Workspace implements Serializable, Cloneable {
 
-    @Column(length=50)
+    @Column(length=100)
     @javax.persistence.Id
     private String id="";
     
     @javax.persistence.ManyToOne(optional=false, fetch=FetchType.EAGER)
     private Account admin;
-    
+
+    @Lob
     private String description;    
     
     private boolean folderLocked;
-    
-    private VaultType vaultType;
-    
-    public enum VaultType {DEMO,SMALL,LARGE,UNLIMITED}
 
 
-    public Workspace(String pId, Account pAdmin, String pDescription, VaultType pVaultType, boolean pFolderLocked) {
+    public Workspace(String pId, Account pAdmin, String pDescription, boolean pFolderLocked) {
         id = pId;
         admin = pAdmin;
         description = pDescription;
-        vaultType = pVaultType;
         folderLocked=pFolderLocked;
     }
-    
     public Workspace(String pId) {
         id = pId;
     }
-
     public Workspace() {
     }
     
-    public void setDescription(String pDescription) {
-        description = pDescription;
-    }
-
-    public void setAdmin(Account pAdmin) {
-        admin = pAdmin;
-    }
-
     public Account getAdmin() {
         return admin;
+    }
+    public void setAdmin(Account pAdmin) {
+        admin = pAdmin;
     }
 
     public String getId() {
         return id;
     }
-
     public void setId(String pId){
         id=pId;
     }
@@ -92,19 +82,13 @@ public class Workspace implements Serializable, Cloneable {
     public String getDescription() {
         return description;
     }
-
-    public VaultType getVaultType() {
-        return vaultType;
-    }
-
-    public void setVaultType(VaultType pVaultType) {
-        vaultType = pVaultType;
+    public void setDescription(String pDescription) {
+        description = pDescription;
     }
 
     public boolean isFolderLocked() {
         return folderLocked;
     }
-
     public void setFolderLocked(boolean folderLocked) {
         this.folderLocked = folderLocked;
     }
@@ -120,8 +104,9 @@ public class Workspace implements Serializable, Cloneable {
         if (this == pObj) {
             return true;
         }
-        if (!(pObj instanceof Workspace))
+        if (!(pObj instanceof Workspace)){
             return false;
+        }
         Workspace workspace = (Workspace) pObj;
         return workspace.id.equals(id);
     }
@@ -134,12 +119,10 @@ public class Workspace implements Serializable, Cloneable {
 
     @Override
     public Workspace clone() {
-        Workspace clone = null;
         try {
-            clone = (Workspace) super.clone();
+            return (Workspace) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new InternalError();
         }
-        return clone;
     }
 }

@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -23,161 +23,149 @@ import com.docdoku.core.common.Account;
 import com.docdoku.core.common.User;
 import com.docdoku.core.common.UserGroupKey;
 import com.docdoku.core.common.Workspace;
-import com.docdoku.core.services.AccessRightException;
-import com.docdoku.core.services.AccountNotFoundException;
-import com.docdoku.core.services.CreationException;
-import com.docdoku.core.services.FolderAlreadyExistsException;
-import com.docdoku.core.services.FolderNotFoundException;
-import com.docdoku.core.services.IDocumentManagerLocal;
+import com.docdoku.core.exceptions.*;
+import com.docdoku.core.security.UserGroupMapping;
+import com.docdoku.core.services.IAccountManagerLocal;
 import com.docdoku.core.services.IUserManagerLocal;
-import com.docdoku.core.services.NotAllowedException;
-import com.docdoku.core.services.UserAlreadyExistsException;
-import com.docdoku.core.services.UserGroupAlreadyExistsException;
-import com.docdoku.core.services.UserGroupNotFoundException;
-import com.docdoku.core.services.UserNotActiveException;
-import com.docdoku.core.services.UserNotFoundException;
-import com.docdoku.core.services.WorkspaceAlreadyExistsException;
-import com.docdoku.core.services.WorkspaceNotFoundException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.docdoku.core.services.IWorkspaceManagerLocal;
+
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.*;
 
-@ManagedBean(name = "workspaceBean")
+@Named("workspaceBean")
 @RequestScoped
 public class WorkspaceBean {
 
     @EJB
-    private IDocumentManagerLocal documentService;
+    private IWorkspaceManagerLocal workspaceManager;
+
     @EJB
     private IUserManagerLocal userManager;
-    private Map<String, Boolean> selectedGroups = new HashMap<String, Boolean>();
-    private Map<String, Boolean> selectedLogins = new HashMap<String, Boolean>();
+
+    @EJB
+    private IAccountManagerLocal accountManager;
+
+    @Inject
+    private AdminStateBean adminState;
+
+    private Map<String, Boolean> selectedGroups = new HashMap<>();
+    private Map<String, Boolean> selectedLogins = new HashMap<>();
     private String loginToAdd;
     private String groupToCreate;
     private String workspaceAdmin;
     private String workspaceId;
     private String workspaceDescription;
     private boolean freezeFolders;
-    @ManagedProperty(value = "#{adminStateBean}")
-    private AdminStateBean adminState;
 
     public WorkspaceBean() {
     }
 
-    public String editWorkspace() throws WorkspaceNotFoundException, UserNotFoundException, UserNotActiveException {
+    public String editWorkspace() throws WorkspaceNotFoundException, UserNotFoundException, UserNotActiveException, AccountNotFoundException {
         Workspace wks = adminState.getCurrentWorkspace();
         this.workspaceId = wks.getId();
         this.workspaceDescription = wks.getDescription();
         this.freezeFolders = wks.isFolderLocked();
-        //this.workspaceAdmin = new User();
         this.workspaceAdmin = wks.getAdmin().getLogin();
-
-        return "/admin/workspace/workspaceEditionForm.xhtml";
+        HttpServletRequest request = (HttpServletRequest) (FacesContext.getCurrentInstance().getExternalContext().getRequest());
+        return request.getContextPath() + "/admin/workspace/workspaceEditionForm.xhtml";
     }
 
-    public String createGroup() throws UserGroupAlreadyExistsException, AccessRightException, AccountNotFoundException, CreationException {
+
+    public String synchronizeIndexer() throws AccessRightException, UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException {
+        if(userManager.isCallerInRole(UserGroupMapping.ADMIN_ROLE_ID)){
+            String wksId = adminState.getSelectedWorkspace();
+            workspaceManager.synchronizeIndexer(wksId);
+            HttpServletRequest request = (HttpServletRequest) (FacesContext.getCurrentInstance().getExternalContext().getRequest());
+            return request.getContextPath() + "/admin/workspace/workspaceIndexed.xhtml";
+        }else{
+            User user = userManager.checkWorkspaceReadAccess(adminState.getSelectedWorkspace());
+            throw new AccessRightException(new Locale(user.getLanguage()),user);
+        }
+    }
+
+    public String deleteWorkspace() throws WorkspaceNotFoundException, UserNotFoundException, UserNotActiveException, AccessRightException, IOException, StorageException, AccountNotFoundException {
+        Workspace wks = adminState.getCurrentWorkspace();
+        workspaceManager.deleteWorkspace(wks.getId());
+        HttpServletRequest request = (HttpServletRequest) (FacesContext.getCurrentInstance().getExternalContext().getRequest());
+        return request.getContextPath() + "/admin/workspace/workspaceDeleted.xhtml";
+    }
+
+    public String createGroup() throws UserGroupAlreadyExistsException, AccessRightException, AccountNotFoundException, CreationException, WorkspaceNotFoundException {
         userManager.createUserGroup(groupToCreate, adminState.getCurrentWorkspace());
-        return "/admin/workspace/manageUsers.xhtml";
+        HttpServletRequest request = (HttpServletRequest) (FacesContext.getCurrentInstance().getExternalContext().getRequest());
+        return request.getContextPath() + "/admin/workspace/manageUsers.xhtml";
     }
 
     
     public String addUser() throws WorkspaceNotFoundException, UserNotFoundException, UserNotActiveException, AccessRightException, UserGroupNotFoundException, NotAllowedException, AccountNotFoundException, UserAlreadyExistsException, FolderAlreadyExistsException, CreationException {
         Workspace workspace = adminState.getCurrentWorkspace();
-        User[] users = documentService.getUsers(workspace.getId());
-        //TODO switch to a more JSF style code
         HttpServletRequest request = (HttpServletRequest) (FacesContext.getCurrentInstance().getExternalContext().getRequest());
-        
-        switch (workspace.getVaultType()) {
-            case DEMO:
-                if (users.length > 1) {
-                    throw new NotAllowedException(request.getLocale(), "NotAllowedException1");
-                }
-                break;
 
-            case SMALL:
-                if (users.length > 9) {
-                    throw new NotAllowedException(request.getLocale(), "NotAllowedException2");
-                }
-                break;
-
-            case LARGE:
-                if (users.length > 19) {
-                    throw new NotAllowedException(request.getLocale(), "NotAllowedException3");
-                }
-                break;
-        }
-        
-        if (adminState.getSelectedGroup() != null && !adminState.getSelectedGroup().equals("")) {
+        if (adminState.getSelectedGroup() != null && !adminState.getSelectedGroup().isEmpty()) {
             userManager.addUserInGroup(new UserGroupKey(workspace.getId(), adminState.getSelectedGroup()), loginToAdd);
-            return "/admin/workspace/manageUsersGroup.xhtml?group=" + adminState.getSelectedGroup();
+            return request.getContextPath() + "/admin/workspace/manageUsersGroup.xhtml?group=" + adminState.getSelectedGroup();
         } else {
             userManager.addUserInWorkspace(workspace.getId(), loginToAdd);
-            return "/admin/workspace/manageUsers.xhtml";
+            return request.getContextPath() + "/admin/workspace/manageUsers.xhtml";
         }
 
     }
 
     public String updateWorkspace() throws AccountNotFoundException, AccessRightException, WorkspaceNotFoundException {
-
-        //TODO switch to a more JSF style code
-        HttpServletRequest request = (HttpServletRequest) (FacesContext.getCurrentInstance().getExternalContext().getRequest());
-        HttpSession sessionHTTP = request.getSession();
-
         Workspace workspace = adminState.getCurrentWorkspace();
-
-        Workspace clone = workspace.clone();
-
-        clone.setFolderLocked(freezeFolders);
-        clone.setDescription(workspaceDescription);
-
-
-        Account newAdmin = null;
-        if (!clone.getAdmin().getLogin().equals(workspaceAdmin)) {
-            newAdmin = userManager.getAccount(workspaceAdmin);
-            clone.setAdmin(newAdmin);
-        }
-        userManager.updateWorkspace(clone);
-
+        Account newAdmin = accountManager.getAccount(workspaceAdmin);
         workspace.setDescription(workspaceDescription);
         workspace.setFolderLocked(freezeFolders);
-        if (newAdmin != null) {
-            workspace.setAdmin(newAdmin);
-
-            Map<String, Workspace> administeredWorkspaces = (Map<String, Workspace>) sessionHTTP.getAttribute("administeredWorkspaces");
-            administeredWorkspaces.remove(workspace.getId());
-            Set<Workspace> regularWorkspaces = (Set<Workspace>) sessionHTTP.getAttribute("regularWorkspaces");
-            regularWorkspaces.add(workspace);
-        }
-
-        return "/admin/workspace/editWorkspace.xhtml";
+        workspace.setAdmin(newAdmin);
+        userManager.updateWorkspace(workspace);
+        HttpServletRequest request = (HttpServletRequest) (FacesContext.getCurrentInstance().getExternalContext().getRequest());
+        return request.getContextPath() + "/admin/workspace/editWorkspace.xhtml";
     }
 
-    public String createWorkspace() throws FolderAlreadyExistsException, UserAlreadyExistsException, WorkspaceAlreadyExistsException, CreationException {
-
-        //TODO switch to a more JSF style code
-        HttpServletRequest request = (HttpServletRequest) (FacesContext.getCurrentInstance().getExternalContext().getRequest());
-        HttpSession sessionHTTP = request.getSession();
-
-        Account account = (Account) sessionHTTP.getAttribute("account");
-        Map<String, Workspace> administeredWorkspaces = (Map<String, Workspace>) sessionHTTP.getAttribute("administeredWorkspaces");
-
-        Workspace.VaultType vaultType = Workspace.VaultType.UNLIMITED;
-
-        Workspace workspace = userManager.createWorkspace(workspaceId, account, workspaceDescription, vaultType, freezeFolders);
-
-        administeredWorkspaces.put(workspace.getId(), workspace);
+    public String createWorkspace() throws FolderAlreadyExistsException, UserAlreadyExistsException, WorkspaceAlreadyExistsException, CreationException, NotAllowedException, AccountNotFoundException, ESIndexNamingException, IOException {
+        String remoteUser = FacesContext.getCurrentInstance().getExternalContext().getRemoteUser();
+        Account account;
+        if(userManager.isCallerInRole(UserGroupMapping.ADMIN_ROLE_ID)){
+            account = accountManager.getAccount(loginToAdd);
+        }else{
+            account = accountManager.getAccount(remoteUser);
+        }
+        Workspace workspace = userManager.createWorkspace(workspaceId, account, workspaceDescription, freezeFolders);
         adminState.setSelectedWorkspace(workspace.getId());
         adminState.setSelectedGroup(null);
-        return "/admin/workspace/createWorkspace.xhtml";
+
+        ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+        HttpServletRequest request = (HttpServletRequest) ec.getRequest();
+        ec.redirect(request.getContextPath() + "/faces/admin/workspace/createWorkspace.xhtml");
+        return "";
+    }
+
+    public void goToDocuments() throws AccountNotFoundException, IOException, WorkspaceNotFoundException {
+        Workspace workspace = adminState.getCurrentWorkspace();
+        ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+        HttpServletRequest request = (HttpServletRequest) ec.getRequest();
+        ec.redirect(request.getContextPath() + "/document-management/#" + workspace.getId() + "/folders");
+    }
+
+    public void goToProducts() throws AccountNotFoundException, IOException, WorkspaceNotFoundException {
+        Workspace workspace = adminState.getCurrentWorkspace();
+        ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+        HttpServletRequest request = (HttpServletRequest) ec.getRequest();
+        ec.redirect(request.getContextPath() + "/product-management/#" + workspace.getId() + "/products");
+    }
+
+    public void goToChangeManagement() throws AccountNotFoundException, IOException, WorkspaceNotFoundException {
+        Workspace workspace = adminState.getCurrentWorkspace();
+        ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+        HttpServletRequest request = (HttpServletRequest) ec.getRequest();
+        ec.redirect(request.getContextPath() + "/change-management/#" + workspace.getId() + "/workflows");
     }
 
     public void read() throws AccessRightException, AccountNotFoundException, WorkspaceNotFoundException {
@@ -197,7 +185,7 @@ public class WorkspaceBean {
         selectedLogins.clear();
     }
     
-    public void remove() throws UserGroupNotFoundException, AccessRightException, UserNotFoundException, NotAllowedException, AccountNotFoundException, WorkspaceNotFoundException, FolderNotFoundException {
+    public void remove() throws UserGroupNotFoundException, AccessRightException, UserNotFoundException, NotAllowedException, AccountNotFoundException, WorkspaceNotFoundException, FolderNotFoundException, ESServerException, EntityConstraintException, DocumentRevisionNotFoundException, UserNotActiveException {
         if (!selectedLogins.isEmpty()) {
             userManager.removeUsers(adminState.getSelectedWorkspace(), getLogins());
         }
@@ -242,7 +230,7 @@ public class WorkspaceBean {
     }
 
     private String[] getGroupIds() {
-        List<String> groupIds = new ArrayList<String>();
+        List<String> groupIds = new ArrayList<>();
         for (Map.Entry<String, Boolean> entry : selectedGroups.entrySet()) {
             if (entry.getValue()) {
                 groupIds.add(entry.getKey());
@@ -252,7 +240,7 @@ public class WorkspaceBean {
     }
 
     private String[] getLogins() {
-        List<String> logins = new ArrayList<String>();
+        List<String> logins = new ArrayList<>();
         for (Map.Entry<String, Boolean> entry : selectedLogins.entrySet()) {
             if (entry.getValue()) {
                 logins.add(entry.getKey());

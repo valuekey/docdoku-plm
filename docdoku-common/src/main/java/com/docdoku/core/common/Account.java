@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,17 +20,20 @@
 
 package com.docdoku.core.common;
 
-import java.io.Serializable;
-import java.util.*;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlTransient;
+import java.io.Serializable;
+import java.util.Date;
 
 /**
- * The <a href="Account.html">Account</a> class represents a user
- * of the application but not attached to a particular workspace.
- * 
+ * The Account class holds personal user data applicable inside the whole application.
+ * However {@link User} objects encapsulate personal information
+ * only in the context of a particular workspace.
+ *
  * @author Florent Garin
  * @version 1.0, 02/06/08
- * @since   V1.0
+ * @since V1.0
  */
 @Table(name="ACCOUNT")
 @javax.persistence.Entity
@@ -38,33 +41,33 @@ public class Account implements Serializable, Cloneable {
 
     @javax.persistence.Id
     private String login="";
-    
+
     private String name;
     private String email;
     private String language;
-    
-  
+    private String timeZone = "Europe/London";
+
+    @ManyToOne
+    private Organization organization;
+
     @javax.persistence.Temporal(javax.persistence.TemporalType.TIMESTAMP)
     private Date creationDate;
 
     public Account(){
-
     }
-    
 
-    public Account(String pLogin, String pName, String pEmail, String pLanguage, Date pCreationDate) {
+    public Account(String pLogin, String pName, String pEmail, String pLanguage, Date pCreationDate,String pTimeZone) {
         login = pLogin;
         name = pName;
         email = pEmail;
         language = pLanguage;
         creationDate = pCreationDate;
+        timeZone = pTimeZone;
     }
 
-    
     public String getLogin() {
         return login;
     }
-
     public void setLogin(String pLogin) {
         login=pLogin;
     }
@@ -72,7 +75,6 @@ public class Account implements Serializable, Cloneable {
     public String getName() {
         return name;
     }
-
     public void setName(String pName) {
         name = pName;
     }
@@ -80,17 +82,38 @@ public class Account implements Serializable, Cloneable {
     public void setEmail(String pEmail) {
         email = pEmail;
     }
-
     public String getEmail() {
         return email;
     }
-    
+
     public void setLanguage(String pLanguage) {
         language = pLanguage;
     }
-
     public String getLanguage() {
         return language;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
+    }
+
+    @XmlTransient
+    public Organization getOrganization() {
+        return organization;
+    }
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
+    }
+
+    public void setCreationDate(Date pCreationDate) {
+        creationDate = (pCreationDate!=null) ? (Date) pCreationDate.clone() : null;
+    }
+    public Date getCreationDate() {
+        return (creationDate!=null) ? (Date) creationDate.clone() : null;
     }
 
     @Override
@@ -98,22 +121,14 @@ public class Account implements Serializable, Cloneable {
         return login;
     }
 
-    public void setCreationDate(Date pCreationDate) {
-        creationDate = pCreationDate;
-    }
-
-    public Date getCreationDate() {
-        return creationDate;
-    }
-    
-
     @Override
     public boolean equals(Object pObj) {
         if (this == pObj) {
             return true;
         }
-        if (!(pObj instanceof Account))
+        if (!(pObj instanceof Account)){
             return false;
+        }
         Account account = (Account) pObj;
         return account.login.equals(login);
     }
@@ -128,7 +143,7 @@ public class Account implements Serializable, Cloneable {
      */
     @Override
     public Account clone() {
-        Account clone = null;
+        Account clone;
         try {
             clone = (Account) super.clone();
         } catch (CloneNotSupportedException e) {

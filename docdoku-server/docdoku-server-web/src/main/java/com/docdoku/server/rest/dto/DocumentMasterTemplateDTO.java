@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -23,8 +23,6 @@ package com.docdoku.server.rest.dto;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -39,9 +37,12 @@ public class DocumentMasterTemplateDTO implements Serializable{
     private Date creationDate;
     private boolean idGenerated;
     private String mask;
+    private String workflowModelId;
 
     private List<String> attachedFiles;
-    private Set<InstanceAttributeTemplateDTO> attributeTemplates;
+    private List<InstanceAttributeTemplateDTO> attributeTemplates;
+    private boolean attributesLocked;
+    private ACLDTO acl;
     
     public DocumentMasterTemplateDTO(){
         
@@ -78,9 +79,15 @@ public class DocumentMasterTemplateDTO implements Serializable{
         this.mask = mask;
     }
 
-    
-    
-    
+
+    public String getWorkflowModelId() {
+        return workflowModelId;
+    }
+
+    public void setWorkflowModelId(String workflowModelId) {
+        this.workflowModelId = workflowModelId;
+    }
+
     public String getId() {
         return id;
     }
@@ -121,11 +128,27 @@ public class DocumentMasterTemplateDTO implements Serializable{
         this.id = id;
     }
 
-    public void setAttributeTemplates(Set<InstanceAttributeTemplateDTO> attributeTemplates) {
+    public List<InstanceAttributeTemplateDTO> getAttributeTemplates() {
+        return attributeTemplates;
+    }
+
+    public void setAttributeTemplates(List<InstanceAttributeTemplateDTO> attributeTemplates) {
         this.attributeTemplates = attributeTemplates;
     }
 
-    public Set<InstanceAttributeTemplateDTO> getAttributeTemplates() {
-        return attributeTemplates;
+    public boolean isAttributesLocked() {
+        return attributesLocked;
+    }
+
+    public void setAttributesLocked(boolean attributesLocked) {
+        this.attributesLocked = attributesLocked;
+    }
+
+    public ACLDTO getAcl() {
+        return acl;
+    }
+
+    public void setAcl(ACLDTO acl) {
+        this.acl = acl;
     }
 }

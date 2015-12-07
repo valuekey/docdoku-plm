@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,14 +19,14 @@
  */
 package com.docdoku.server.dao;
 
+import com.docdoku.core.exceptions.LayerNotFoundException;
 import com.docdoku.core.product.ConfigurationItemKey;
 import com.docdoku.core.product.Layer;
-import com.docdoku.core.services.LayerNotFoundException;
-import java.util.List;
-import java.util.Locale;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import java.util.List;
+import java.util.Locale;
 
 public class LayerDAO {
 
@@ -64,8 +64,7 @@ public class LayerDAO {
         em.flush();
     }
 
-    public void deleteLayer(int layerId) throws LayerNotFoundException {
-        Layer layer = loadLayer(layerId);
+    public void deleteLayer(Layer layer) {
         em.remove(layer);
         em.flush();
     }

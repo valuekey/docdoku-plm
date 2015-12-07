@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -21,10 +21,11 @@ package com.docdoku.core.services;
 
 import com.docdoku.core.common.Account;
 import com.docdoku.core.common.User;
-import com.docdoku.core.document.DocumentMaster;
+import com.docdoku.core.document.DocumentRevision;
+import com.docdoku.core.product.PartRevision;
 import com.docdoku.core.workflow.Task;
+
 import java.util.Collection;
-import java.util.Locale;
 
 /**
  *
@@ -32,11 +33,23 @@ import java.util.Locale;
  */
 public interface IMailerLocal {
 
-    void sendStateNotification(User[] pSubscribers, DocumentMaster pDocumentMaster);
+    void sendStateNotification(User[] pSubscribers, DocumentRevision pDocumentRevision);
 
-    void sendIterationNotification(User[] pSubscribers, DocumentMaster pDocumentMaster);
+    void sendIterationNotification(User[] pSubscribers, DocumentRevision pDocumentRevision);
 
-    void sendApproval(Collection<Task> pRunningTasks, DocumentMaster pDocumentMaster);
+    void sendApproval(Collection<Task> pRunningTasks, DocumentRevision pDocumentRevision);
 
     void sendPasswordRecovery(Account account, String passwordRRUuid);
+
+    void sendApproval(Collection<Task> runningTasks, PartRevision partRevision);
+
+    void sendWorkspaceDeletionNotification(Account admin, String workspaceId);
+
+    void sendPartRevisionWorkflowRelaunchedNotification(PartRevision partRevision);
+
+    void sendDocumentRevisionWorkflowRelaunchedNotification(DocumentRevision pDocumentRevision);
+
+    void sendIndexerResult(Account account, String workspaceId, boolean hasSuccess, String pMessage);
+
+    void sendCredential(Account account);
 }

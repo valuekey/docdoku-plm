@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -22,8 +22,10 @@
 package com.docdoku.core.product;
 
 import com.docdoku.core.common.BinaryResource;
+
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import java.util.Date;
 
 /**
  * Wraps a CAD file providing quality information.
@@ -39,18 +41,27 @@ import javax.persistence.Table;
 @Entity
 public class Geometry extends BinaryResource{
 
-        
     /**
      * Starts at 0, smaller is greater.
      */
     private int quality;
 
- 
+    /*
+    * Box
+    * */
+
+    private double xMin = 0;
+    private double yMin = 0;
+    private double zMin = 0;
+    private double xMax = 0;
+    private double yMax = 0;
+    private double zMax = 0;
+
     public Geometry() {
     }
     
-    public Geometry(int pQuality, String pFullName, long pContentLength) {
-        super(pFullName, pContentLength);
+    public Geometry(int pQuality, String pFullName, long pContentLength, Date pLastModified) {
+        super(pFullName, pContentLength, pLastModified);
         this.quality=pQuality;
     }
 
@@ -62,5 +73,97 @@ public class Geometry extends BinaryResource{
         this.quality = quality;
     }
 
-    
+    public void setBox(double x1, double y1, double z1, double x2, double y2, double z2) {
+        xMin = Math.min(x1, x2);
+        xMax = Math.max(x1, x2);
+        yMin = Math.min(y1, y2);
+        yMax = Math.max(y1, y2);
+        zMin = Math.min(z1, z2);
+        zMax = Math.max(z1, z2);
+    }
+
+    public double getxMin() {
+        return xMin;
+    }
+
+    public void setxMin(double xMin) {
+        this.xMin = xMin;
+    }
+
+    public double getyMin() {
+        return yMin;
+    }
+
+    public void setyMin(double yMin) {
+        this.yMin = yMin;
+    }
+
+    public double getzMin() {
+        return zMin;
+    }
+
+    public void setzMin(double zMin) {
+        this.zMin = zMin;
+    }
+
+    public double getxMax() {
+        return xMax;
+    }
+
+    public void setxMax(double xMax) {
+        this.xMax = xMax;
+    }
+
+    public double getyMax() {
+        return yMax;
+    }
+
+    public void setyMax(double yMax) {
+        this.yMax = yMax;
+    }
+
+    public double getzMax() {
+        return zMax;
+    }
+
+    public void setzMax(double zMax) {
+        this.zMax = zMax;
+    }
+
+    @Override
+    public int compareTo(BinaryResource pBinaryResource) {
+        if (!(pBinaryResource instanceof Geometry)) {
+            return super.compareTo(pBinaryResource);
+        }
+
+        int ret = quality - ((Geometry) pBinaryResource).quality;
+        if(ret == 0){
+            return  fullName.compareTo(((Geometry) pBinaryResource).fullName);
+        }
+        return ret;
+
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Geometry)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        Geometry geometry = (Geometry) o;
+        return quality == geometry.quality;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + quality;
+        return result;
+    }
 }

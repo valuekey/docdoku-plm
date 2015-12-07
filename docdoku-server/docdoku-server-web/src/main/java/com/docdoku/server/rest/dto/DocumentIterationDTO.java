@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,8 +19,10 @@
  */
 package com.docdoku.server.rest.dto;
 
+import javax.xml.bind.annotation.XmlElement;
 import java.io.Serializable;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -29,28 +31,41 @@ import java.util.*;
 public class DocumentIterationDTO implements Serializable {
 
     private String workspaceId;
+    private String id;
     private String documentMasterId;
-    private String documentMasterVersion;
+    private String version;
     private int iteration;
     private Date creationDate;
+    private Date modificationDate;
+    private Date checkInDate;
+    private String title;
     private UserDTO author;
+    @XmlElement(nillable = true)
     private String revisionNote;
     private List<String> attachedFiles;
     private List<InstanceAttributeDTO> instanceAttributes;
-    private List<DocumentIterationDTO> linkedDocuments;
+    private List<DocumentRevisionDTO> linkedDocuments;
 
     public DocumentIterationDTO() {
     }
 
-    public DocumentIterationDTO(String pWorkspaceId, String pDocumentMasterId, String pDocumentMasterVersion, int pIteration) {
+    public DocumentIterationDTO(String pWorkspaceId, String pDocumentMasterId, String pVersion, int pIteration) {
         workspaceId = pWorkspaceId;
         documentMasterId = pDocumentMasterId;
-        documentMasterVersion = pDocumentMasterVersion;
+        version = pVersion;
         iteration = pIteration;
     }
 
     public UserDTO getAuthor() {
         return author;
+    }
+
+    public String getId() {
+        return documentMasterId+"-"+version+"-"+iteration;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public void setAuthor(UserDTO author) {
@@ -65,6 +80,22 @@ public class DocumentIterationDTO implements Serializable {
         this.creationDate = creationDate;
     }
 
+    public Date getModificationDate() {
+        return modificationDate;
+    }
+
+    public void setModificationDate(Date modificationDate) {
+        this.modificationDate = modificationDate;
+    }
+
+    public Date getCheckInDate() {
+        return checkInDate;
+    }
+
+    public void setCheckInDate(Date checkInDate) {
+        this.checkInDate = checkInDate;
+    }
+
     public void setRevisionNote(String pRevisionNote) {
         revisionNote = pRevisionNote;
     }
@@ -77,7 +108,7 @@ public class DocumentIterationDTO implements Serializable {
         return attachedFiles;
     }
 
-    public List<DocumentIterationDTO> getLinkedDocuments() {
+    public List<DocumentRevisionDTO> getLinkedDocuments() {
         return linkedDocuments;
     }
 
@@ -85,7 +116,7 @@ public class DocumentIterationDTO implements Serializable {
         this.attachedFiles = attachedFiles;
     }
 
-    public void setLinkedDocuments(List<DocumentIterationDTO> linkedDocuments) {
+    public void setLinkedDocuments(List<DocumentRevisionDTO> linkedDocuments) {
         this.linkedDocuments = linkedDocuments;
     }
 
@@ -99,7 +130,7 @@ public class DocumentIterationDTO implements Serializable {
 
     @Override
     public String toString() {
-        return workspaceId + "-" + documentMasterId + "-" + documentMasterVersion + "-" + iteration;
+        return workspaceId + "-" + documentMasterId + "-" + version + "-" + iteration;
     }
 
     public String getWorkspaceId() {
@@ -118,19 +149,31 @@ public class DocumentIterationDTO implements Serializable {
         documentMasterId = pDocumentMasterId;
     }
 
-    public String getDocumentMasterVersion() {
-        return documentMasterVersion;
-    }
-
-    public void setDocumentMasterVersion(String pDocumentMasterVersion) {
-        this.documentMasterVersion = pDocumentMasterVersion;
-    }
-
     public int getIteration() {
         return iteration;
     }
 
     public void setIteration(int pIteration) {
         iteration = pIteration;
+    }
+
+    public DocumentRevisionDTO getDocumentRevision() {
+        return new DocumentRevisionDTO(workspaceId, id+"-"+version, version);
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 }

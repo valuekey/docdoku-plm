@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,33 +20,31 @@
 
 package com.docdoku.core.common;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.Column;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
 
 /**
  * Class which gathers users in a workspace context.
  * 
  * @author Florent Garin
  * @version 1.1, 8/07/09
- * @since   V1.1
+ * @since V1.1
  */
 @Table(name="USERGROUP")
 @javax.persistence.IdClass(com.docdoku.core.common.UserGroupKey.class)
 @javax.persistence.Entity
-public class UserGroup implements Serializable, Cloneable {
+@NamedQueries({
+        @NamedQuery(name="UserGroup.findUserGroups", query="SELECT u FROM UserGroup u WHERE :user member of u.users AND u.workspaceId = :workspaceId")
+})
+public class UserGroup implements Serializable {
 
-    @Column(length=50)
+    @Column(length=100)
     @javax.persistence.Id
     private String id="";
 
-    @javax.persistence.Column(name = "WORKSPACE_ID", length=50, nullable = false, insertable = false, updatable = false)
+    @javax.persistence.Column(name = "WORKSPACE_ID", length=100, nullable = false, insertable = false, updatable = false)
     @javax.persistence.Id
     private String workspaceId="";
 
@@ -63,7 +61,7 @@ public class UserGroup implements Serializable, Cloneable {
         @JoinColumn(name="USERGROUP_ID", referencedColumnName="ID"),
         @JoinColumn(name="USERGROUP_ID_WORKSPACE_ID", referencedColumnName="WORKSPACE_ID")
     })
-    private Set<User> users=new HashSet<User>();
+    private Set<User> users=new HashSet<>();
 
     public UserGroup(){
 
@@ -102,5 +100,12 @@ public class UserGroup implements Serializable, Cloneable {
         return workspaceId;
     }
 
-    
+    public void setUsers(Set<User> users) {
+        this.users = users;
+    }
+
+    @Override
+    public String toString() {
+        return getId();
+    }
 }

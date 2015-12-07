@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,15 +20,17 @@
 
 package com.docdoku.core.workflow;
 
-import java.util.ArrayList;
+import com.docdoku.core.common.User;
+
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.util.LinkedList;
 import java.util.List;
-import javax.persistence.*;
+import java.util.Map;
 
 /**
  * This class is the model used to create instances
- * of <a href="ParallelActivity.html">ParallelActivity</a> attached to
- * workflows.
+ * of {@link ParallelActivity} attached to workflows.
  * 
  * @author Florent Garin
  * @version 1.0, 02/06/08
@@ -50,7 +52,7 @@ public class ParallelActivityModel extends ActivityModel {
     }
     
     public ParallelActivityModel(WorkflowModel pWorkflowModel, String pLifeCycleState, int pTasksToComplete) {
-        this(pWorkflowModel, 0,  new ArrayList<TaskModel>(), pLifeCycleState,pTasksToComplete);      
+        this(pWorkflowModel, 0,  new LinkedList<>(), pLifeCycleState,pTasksToComplete);
     }
 
  
@@ -59,22 +61,27 @@ public class ParallelActivityModel extends ActivityModel {
     }
 
     public void setTasksToComplete(int pTasksToComplete) {
-        tasksToComplete = pTasksToComplete;
+        if (pTasksToComplete < this.getTaskModels().size()) {
+            tasksToComplete = pTasksToComplete;
+        } else {
+            tasksToComplete = this.getTaskModels().size();
+        }
     }
 
     @Override
     public void removeTaskModel(TaskModel pTaskModel) {
         super.removeTaskModel(pTaskModel);
-        if (tasksToComplete > taskModels.size())
+        if (tasksToComplete > taskModels.size()) {
             tasksToComplete--;
+        }
     }
 
     @Override
-    public Activity createActivity() {
+    public Activity createActivity(Map<Role, User> roleUserMap) {
         Activity activity = new ParallelActivity(step, lifeCycleState, tasksToComplete);
         List<Task> tasks = activity.getTasks();
         for(TaskModel model:taskModels){
-            Task task = model.createTask();
+            Task task = model.createTask(roleUserMap);
             task.setActivity(activity);
             tasks.add(task);
         }

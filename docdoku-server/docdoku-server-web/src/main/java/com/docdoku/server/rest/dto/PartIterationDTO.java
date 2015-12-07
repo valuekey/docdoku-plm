@@ -1,3 +1,22 @@
+/*
+ * DocDoku, Professional Open Source
+ * Copyright 2006 - 2015 DocDoku SARL
+ *
+ * This file is part of DocDokuPLM.
+ *
+ * DocDokuPLM is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * DocDokuPLM is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with DocDokuPLM.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.docdoku.server.rest.dto;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -13,12 +32,28 @@ public class PartIterationDTO implements Serializable {
     private String nativeCADFile;
     private String iterationNote;
     private UserDTO author;
+
     private Date creationDate;
+    private Date modificationDate;
+    private Date checkInDate;
     private List<InstanceAttributeDTO> instanceAttributes;
+    private List<InstanceAttributeTemplateDTO> instanceAttributeTemplates;
     private List<PartUsageLinkDTO> components;
-    private List<DocumentIterationDTO> linkedDocuments;
+    private List<DocumentRevisionDTO> linkedDocuments;
+    private String number;
+    private String name;
+    private String version;
+    private List<String> attachedFiles;
 
     public PartIterationDTO() {
+    }
+
+    public PartIterationDTO(String pWorkspaceId, String pName, String pNumber, String pVersion, int pIteration) {
+        workspaceId = pWorkspaceId;
+        number = pNumber;
+        name = pName;
+        version = pVersion;
+        iteration = pIteration;
     }
 
     public String getWorkspaceId() {
@@ -69,6 +104,22 @@ public class PartIterationDTO implements Serializable {
         this.creationDate = creationDate;
     }
 
+    public Date getModificationDate() {
+        return modificationDate;
+    }
+
+    public void setModificationDate(Date modificationDate) {
+        this.modificationDate = modificationDate;
+    }
+
+    public Date getCheckInDate() {
+        return checkInDate;
+    }
+
+    public void setCheckInDate(Date checkInDate) {
+        this.checkInDate = checkInDate;
+    }
+
     public List<InstanceAttributeDTO> getInstanceAttributes() {
         return instanceAttributes;
     }
@@ -85,11 +136,52 @@ public class PartIterationDTO implements Serializable {
         this.components = components;
     }
 
-    public List<DocumentIterationDTO> getLinkedDocuments() {
+    public List<DocumentRevisionDTO> getLinkedDocuments() {
         return linkedDocuments;
     }
 
-    public void setLinkedDocuments(List<DocumentIterationDTO> linkedDocuments) {
+    public void setLinkedDocuments(List<DocumentRevisionDTO> linkedDocuments) {
         this.linkedDocuments = linkedDocuments;
     }
+
+    public String getNumber() {
+        return number;
+    }
+
+    public void setNumber(String number) {
+        this.number = number;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<InstanceAttributeTemplateDTO> getInstanceAttributeTemplates() {
+        return instanceAttributeTemplates;
+    }
+
+    public void setInstanceAttributeTemplates(List<InstanceAttributeTemplateDTO> instanceAttributeTemplates) {
+        this.instanceAttributeTemplates = instanceAttributeTemplates;
+    }
+
+    public List<String> getAttachedFiles() {
+        return attachedFiles;
+    }
+
+    public void setAttachedFiles(List<String> attachedFiles) {
+        this.attachedFiles = attachedFiles;
+    }
+
 }

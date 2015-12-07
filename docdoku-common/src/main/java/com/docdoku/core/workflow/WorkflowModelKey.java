@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -23,6 +23,7 @@ package com.docdoku.core.workflow;
 import java.io.Serializable;
 
 /**
+ * Identity class of {@link WorkflowModel} objects.
  *
  * @author Florent Garin
  */
@@ -42,9 +43,9 @@ public class WorkflowModelKey implements Serializable {
     @Override
     public int hashCode() {
         int hash = 1;
-	hash = 31 * hash + workspaceId.hashCode();
-	hash = 31 * hash + id.hashCode();
-	return hash;
+        hash = 31 * hash + workspaceId.hashCode();
+        hash = 31 * hash + id.hashCode();
+        return hash;
     }
     
     @Override
@@ -52,10 +53,11 @@ public class WorkflowModelKey implements Serializable {
         if (this == pObj) {
             return true;
         }
-        if (!(pObj instanceof WorkflowModelKey))
+        if (!(pObj instanceof WorkflowModelKey)) {
             return false;
+        }
         WorkflowModelKey key = (WorkflowModelKey) pObj;
-        return ((key.id.equals(id)) && (key.workspaceId.equals(workspaceId)));
+        return key.id.equals(id) && key.workspaceId.equals(workspaceId);
     }
     
     @Override

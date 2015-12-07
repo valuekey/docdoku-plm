@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -26,33 +26,61 @@ package com.docdoku.core.util;
  */
 public class NamingConvention {
     
+    private static final char[] FORBIDDEN_CHARS = {
+            '$','&','+',',','/',':',';','=','?','@','"', '<', '>', '#','%','{','}','|','\\','^','~','[',']',' ', '*','`'
+    };
+
+    private static final char[] FORBIDDEN_CHARS_MASK = {
+            '$','&','+',',','/',':',';','=','?','@','"', '<', '>','%','{','}','|','\\','^','~','[',']',' ','`'
+    };
+
+    private static final char[] FORBIDDEN_CHARS_FILE = {
+            '/', '\\', ':', '*', '?','"', '<', '>', '|', '~', '#',
+            '^', '%', '{', '}','&','$','+',',', ';', '@', '\'', '`','=', '[', ']'
+    };
     
-    private final static char[] FORBIDDEN_CHARS = {'/', '\\', ':', '*', '?',
-    '"', '<', '>', '|', '~'};
-    
-    private final static String[] FORBIDDEN_NAMES = {"",".."};
-    
+    private static final String[] FORBIDDEN_NAMES = {"",".."};
+
     private NamingConvention() {
     }
     
-    private static boolean forbidden(char pChar) {
-        for (int i = 0; i < FORBIDDEN_CHARS.length; i++)
-            if (pChar == FORBIDDEN_CHARS[i])
+    private static boolean forbidden(char pChar, char[] forbiddenChars) {
+        for (char forbiddenChar : forbiddenChars) {
+            if (pChar == forbiddenChar) {
                 return true;
+            }
+        }
         return false;
+    }
+
+    private static boolean correct(String pShortName, char[] forbiddenChars) {
+        if (pShortName == null) {
+            return false;
+        }
+
+        for (String forbiddenName : FORBIDDEN_NAMES) {
+            if (pShortName.equals(forbiddenName)) {
+                return false;
+            }
+        }
+
+        for (int i = 0; i < pShortName.length(); i++) {
+            if (forbidden(pShortName.charAt(i), forbiddenChars)) {
+                return false;
+            }
+        }
+        return true;
     }
     
     public static boolean correct(String pShortName) {
-        if (pShortName == null)
-            return false;
-        
-        for (int i = 0; i < FORBIDDEN_NAMES.length; i++)
-            if (pShortName.equals(FORBIDDEN_NAMES[i]))
-                return false;
-        
-        for (int i = 0; i < pShortName.length(); i++)
-            if (forbidden(pShortName.charAt(i)))
-                return false;
-        return true;
+        return correct(pShortName, FORBIDDEN_CHARS);
+    }
+
+
+    public static boolean correctNameFile(String pShortName) {
+        return correct(pShortName, FORBIDDEN_CHARS_FILE);
+    }
+    public static boolean correctNameMask(String mask) {
+        return correct(mask, FORBIDDEN_CHARS_MASK);
     }
 }

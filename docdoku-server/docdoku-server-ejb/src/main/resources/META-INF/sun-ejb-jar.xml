@@ -4,6 +4,11 @@
     <security-role-mapping>
         <role-name>users</role-name>
         <group-name>users</group-name>
+
+    </security-role-mapping>
+    <security-role-mapping>
+        <role-name>admin</role-name>
+        <group-name>admin</group-name>
     </security-role-mapping>
     <enterprise-beans>
         <ejb>
@@ -19,11 +24,35 @@
             </webservice-endpoint>
         </ejb>
         <ejb>
+            <ejb-name>LOVManagerBean</ejb-name>
+            <jndi-name>ejb/LOVManagerBean</jndi-name>
+            <webservice-endpoint>
+                <port-component-name>LOVManagerBean</port-component-name>
+                <endpoint-address-uri>services/lov</endpoint-address-uri>
+                <login-config>
+                    <auth-method>BASIC</auth-method>
+                    <realm>docdokuRealm</realm>
+                </login-config>
+            </webservice-endpoint>
+        </ejb>
+        <ejb>
             <ejb-name>ProductManagerBean</ejb-name>
             <jndi-name>ejb/ProductManagerBean</jndi-name>
             <webservice-endpoint>
                 <port-component-name>ProductManagerBean</port-component-name>
                 <endpoint-address-uri>services/product</endpoint-address-uri>
+                <login-config>
+                    <auth-method>BASIC</auth-method>
+                    <realm>docdokuRealm</realm>
+                </login-config>
+            </webservice-endpoint>
+        </ejb>
+        <ejb>
+            <ejb-name>ProductBaselineManagerBean</ejb-name>
+            <jndi-name>ejb/ProductBaselineManagerBean</jndi-name>
+            <webservice-endpoint>
+                <port-component-name>ProductBaselineManagerBean</port-component-name>
+                <endpoint-address-uri>services/productBaseline</endpoint-address-uri>
                 <login-config>
                     <auth-method>BASIC</auth-method>
                     <realm>docdokuRealm</realm>
@@ -57,6 +86,26 @@
         <ejb>
             <ejb-name>UserManagerBean</ejb-name>
             <jndi-name>ejb/UserManagerBean</jndi-name>
+            <webservice-endpoint>
+                <port-component-name>UserManagerBean</port-component-name>
+                <endpoint-address-uri>services/user</endpoint-address-uri>
+                <login-config>
+                    <auth-method>BASIC</auth-method>
+                    <realm>docdokuRealm</realm>
+                </login-config>
+            </webservice-endpoint>
+        </ejb>
+        <ejb>
+            <ejb-name>AccountManagerBean</ejb-name>
+            <jndi-name>ejb/AccountManagerBean</jndi-name>
+            <webservice-endpoint>
+                <port-component-name>AccountManagerBean</port-component-name>
+                <endpoint-address-uri>services/account</endpoint-address-uri>
+                <login-config>
+                    <auth-method>BASIC</auth-method>
+                    <realm>docdokuRealm</realm>
+                </login-config>
+            </webservice-endpoint>
         </ejb>
         <ejb>
             <ejb-name>MailerBean</ejb-name>
@@ -67,10 +116,6 @@
             </resource-ref>
         </ejb>
         <ejb>
-            <ejb-name>IndexerBean</ejb-name>
-            <jndi-name>ejb/IndexerBean</jndi-name>
-        </ejb>
-        <ejb>
             <ejb-name>ConverterBean</ejb-name>
             <jndi-name>ejb/ConverterBean</jndi-name>
             <bean-pool>
@@ -78,10 +123,6 @@
                 <resize-quantity>1</resize-quantity>
                 <max-pool-size>1</max-pool-size>
             </bean-pool>
-        </ejb>
-        <ejb>
-            <ejb-name>IndexSearcherBean</ejb-name>
-            <jndi-name>ejb/IndexSearcherBean</jndi-name>
         </ejb>
     </enterprise-beans>
 </sun-ejb-jar>

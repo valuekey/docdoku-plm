@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -24,7 +24,7 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 
 /**
- * Defines a numerical custom attribute of a document.
+ * Defines a numerical custom attribute of a document, part, product and other objects.
  * 
  * @author Florent Garin
  * @version 1.0, 02/06/08
@@ -41,8 +41,8 @@ public class InstanceNumberAttribute extends InstanceAttribute{
     public InstanceNumberAttribute() {
     }
     
-    public InstanceNumberAttribute(String pName, float pValue) {
-        super(pName);
+    public InstanceNumberAttribute(String pName, float pValue, boolean pMandatory) {
+        super(pName, pMandatory);
         setNumberValue(pValue);
     }
 
@@ -50,15 +50,6 @@ public class InstanceNumberAttribute extends InstanceAttribute{
     public Float getValue() {
         return numberValue;
     }
-
-    public float getNumberValue() {
-        return numberValue;
-    }
-
-    public void setNumberValue(float numberValue) {
-        this.numberValue = numberValue;
-    }
-
     @Override
     public boolean setValue(Object pValue) {
         try{
@@ -69,4 +60,10 @@ public class InstanceNumberAttribute extends InstanceAttribute{
         }
     }
 
+    public float getNumberValue() {
+        return numberValue;
+    }
+    public void setNumberValue(float numberValue) {
+        this.numberValue = numberValue;
+    }
 }

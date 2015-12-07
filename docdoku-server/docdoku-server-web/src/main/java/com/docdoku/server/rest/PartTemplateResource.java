@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,14 +19,18 @@
  */
 package com.docdoku.server.rest;
 
+import com.docdoku.core.common.BinaryResource;
+import com.docdoku.core.exceptions.*;
+import com.docdoku.core.exceptions.NotAllowedException;
+import com.docdoku.core.meta.DefaultAttributeTemplate;
 import com.docdoku.core.meta.InstanceAttributeTemplate;
+import com.docdoku.core.meta.ListOfValuesAttributeTemplate;
 import com.docdoku.core.product.PartMasterTemplate;
 import com.docdoku.core.product.PartMasterTemplateKey;
+import com.docdoku.core.security.ACL;
 import com.docdoku.core.security.UserGroupMapping;
 import com.docdoku.core.services.IProductManagerLocal;
-import com.docdoku.server.rest.dto.InstanceAttributeTemplateDTO;
-import com.docdoku.server.rest.dto.PartMasterTemplateDTO;
-import com.docdoku.server.rest.dto.PartTemplateCreationDTO;
+import com.docdoku.server.rest.dto.*;
 import org.dozer.DozerBeanMapperSingletonWrapper;
 import org.dozer.Mapper;
 
@@ -36,10 +40,11 @@ import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  *
@@ -63,147 +68,184 @@ public class PartTemplateResource {
     }
 
     @GET
-    @Produces("application/json;charset=UTF-8")
-    public PartMasterTemplateDTO[] getPartMasterTemplates(@PathParam("workspaceId") String workspaceId) {
-        try {
+    @Produces(MediaType.APPLICATION_JSON)
+    public PartMasterTemplateDTO[] getPartMasterTemplates(@PathParam("workspaceId") String workspaceId)
+            throws EntityNotFoundException, UserNotActiveException {
 
-            PartMasterTemplate[] partMsTemplates = productService.getPartMasterTemplates(workspaceId);
-            PartMasterTemplateDTO[] dtos = new PartMasterTemplateDTO[partMsTemplates.length];
 
-            for (int i = 0; i < partMsTemplates.length; i++) {
-                dtos[i] = mapper.map(partMsTemplates[i], PartMasterTemplateDTO.class);
-            }
+        PartMasterTemplate[] partMsTemplates = productService.getPartMasterTemplates(workspaceId);
+        PartMasterTemplateDTO[] dtos = new PartMasterTemplateDTO[partMsTemplates.length];
 
-            return dtos;
-
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
+        for (int i = 0; i < partMsTemplates.length; i++) {
+            dtos[i] = mapper.map(partMsTemplates[i], PartMasterTemplateDTO.class);
         }
+
+        return dtos;
     }
 
     @GET
     @Path("{templateId}")
-    @Produces("application/json;charset=UTF-8")
-    public PartMasterTemplateDTO getPartMasterTemplates(@PathParam("workspaceId") String workspaceId, @PathParam("templateId") String templateId) {
-        try {
+    @Produces(MediaType.APPLICATION_JSON)
+    public PartMasterTemplateDTO getPartMasterTemplate(@PathParam("workspaceId") String workspaceId, @PathParam("templateId") String templateId)
+            throws EntityNotFoundException, UserNotActiveException {
 
-            PartMasterTemplate partMsTemplate = productService.getPartMasterTemplate(new PartMasterTemplateKey(workspaceId, templateId));
-            PartMasterTemplateDTO dto = mapper.map(partMsTemplate, PartMasterTemplateDTO.class);
-
-            return dto;
-
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
-        }
+        PartMasterTemplate partMsTemplate = productService.getPartMasterTemplate(new PartMasterTemplateKey(workspaceId, templateId));
+        return mapper.map(partMsTemplate, PartMasterTemplateDTO.class);
     }
     
     @GET
     @Path("{templateId}/generate_id")
-    @Produces("application/json;charset=UTF-8")
-    public String generatePartMsId(@PathParam("workspaceId") String workspaceId, @PathParam("templateId") String templateId) {
-        try {
-            return productService.generateId(workspaceId, templateId);
+    @Produces(MediaType.APPLICATION_JSON)
+    public TemplateGeneratedIdDTO generatePartMsId(@PathParam("workspaceId") String workspaceId, @PathParam("templateId") String templateId)
+            throws EntityNotFoundException, UserNotActiveException {
 
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
-        }
-    }    
+        String generatedId = productService.generateId(workspaceId, templateId);
+        return new TemplateGeneratedIdDTO(generatedId);
+    }
 
     @POST
-    @Consumes("application/json;charset=UTF-8")
-    @Produces("application/json;charset=UTF-8")
-    public PartMasterTemplateDTO createPartMasterTemplate(@PathParam("workspaceId") String workspaceId, PartTemplateCreationDTO templateCreationDTO) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public PartMasterTemplateDTO createPartMasterTemplate(@PathParam("workspaceId") String workspaceId, PartTemplateCreationDTO templateCreationDTO)
+            throws EntityNotFoundException, EntityAlreadyExistsException, CreationException, AccessRightException, NotAllowedException {
 
-        try {      
-            String id =templateCreationDTO.getReference();
-            String partType = templateCreationDTO.getPartType();
-            String mask = templateCreationDTO.getMask();
-            boolean idGenerated = templateCreationDTO.isIdGenerated();
+        String id =templateCreationDTO.getReference();
+        String partType = templateCreationDTO.getPartType();
+        String workflowModelId = templateCreationDTO.getWorkflowModelId();
+        String mask = templateCreationDTO.getMask();
+        boolean idGenerated = templateCreationDTO.isIdGenerated();
+        boolean attributesLocked = templateCreationDTO.isAttributesLocked();
 
-            Set<InstanceAttributeTemplateDTO> attributeTemplates = templateCreationDTO.getAttributeTemplates();
-            List<InstanceAttributeTemplateDTO> attributeTemplatesList = new ArrayList<InstanceAttributeTemplateDTO>(attributeTemplates);
-            InstanceAttributeTemplateDTO[] attributeTemplatesDtos = new InstanceAttributeTemplateDTO[attributeTemplatesList.size()];
-
-            for (int i = 0; i < attributeTemplatesDtos.length; i++) {
-                attributeTemplatesDtos[i] = attributeTemplatesList.get(i);
-            }
-
-            PartMasterTemplate template = productService.createPartMasterTemplate(workspaceId, id, partType, mask, createInstanceAttributeTemplateFromDto(attributeTemplatesDtos), idGenerated);
-            PartMasterTemplateDTO templateDto = mapper.map(template, PartMasterTemplateDTO.class);
-
-            return templateDto;
-
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
+        List<InstanceAttributeTemplateDTO> attributeTemplates = templateCreationDTO.getAttributeTemplates();
+        String[] lovNames=new String[attributeTemplates.size()];
+        for (int i=0;i<attributeTemplates.size();i++) {
+            lovNames[i] = attributeTemplates.get(i).getLovName();
         }
+
+        List<InstanceAttributeTemplateDTO> attributeInstanceTemplates = templateCreationDTO.getAttributeInstanceTemplates();
+        String[] instanceLovNames = new String[attributeInstanceTemplates.size()];
+        for (int i=0;i<attributeInstanceTemplates.size();i++) {
+            instanceLovNames[i] = attributeInstanceTemplates.get(i).getLovName();
+        }
+
+        PartMasterTemplate template = productService.createPartMasterTemplate(workspaceId, id, partType, workflowModelId, mask, createInstanceAttributeTemplateFromDto(attributeTemplates), lovNames, createInstanceAttributeTemplateFromDto(attributeInstanceTemplates), instanceLovNames, idGenerated, attributesLocked);
+        return mapper.map(template, PartMasterTemplateDTO.class);
     }
     
     @PUT
     @Path("{templateId}") 
-    @Consumes("application/json;charset=UTF-8")
-    @Produces("application/json;charset=UTF-8")  
-    public PartMasterTemplateDTO updatePartMsTemplate(@PathParam("workspaceId") String workspaceId,@PathParam("templateId") String templateId, PartMasterTemplateDTO partMsTemplateDTO) {
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public PartMasterTemplateDTO updatePartMsTemplate(@PathParam("workspaceId") String workspaceId,@PathParam("templateId") String templateId, PartMasterTemplateDTO partMsTemplateDTO)
+            throws EntityNotFoundException, AccessRightException, UserNotActiveException {
 
-        try {
-            String id = partMsTemplateDTO.getId();
-            String partType = partMsTemplateDTO.getPartType();
-            String mask = partMsTemplateDTO.getMask();
-            boolean idGenerated = partMsTemplateDTO.isIdGenerated();
+        String partType = partMsTemplateDTO.getPartType();
+        String mask = partMsTemplateDTO.getMask();
+        String workflowModelId = partMsTemplateDTO.getWorkflowModelId();
+        boolean idGenerated = partMsTemplateDTO.isIdGenerated();
+        boolean attributesLocked = partMsTemplateDTO.isAttributesLocked();
 
-            Set<InstanceAttributeTemplateDTO> attributeTemplates = partMsTemplateDTO.getAttributeTemplates();
-            List<InstanceAttributeTemplateDTO> attributeTemplatesList = new ArrayList<InstanceAttributeTemplateDTO>(attributeTemplates);
-            InstanceAttributeTemplateDTO[] attributeTemplatesDtos = new InstanceAttributeTemplateDTO[attributeTemplatesList.size()];
+        List<InstanceAttributeTemplateDTO> attributeTemplates = partMsTemplateDTO.getAttributeTemplates();
+        String[] lovNames=new String[attributeTemplates.size()];
+        for (int i=0;i<attributeTemplates.size();i++) {
+            lovNames[i]=attributeTemplates.get(i).getLovName();
+        }
 
-            for (int i = 0; i < attributeTemplatesDtos.length; i++) {
-                attributeTemplatesDtos[i] = attributeTemplatesList.get(i);
+
+        List<InstanceAttributeTemplateDTO> attributeInstanceTemplates = partMsTemplateDTO.getAttributeInstanceTemplates();
+        String[] instanceLovNames = new String[attributeInstanceTemplates.size()];
+        for (int i=0;i<attributeInstanceTemplates.size();i++) {
+            instanceLovNames[i] = attributeInstanceTemplates.get(i).getLovName();
+        }
+
+        PartMasterTemplate template = productService.updatePartMasterTemplate(new PartMasterTemplateKey(workspaceId, templateId), partType, workflowModelId, mask, createInstanceAttributeTemplateFromDto(attributeTemplates), lovNames, createInstanceAttributeTemplateFromDto(attributeInstanceTemplates) ,instanceLovNames,idGenerated, attributesLocked);
+        return mapper.map(template, PartMasterTemplateDTO.class);
+    }
+
+    @PUT
+    @Path("{templateId}/acl")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updatePartMsTemplateACL(@PathParam("workspaceId") String workspaceId,@PathParam("templateId") String templateId, ACLDTO acl)
+            throws EntityNotFoundException, AccessRightException, UserNotActiveException, NotAllowedException {
+
+        if (!acl.getGroupEntries().isEmpty() || !acl.getUserEntries().isEmpty()) {
+
+            Map<String,String> userEntries = new HashMap<>();
+            Map<String,String> groupEntries = new HashMap<>();
+
+            for (Map.Entry<String, ACL.Permission> entry : acl.getUserEntries().entrySet()) {
+                userEntries.put(entry.getKey(), entry.getValue().name());
             }
 
-            PartMasterTemplate template = productService.updatePartMasterTemplate(new PartMasterTemplateKey(workspaceId, templateId), partType, mask, createInstanceAttributeTemplateFromDto(attributeTemplatesDtos), idGenerated);
-            PartMasterTemplateDTO templateDto = mapper.map(template, PartMasterTemplateDTO.class);
+            for (Map.Entry<String, ACL.Permission> entry : acl.getGroupEntries().entrySet()) {
+                groupEntries.put(entry.getKey(), entry.getValue().name());
+            }
 
-            return templateDto;
-
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
+            productService.updateACLForPartMasterTemplate(workspaceId, templateId, userEntries, groupEntries);
+        }else{
+            productService.removeACLFromPartMasterTemplate(workspaceId, templateId);
         }
+
+        return Response.ok().build();
     }
 
     @DELETE
     @Path("{templateId}")
-    public Response deletePartMasterTemplate(@PathParam("workspaceId") String workspaceId, @PathParam("templateId") String templateId) {
-        try {
-            productService.deletePartMasterTemplate(new PartMasterTemplateKey(workspaceId, templateId));
-            return Response.ok().build();
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
-        }
+    public Response deletePartMasterTemplate(@PathParam("workspaceId") String workspaceId, @PathParam("templateId") String templateId)
+            throws EntityNotFoundException, AccessRightException, UserNotActiveException {
+
+        productService.deletePartMasterTemplate(new PartMasterTemplateKey(workspaceId, templateId));
+        return Response.ok().build();
     }
 
     @DELETE
-    @Consumes("application/json;charset=UTF-8")
     @Path("{templateId}/files/{fileName}")
-    public Response removeAttachedFile(@PathParam("workspaceId") String workspaceId, @PathParam("templateId") String templateId, @PathParam("fileName") String fileName) {
-        try {
-            String fileFullName = workspaceId + "/part-templates/" + templateId + "/" + fileName;
-            productService.removeFileFromTemplate(fileFullName);
-            return Response.ok().build();
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
-        }
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response removeAttachedFile(@PathParam("workspaceId") String workspaceId, @PathParam("templateId") String templateId, @PathParam("fileName") String fileName)
+            throws EntityNotFoundException, AccessRightException, UserNotActiveException {
+
+        String fileFullName = workspaceId + "/part-templates/" + templateId + "/" + fileName;
+        productService.removeFileFromTemplate(fileFullName);
+        return Response.ok().build();
     }
 
-    private InstanceAttributeTemplate[] createInstanceAttributeTemplateFromDto(InstanceAttributeTemplateDTO[] dtos) {
-        InstanceAttributeTemplate[] data = new InstanceAttributeTemplate[dtos.length];
-        for (int i = 0; i < dtos.length; i++) {
-            data[i] = createInstanceAttributeTemplateObject(dtos[i]);
+    @PUT
+    @Path("{templateId}/files/{fileName}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public FileDTO renameAttachedFile(@PathParam("workspaceId") String workspaceId, @PathParam("templateId") String templateId, @PathParam("fileName") String fileName, FileDTO fileDTO)
+            throws UserNotActiveException, WorkspaceNotFoundException, CreationException, UserNotFoundException, FileNotFoundException, AccessRightException, FileAlreadyExistsException, StorageException, NotAllowedException {
+
+        String fileFullName = workspaceId + "/part-templates/" + templateId + "/" + fileName;
+        BinaryResource binaryResource = productService.renameFileInTemplate(fileFullName, fileDTO.getShortName());
+        return new FileDTO(true,binaryResource.getFullName(),binaryResource.getName());
+    }
+
+
+
+    private InstanceAttributeTemplate[] createInstanceAttributeTemplateFromDto(List<InstanceAttributeTemplateDTO> dtos) {
+        InstanceAttributeTemplate[] data = new InstanceAttributeTemplate[dtos.size()];
+        for (int i = 0; i < dtos.size(); i++) {
+            data[i] = createInstanceAttributeTemplateObject(dtos.get(i));
         }
         return data;
     }
 
-    private InstanceAttributeTemplate createInstanceAttributeTemplateObject(InstanceAttributeTemplateDTO instanceAttributeTemplateDTO) {
-        InstanceAttributeTemplate data = new InstanceAttributeTemplate();
-        data.setName(instanceAttributeTemplateDTO.getName());
-        data.setAttributeType(InstanceAttributeTemplate.AttributeType.valueOf(instanceAttributeTemplateDTO.getAttributeType().name()));
+    private InstanceAttributeTemplate createInstanceAttributeTemplateObject(InstanceAttributeTemplateDTO dto) {
+        InstanceAttributeTemplate data;
+        if(dto.getLovName()==null || dto.getLovName().isEmpty()) {
+            DefaultAttributeTemplate defaultIA = new DefaultAttributeTemplate();
+            defaultIA.setAttributeType(InstanceAttributeTemplate.AttributeType.valueOf(dto.getAttributeType().name()));
+            data=defaultIA;
+        }
+        else {
+            ListOfValuesAttributeTemplate lovA = new ListOfValuesAttributeTemplate();
+            data=lovA;
+        }
+
+        data.setName(dto.getName());
+        data.setMandatory(dto.isMandatory());
+        data.setLocked(dto.isLocked());
         return data;
     }
 }

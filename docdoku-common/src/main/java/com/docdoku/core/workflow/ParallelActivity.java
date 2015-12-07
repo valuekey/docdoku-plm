@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,11 +20,14 @@
 
 package com.docdoku.core.workflow;
 
-import java.util.*;
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * <a href="ParallelActivity.html">ParallelActivity</a> is a kind of activity where 
+ * ParallelActivity is a kind of activity where
  * all its tasks start at the same time as the activity itself.
  * Thus, there is no order between the executions of tasks.
  * The <code>tasksToComplete</code> attribute specifies the number of tasks that
@@ -37,7 +40,6 @@ import javax.persistence.*;
 @Table(name="PARALLELACTIVITY")
 @Entity
 public class ParallelActivity extends Activity {
-
 
     private int tasksToComplete;
     
@@ -52,18 +54,15 @@ public class ParallelActivity extends Activity {
 
     @Override
     public boolean isStopped() {
-        if (tasks.size() - numberOfRejected()
-                < tasksToComplete)
-            return true;
-        else
-            return false;
+        return tasks.size() - numberOfRejected() < tasksToComplete;
     }
 
     private int numberOfApproved(){
         int approved=0;
         for(Task task:tasks){
-            if(task.isApproved())
+            if(task.isApproved() || task.isNotToBeDone()) {
                 approved++;
+            }
         }
         return approved;
     }
@@ -71,19 +70,21 @@ public class ParallelActivity extends Activity {
     private int numberOfRejected(){
         int rejected=0;
         for(Task task:tasks){
-            if(task.isRejected())
+            if(task.isRejected()) {
                 rejected++;
+            }
         }
         return rejected;
     }
     
     @Override
     public Collection<Task> getOpenTasks() {
-        Set<Task> runningTasks = new HashSet<Task>();
+        Set<Task> runningTasks = new HashSet<>();
         if (!isComplete() && !isStopped()) {           
             for (Task task : tasks) {
-                if(task.isInProgress() || task.isNotStarted())
+                if(task.isInProgress() || task.isNotStarted()) {
                     runningTasks.add(task);
+                }
             }    
         }
         return runningTasks;
@@ -100,11 +101,13 @@ public class ParallelActivity extends Activity {
 
     @Override
     public boolean isComplete() {
-        if (numberOfApproved() >= tasksToComplete)
-            return true;
-        else
-            return false;
+        return numberOfApproved() >= tasksToComplete;
     }
 
-    
+    @Override
+    public void relaunch(){
+        for(Task t : tasks){
+            t.start();
+        }
+    }
 }

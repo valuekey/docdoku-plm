@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,13 +19,11 @@
  */
 package com.docdoku.server;
 
-import com.docdoku.core.log.DocumentLog;
 import com.docdoku.core.common.BinaryResource;
 import com.docdoku.core.document.DocumentIteration;
+import com.docdoku.core.log.DocumentLog;
 import com.docdoku.server.dao.BinaryResourceDAO;
-import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.annotation.Resource;
 import javax.ejb.SessionContext;
 import javax.interceptor.AroundInvoke;
@@ -33,6 +31,9 @@ import javax.interceptor.Interceptor;
 import javax.interceptor.InvocationContext;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @LogDocument
 @Interceptor
@@ -42,8 +43,8 @@ public class DocumentLoggerInterceptor {
     private EntityManager em;
     @Resource
     private SessionContext ejbCtx;
-    private final static Logger LOGGER = Logger.getLogger(DocumentLoggerInterceptor.class.getName());
-    private final static String EVENT = "DOWNLOAD";
+    private static final Logger LOGGER = Logger.getLogger(DocumentLoggerInterceptor.class.getName());
+    private static final String EVENT = "DOWNLOAD";
 
     @AroundInvoke
     public Object log(InvocationContext ctx) throws Exception {
@@ -60,8 +61,8 @@ public class DocumentLoggerInterceptor {
                     log.setUserLogin(userLogin);
                     log.setLogDate(new Date());
                     log.setDocumentWorkspaceId(document.getWorkspaceId());
-                    log.setDocumentId(document.getDocumentMasterId());
-                    log.setDocumentVersion(document.getDocumentMasterVersion());
+                    log.setDocumentId(document.getId());
+                    log.setDocumentVersion(document.getVersion());
                     log.setDocumentIteration(document.getIteration());
                     log.setEvent(EVENT);
                     log.setInfo(fullName);

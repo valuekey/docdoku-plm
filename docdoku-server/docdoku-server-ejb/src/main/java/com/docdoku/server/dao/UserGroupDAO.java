@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,23 +19,22 @@
  */
 package com.docdoku.server.dao;
 
-import com.docdoku.core.services.CreationException;
-import com.docdoku.core.services.UserGroupAlreadyExistsException;
-import com.docdoku.core.services.UserGroupNotFoundException;
 import com.docdoku.core.common.User;
 import com.docdoku.core.common.UserGroup;
 import com.docdoku.core.common.UserGroupKey;
 import com.docdoku.core.common.Workspace;
+import com.docdoku.core.exceptions.CreationException;
+import com.docdoku.core.exceptions.UserGroupAlreadyExistsException;
+import com.docdoku.core.exceptions.UserGroupNotFoundException;
 import com.docdoku.core.security.WorkspaceUserGroupMembership;
 import com.docdoku.core.security.WorkspaceUserGroupMembershipKey;
-import java.util.List;
-import java.util.Locale;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
+import java.util.List;
+import java.util.Locale;
 
 public class UserGroupDAO {
 
@@ -107,8 +106,8 @@ public class UserGroupDAO {
     public void removeUserFromAllGroups(User pUser) {
         Query query = em.createQuery("SELECT DISTINCT g FROM UserGroup g WHERE g.workspaceId = :workspaceId");
         List listUserGroups = query.setParameter("workspaceId", pUser.getWorkspaceId()).getResultList();
-        for (int i = 0; i < listUserGroups.size(); i++) {
-            ((UserGroup) listUserGroups.get(i)).removeUser(pUser);
+        for (Object listUserGroup : listUserGroups) {
+            ((UserGroup) listUserGroup).removeUser(pUser);
         }
     }
 
@@ -128,9 +127,15 @@ public class UserGroupDAO {
         UserGroup group = loadUserGroup(pKey);
         removeUserGroupMembership(new WorkspaceUserGroupMembershipKey(pKey.getWorkspaceId(), pKey.getWorkspaceId(), pKey.getId()));
         em.remove(group);
-
     }
 
+    public boolean hasACLConstraint(UserGroupKey pKey){
+        Query query = em.createQuery("SELECT DISTINCT a FROM ACLUserGroupEntry a WHERE a.principal.id = :id AND a.principal.workspaceId = :workspaceId");
+        query.setParameter("id",pKey.getId());
+        query.setParameter("workspaceId",pKey.getWorkspaceId());
+        return !query.getResultList().isEmpty();
+    }
+    
     public void createUserGroup(UserGroup pUserGroup) throws CreationException, UserGroupAlreadyExistsException {
         try {
             //the EntityExistsException is thrown only when flush occurs
@@ -144,5 +149,12 @@ public class UserGroupDAO {
             //thrown instead of EntityExistsException
             throw new CreationException(mLocale);
         }
+    }
+
+    public List<UserGroup> getUserGroups(String workspaceId, User user) {
+        return em.createNamedQuery("UserGroup.findUserGroups").
+                setParameter("workspaceId", workspaceId).
+                setParameter("user", user).
+                getResultList();
     }
 }

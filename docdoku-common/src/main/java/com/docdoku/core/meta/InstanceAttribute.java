@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,40 +20,39 @@
 
 package com.docdoku.core.meta;
 
-import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlSeeAlso;
+import java.io.Serializable;
 
 /**
- * Base class for all instance attributes.  
- * 
+ * Base class for all instance attributes.
+ *
  * @author Florent Garin
  * @version 1.0, 02/06/08
- * @since   V1.0
+ * @since V1.0
  */
-
-@Table(name="INSTANCEATTRIBUTE")
-@XmlSeeAlso({InstanceTextAttribute.class, InstanceNumberAttribute.class, InstanceDateAttribute.class, InstanceBooleanAttribute.class, InstanceURLAttribute.class})
+@Table(name = "INSTANCEATTRIBUTE")
+@XmlSeeAlso({InstanceTextAttribute.class, InstanceNumberAttribute.class, InstanceDateAttribute.class, InstanceBooleanAttribute.class, InstanceURLAttribute.class, InstanceListOfValuesAttribute.class})
 @Inheritance()
 @Entity
 public abstract class InstanceAttribute implements Serializable, Cloneable {
 
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private int id;
 
     protected String name = "";
 
+    protected boolean mandatory;
+
+    protected boolean locked;
+
     public InstanceAttribute() {
     }
 
-    public InstanceAttribute(String pName) {
+    public InstanceAttribute(String pName, boolean pMandatory) {
         name = pName;
+        mandatory = pMandatory;
     }
 
     public String getName() {
@@ -62,6 +61,26 @@ public abstract class InstanceAttribute implements Serializable, Cloneable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getNameWithoutWhiteSpace() {
+        return this.name.replaceAll(" ", "_");
+    }
+
+    public boolean isMandatory() {
+        return mandatory;
+    }
+
+    public void setMandatory(boolean mandatory) {
+        this.mandatory = mandatory;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 
     @Override
@@ -88,13 +107,11 @@ public abstract class InstanceAttribute implements Serializable, Cloneable {
 
     @Override
     public InstanceAttribute clone() {
-        InstanceAttribute clone = null;
         try {
-            clone = (InstanceAttribute) super.clone();
+            return (InstanceAttribute) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new InternalError();
         }
-        return clone;
     }
 
     public void setId(int id) {
@@ -111,6 +128,6 @@ public abstract class InstanceAttribute implements Serializable, Cloneable {
 
     public boolean isValueEquals(Object pValue) {
         Object value = getValue();
-        return value == null ? false : value.equals(pValue);
+        return value != null && value.equals(pValue);
     }
 }

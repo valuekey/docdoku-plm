@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,42 +20,45 @@
 
 package com.docdoku.cli.helpers;
 
-
 import org.apache.commons.io.FileUtils;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 
 public class ConsoleProgressMonitorInputStream extends FilterInputStream {
 
     private long maximum;
     private long totalRead;
-
+    private PrintStream OUTPUT_STREAM = System.out;
     private int rotationChar;
 
-    private final static char[] ROTATION = {'|','|','|','|','/','/','/','/','-','-','-','-','\\','\\','\\','\\'};
+    private static final char[] ROTATION = {'|','|','|','|','/','/','/','/','-','-','-','-','\\','\\','\\','\\'};
 
     public ConsoleProgressMonitorInputStream(long maximum, InputStream in){
         super(in);
         this.maximum=maximum;
     }
 
+    @Override
     public int read(byte b[]) throws IOException {
         int length =  super.read(b, 0, b.length);
         totalRead += length;
         int percentage = (int)((totalRead * 100.0f) / maximum);
 
         String percentageToPrint;
-        if(percentage==100)
-            percentageToPrint=""+percentage;
-        else
-            percentageToPrint=(percentage<10)?"  "+percentage:" "+percentage;
+        if(percentage==100) {
+            percentageToPrint = "" + percentage;
+        } else {
+            percentageToPrint = (percentage < 10) ? "  " + percentage : " " + percentage;
+        }
 
-        if(length ==-1)
-            System.out.println("\r" + 100);
-        else
-            System.out.print("\r" + percentageToPrint + "% Total " + FileUtils.byteCountToDisplaySize(maximum) + " " + ROTATION[rotationChar % ROTATION.length]);
+        if(length ==-1) {
+            OUTPUT_STREAM.println("\r" + 100);
+        }else {
+            OUTPUT_STREAM.print("\r" + percentageToPrint + "% Total " + FileUtils.byteCountToDisplaySize(maximum) + " " + ROTATION[rotationChar % ROTATION.length]);
+        }
 
         rotationChar++;
         return length;

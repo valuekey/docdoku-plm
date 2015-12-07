@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,21 +19,17 @@
  */
 package com.docdoku.server.rest;
 
-import com.docdoku.core.document.DocumentMaster;
-import com.docdoku.core.document.TagKey;
 import com.docdoku.core.security.UserGroupMapping;
-import com.docdoku.core.services.IDocumentManagerLocal;
-import com.docdoku.server.rest.dto.DocumentMasterDTO;
-import com.docdoku.server.rest.dto.TagDTO;
-import javax.annotation.PostConstruct;
+import com.docdoku.core.services.IWorkspaceManagerLocal;
+
 import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ws.rs.*;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
-import org.dozer.DozerBeanMapperSingletonWrapper;
-import org.dozer.Mapper;
 
 /**
  *
@@ -45,27 +41,25 @@ import org.dozer.Mapper;
 public class SearchResource {
 
     @EJB
-    private IDocumentManagerLocal documentService;
-
-    @EJB
     private DocumentsResource documentsResource;
 
     @EJB
-    private DocumentResource documentResource;
-
-    private Mapper mapper;
+    private IWorkspaceManagerLocal workspaceManager;
 
     public SearchResource() {
     }
 
-    @PostConstruct
-    public void init() {
-        mapper = DozerBeanMapperSingletonWrapper.getInstance();
-    }
-
-    @Path("{query}/documents/")
+    @Path("{query : .+}/documents/")
     public DocumentsResource getDocumentsResource() {
         return documentsResource;
+    }
+
+
+    @PUT
+    @Path("indexall")
+    public Response synchronizeIndexer(@PathParam("workspaceId") String workspaceId) {
+        workspaceManager.synchronizeIndexer(workspaceId);
+        return Response.ok().build();
     }
 
 }

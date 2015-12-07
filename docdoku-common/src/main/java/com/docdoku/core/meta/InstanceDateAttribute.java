@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,12 +20,16 @@
 
 package com.docdoku.core.meta;
 
-import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
- * Defines a date type custom attribute of a document.
+ * Defines a date type custom attribute of a document, part, product and other objects.
  * 
  * @author Florent Garin
  * @version 1.0, 02/06/08
@@ -42,8 +46,8 @@ public class InstanceDateAttribute extends InstanceAttribute{
     public InstanceDateAttribute() {
     }
     
-    public InstanceDateAttribute(String pName, Date pValue) {
-        super(pName);
+    public InstanceDateAttribute(String pName, Date pValue, boolean pMandatory) {
+        super(pName, pMandatory);
         setDateValue(pValue);
     }
 
@@ -51,11 +55,38 @@ public class InstanceDateAttribute extends InstanceAttribute{
     public Date getValue() {
         return dateValue;
     }
+    @Override
+    public boolean setValue(Object pValue) {
+        if(pValue instanceof Date){
+            dateValue=(Date)pValue;
+            return true;
+        }else if(pValue instanceof String){
+            try {
+                //TODO: could use DateAdpater instead
+                TimeZone tz = TimeZone.getTimeZone("UTC");
+                DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                df.setTimeZone(tz);
+                Date date = df.parse((String) pValue);
+                dateValue = date;
+                return true;
+            } catch (ParseException pe) {
+                try {
+                    dateValue = new Date(Long.parseLong((String) pValue));
+                    return true;
+                }catch(NumberFormatException nfe){
+                    return false;
+                }
+            }
+
+        }else{
+            dateValue=null;
+            return false;
+        }
+    }
 
     public Date getDateValue() {
         return dateValue;
     }
-
     public void setDateValue(Date dateValue) {
         this.dateValue = dateValue;
     }
@@ -66,21 +97,11 @@ public class InstanceDateAttribute extends InstanceAttribute{
      */
     @Override
     public InstanceDateAttribute clone() {
-        InstanceDateAttribute clone = null;
+        InstanceDateAttribute clone;
         clone = (InstanceDateAttribute) super.clone();
         
         if(dateValue!=null)
             clone.dateValue = (Date) dateValue.clone();
         return clone;
     }
-
-    @Override
-    public boolean setValue(Object pValue) {
-        if(pValue instanceof Date){
-            dateValue=(Date)pValue;
-            return true;
-        }else
-            return false;
-    }
-
 }

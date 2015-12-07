@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,21 +20,13 @@
 
 package com.docdoku.core.services;
 
-import com.docdoku.core.common.*;
+import com.docdoku.core.common.BinaryResource;
 import com.docdoku.core.product.PartIterationKey;
-import com.docdoku.core.security.PasswordRecoveryRequest;
-import com.docdoku.core.security.WorkspaceUserGroupMembership;
-import com.docdoku.core.security.WorkspaceUserMembership;
-
-import java.io.File;
-import java.util.concurrent.Future;
-
 
 /**
  *
  * @author Florent Garin
  */
 public interface IConverterManagerLocal {
-
-    Future<File> convertCADFileToJSON(PartIterationKey pPartIPK, File cadFile) throws Exception;
+    void convertCADFileToOBJ(PartIterationKey pPartIPK, BinaryResource cadFile) throws Exception;
 }

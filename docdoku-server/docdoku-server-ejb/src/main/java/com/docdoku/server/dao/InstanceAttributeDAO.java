@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -21,19 +21,25 @@
 package com.docdoku.server.dao;
 
 import com.docdoku.core.meta.InstanceAttribute;
+import com.docdoku.core.meta.InstanceAttributeDescriptor;
+
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
-
-
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class InstanceAttributeDAO {
+    private static final Logger LOGGER = Logger.getLogger(InstanceAttributeDAO.class.getName());
 
-    private EntityManager em;
+    private final EntityManager em;
 
     public InstanceAttributeDAO(EntityManager pEM) {
         em=pEM;
     }
-
 
     public void removeAttribute(InstanceAttribute pAttr){
         em.remove(pAttr);
@@ -46,6 +52,37 @@ public class InstanceAttributeDAO {
             em.flush();
         }catch(EntityExistsException pEEEx){
             //already created
+            LOGGER.log(Level.FINER,null,pEEEx);
         }
+    }
+
+    public List<InstanceAttributeDescriptor> getPartIterationsInstanceAttributesInWorkspace(String workspaceId){
+
+        List<InstanceAttribute> partsAttributesInWorkspace = em.createNamedQuery("PartIteration.findDistinctInstanceAttributes", InstanceAttribute.class)
+                .setParameter("workspaceId", workspaceId)
+                .getResultList();
+
+        Set<InstanceAttributeDescriptor> descriptors = new HashSet<>();
+
+        for(InstanceAttribute attribute: partsAttributesInWorkspace){
+            descriptors.add(new InstanceAttributeDescriptor(attribute));
+        }
+
+        return new ArrayList<>(descriptors);
+    }
+
+    public List<InstanceAttributeDescriptor> getPathDataInstanceAttributesInWorkspace(String workspaceId){
+
+        List<InstanceAttribute> partsAttributesInWorkspace = em.createNamedQuery("PathDataIteration.findDistinctInstanceAttributes", InstanceAttribute.class)
+                .setParameter("workspaceId", workspaceId)
+                .getResultList();
+
+        Set<InstanceAttributeDescriptor> descriptors = new HashSet<>();
+
+        for(InstanceAttribute attribute: partsAttributesInWorkspace){
+            descriptors.add(new InstanceAttributeDescriptor(attribute));
+        }
+
+        return new ArrayList<>(descriptors);
     }
 }

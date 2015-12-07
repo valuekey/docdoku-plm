@@ -1,0 +1,10 @@
+dist
+test/temp
+.sass-cache
+.tmp
+tests/conf.local.js
+app/document-management/main.css
+app/product-management/main.css
+app/product-structure/main.css
+app/visualization/main.css
+app/change-management/main.css

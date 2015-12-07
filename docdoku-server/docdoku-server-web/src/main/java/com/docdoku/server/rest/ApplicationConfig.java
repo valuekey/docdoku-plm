@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,16 +20,15 @@
 
 package com.docdoku.server.rest;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
-
 /**
  *
  * @author Florent Garin
  */
-
-@ApplicationPath("/api/")
-public class ApplicationConfig extends Application{
+//switched to web.xml definition because some
+//settings can only be made inside that file (async-supported).
+//Just keep this class in case of we want to revert...
+//@ApplicationPath("/api/")
+public class ApplicationConfig /*extends Application*/{
     
     
 }

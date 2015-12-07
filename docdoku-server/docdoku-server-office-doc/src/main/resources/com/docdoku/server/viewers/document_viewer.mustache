@@ -1,0 +1,5 @@
+<script type="text/javascript">
+    document.write( PluginDetect.canHandlePDF() ?
+            '<iframe class="pdfviewer" id="pdfjs-{{thisId}}" src="{{uriResource}}?type=viewer&output=pdf"></iframe>' :
+            '<a class="pdflink" id="pdfjs-{{thisId}}" href="{{uriResource}}?type=viewer&output=pdf">{{fileName}}</a>' );
+</script>

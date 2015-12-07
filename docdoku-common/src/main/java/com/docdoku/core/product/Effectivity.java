@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,16 +19,15 @@
  */
 package com.docdoku.core.product;
 
-import java.io.Serializable;
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlSeeAlso;
+import java.io.Serializable;
 
 /**
  * An Effectivity is an abstract subclass which is
  * a kind of qualification object.
  * 
- * Effectivities are primarily applied to
- * <a href="PartRevision.html">PartRevision</a> objects.
+ * Effectivities are primarily applied to {@link PartRevision} objects.
  * 
  * 
  * @author Florent Garin
@@ -47,6 +46,8 @@ public abstract class Effectivity implements Serializable {
     @Id
     private int id;
     protected String name;
+
+    @Lob
     private String description;
     
     @ManyToOne(optional = true, fetch = FetchType.EAGER)
@@ -67,14 +68,12 @@ public abstract class Effectivity implements Serializable {
     public Effectivity() {
     }
 
-    public int getId() {
-        return id;
-    }
-    
-     
-
     public Effectivity(String pName) {
         name = pName;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public String getName() {

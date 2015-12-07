@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,6 +20,7 @@
 
 package com.docdoku.server.rest.dto;
 
+import javax.xml.bind.annotation.XmlElement;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -33,20 +34,39 @@ public class ComponentDTO implements Serializable{
     private String author;
     private String authorLogin;
     private String number;
-    private String name;
+    private String name = "";
     private String version;
     private int iteration;
     private String description;
     private boolean standardPart;
     private boolean assembly;
-    private int partUsageLinkId;
+    private boolean substitute;
+    private String partUsageLinkId;
+    private String partUsageLinkReferenceDescription;
     private List<ComponentDTO> components;
-    private int amount;
+    private double amount;
+    private String unit;
     private List<InstanceAttributeDTO> attributes;
     private UserDTO checkOutUser;
     private Date checkOutDate;
+    private boolean released;
+    private boolean obsolete;
+    private boolean optional;
+    @XmlElement(nillable = true)
+    private int lastIterationNumber;
+    @XmlElement(nillable = true)
+    private boolean accessDeny;
+    @XmlElement(nillable = true)
+    private List<String> substituteIds;
+    private List<ModificationNotificationDTO> notifications;
+    private boolean hasPathData;
+    private boolean isVirtual;
+    private String path;
 
-    public ComponentDTO() {}
+
+    public ComponentDTO() {
+
+    }
 
     public ComponentDTO(String number) {
         this.number=number;
@@ -55,11 +75,13 @@ public class ComponentDTO implements Serializable{
     public String getNumber() {
         return number;
     }
+    public void setNumber(String number) {
+        this.number = number;
+    }
 
     public boolean isAssembly() {
         return assembly;
     }
-
     public void setAssembly(boolean assembly) {
         this.assembly = assembly;
     }
@@ -67,11 +89,13 @@ public class ComponentDTO implements Serializable{
     public boolean isStandardPart() {
         return standardPart;
     }
+    public void setStandardPart(boolean standardPart) {
+        this.standardPart = standardPart;
+    }
 
     public int getIteration() {
         return iteration;
     }
-
     public void setIteration(int iteration) {
         this.iteration = iteration;
     }
@@ -79,55 +103,42 @@ public class ComponentDTO implements Serializable{
     public List<ComponentDTO> getComponents() {
         return components;
     }
+    public void setComponents(List<ComponentDTO> components) {
+        this.components = components;
+    }
 
     public String getDescription() {
         return description;
+    }
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getName() {
         return name;
     }
-
-    public void setComponents(List<ComponentDTO> components) {
-        this.components = components;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getVersion() {
         return version;
     }
-
     public void setVersion(String version) {
         this.version = version;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getPartUsageLinkId() {
+    public String getPartUsageLinkId() {
         return partUsageLinkId;
     }
 
-    public void setPartUsageLinkId(int partUsageLinkId) {
+    public void setPartUsageLinkId(String partUsageLinkId) {
         this.partUsageLinkId = partUsageLinkId;
-    }
-
-    public void setNumber(String number) {
-        this.number = number;
-    }
-
-    public void setStandardPart(boolean standardPart) {
-        this.standardPart = standardPart;
     }
 
     public void setAttributes(List<InstanceAttributeDTO> attributes) {
         this.attributes = attributes;
     }
-
     public List<InstanceAttributeDTO> getAttributes() {
         return attributes;
     }
@@ -135,7 +146,6 @@ public class ComponentDTO implements Serializable{
     public String getAuthor() {
         return author;
     }
-
     public void setAuthor(String author) {
         this.author = author;
     }
@@ -143,33 +153,130 @@ public class ComponentDTO implements Serializable{
     public String getAuthorLogin() {
         return authorLogin;
     }
-
     public void setAuthorLogin(String authorLogin) {
         this.authorLogin = authorLogin;
     }
 
-    public int getAmount() {
+    public double getAmount() {
         return amount;
     }
-
-    public void setAmount(int amount) {
+    public void setAmount(double amount) {
         this.amount = amount;
     }
 
     public UserDTO getCheckOutUser() {
         return checkOutUser;
     }
-
     public void setCheckOutUser(UserDTO checkOutUser) {
         this.checkOutUser = checkOutUser;
     }
 
     public Date getCheckOutDate() {
-        return checkOutDate;
+        return (checkOutDate!=null) ? (Date) checkOutDate.clone() : null;
     }
-
     public void setCheckOutDate(Date checkOutDate) {
-        this.checkOutDate = checkOutDate;
+        this.checkOutDate = (checkOutDate!=null) ? (Date) checkOutDate.clone() : null;
     }
 
+    public int getLastIterationNumber() {
+        return lastIterationNumber;
+    }
+    public void setLastIterationNumber(int lastIterationNumber) {
+        this.lastIterationNumber = lastIterationNumber;
+    }
+
+    public boolean isAccessDeny() {
+        return accessDeny;
+    }
+    public void setAccessDeny(boolean accessDeny) {
+        this.accessDeny = accessDeny;
+    }
+
+    public boolean isReleased() {
+        return released;
+    }
+
+    public void setReleased(boolean released) {
+        this.released = released;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public boolean isSubstitute() {
+        return substitute;
+    }
+
+    public void setSubstitute(boolean substitute) {
+        this.substitute = substitute;
+    }
+
+    public List<ModificationNotificationDTO> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(List<ModificationNotificationDTO> notifications) {
+        this.notifications = notifications;
+    }
+
+    public boolean isObsolete() {
+        return obsolete;
+    }
+
+    public void setObsolete(boolean obsolete) {
+        this.obsolete = obsolete;
+    }
+
+    public String getPartUsageLinkReferenceDescription() {
+        return partUsageLinkReferenceDescription;
+    }
+
+    public void setPartUsageLinkReferenceDescription(String partUsageLinkReferenceDescription) {
+        this.partUsageLinkReferenceDescription = partUsageLinkReferenceDescription;
+    }
+
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public void setOptional(boolean optional) {
+        this.optional = optional;
+    }
+
+    public boolean isHasPathData() {
+        return hasPathData;
+    }
+
+    public void setHasPathData(boolean hasPathData) {
+        this.hasPathData = hasPathData;
+    }
+
+    public boolean isVirtual() {
+        return isVirtual;
+    }
+
+    public void setVirtual(boolean isVirtual) {
+        this.isVirtual = isVirtual;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public List<String> getSubstituteIds() {
+        return substituteIds;
+    }
+
+    public void setSubstituteIds(List<String> substituteIds) {
+        this.substituteIds = substituteIds;
+    }
 }

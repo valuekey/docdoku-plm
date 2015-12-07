@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,12 +20,13 @@
 
 package com.docdoku.core.common;
 
-import java.io.Serializable;
 import javax.persistence.*;
+import java.io.Serializable;
+import java.util.Date;
 
 /**
- * <a href="BinaryResource.html">BinaryResource</a> is the representation
- * of a file contained in either a document or a document template.
+ * BinaryResource is the representation
+ * of a file contained in either a document, part or template.
  * 
  * @author Florent Garin
  * @version 1.0, 02/06/08
@@ -39,17 +40,21 @@ import javax.persistence.*;
 @Entity
 public class BinaryResource implements Serializable, Comparable<BinaryResource>{
 
-    
     @Id
     protected String fullName="";
+
     protected long contentLength;
+
+    @javax.persistence.Temporal(javax.persistence.TemporalType.TIMESTAMP)
+    private Date lastModified;
     
     public BinaryResource() {
     }
     
-    public BinaryResource(String pFullName, long pContentLength) {
+    public BinaryResource(String pFullName, long pContentLength, Date pLastModified) {
         fullName = pFullName;
         contentLength = pContentLength;
+        lastModified = pLastModified;
     }
     
     public String getWorkspaceId(){
@@ -73,13 +78,50 @@ public class BinaryResource implements Serializable, Comparable<BinaryResource>{
     public String getOwnerRef(){
         return BinaryResource.parseOwnerRef(fullName);
     }
+
+    public String getOwnerId() {
+        return BinaryResource.parseId(fullName);
+    }
+
+    public String getOwnerIteration(){
+        return BinaryResource.parseIteration(fullName);
+    }
     
     public static String parseOwnerRef(String pFullName){
         String[] parts = pFullName.split("/",3);
         int index= parts[2].lastIndexOf('/');
         return parts[2].substring(0, index);
     }
-    
+
+
+
+    public static String parseIteration(String pFullName){
+        String ref = BinaryResource.parseOwnerRef(pFullName);
+        String[] split = ref.split("/");
+        return split[2];
+    }
+
+    public static String parseVersion(String pFullName){
+        String ref = BinaryResource.parseOwnerRef(pFullName);
+        String[] split = ref.split("/");
+        return split[1];
+    }
+
+    public static String parseId(String pFullName){
+        String ref = BinaryResource.parseOwnerRef(pFullName);
+        String[] split = ref.split("/");
+        return split[0];
+    }
+
+    public static String getFolderName(String pFullName) {
+        return parseId(pFullName) + "-" + parseVersion(pFullName) + "-" + parseIteration(pFullName);
+    }
+
+    public String getNewFullName(String newName){
+        int index = fullName.lastIndexOf('/');
+        return fullName.substring(0,index) + '/' + newName;
+    }
+
     public void setFullName(String pFullName) {
         fullName = pFullName;
     }
@@ -90,35 +132,54 @@ public class BinaryResource implements Serializable, Comparable<BinaryResource>{
 
     public boolean isNativeCADFile(){
         String[] parts = fullName.split("/");
-        return (parts.length==7 && "nativecad".equals(parts[5]));
+        return parts.length==7 && "nativecad".equals(parts[5]);
+    }
+
+    public boolean isAttachedFile() {
+        String[] parts = fullName.split("/");
+        return parts.length==7 && "attachedfiles".equals(parts[5]);
     }
 
     public BinaryResource getPrevious(){
-        if(getOwnerType().equals("document-templates") || getOwnerType().equals("part-templates"))
+        String ownerType = getOwnerType();
+        if("document-templates".equals(ownerType) || "part-templates".equals(ownerType)) {
             return null;
+        }
         
         int lastS = fullName.lastIndexOf('/');
-        String name = fullName.substring(lastS+1);
+        String name = fullName.substring(lastS + 1);
 
-        if(isNativeCADFile()){
+        if (isNativeCADFile()) {
             String[] parts = fullName.split("/");
             int iteration=Integer.parseInt(parts[4]);
             iteration--;
             if(iteration>0){
                 String previousFullName=parts[0] + "/parts/" + parts[2] + "/" +parts[3]  + "/" + iteration + "/nativecad/" +name;
-                return new BinaryResource(previousFullName,contentLength);
-            }else
+                return new BinaryResource(previousFullName, contentLength, lastModified);
+            }else {
                 return null;
-        }else{
+            }
+        } else if (isAttachedFile()) {
+            String[] parts = fullName.split("/");
+            int iteration=Integer.parseInt(parts[4]);
+            iteration--;
+            if (iteration>0) {
+                String previousFullName=parts[0] + "/parts/" + parts[2] + "/" +parts[3]  + "/" + iteration + "/attachedfiles/" +name;
+                return new BinaryResource(previousFullName, contentLength, lastModified);
+            } else {
+                return null;
+            }
+        } else {
             String truncatedName=fullName.substring(0,lastS);
             int beforeLastS = truncatedName.lastIndexOf('/');
             int iteration=Integer.parseInt(truncatedName.substring(beforeLastS+1));
             iteration--;
-            if(iteration>0){
+            if (iteration>0) {
                 String previousFullName=truncatedName.substring(0,beforeLastS)+"/"+iteration+"/"+name;
-                return new BinaryResource(previousFullName,contentLength);
-            }else
+                return new BinaryResource(previousFullName, contentLength, lastModified);
+            } else {
                 return null;
+            }
         }
     }
     
@@ -130,19 +191,20 @@ public class BinaryResource implements Serializable, Comparable<BinaryResource>{
         int index= fullName.lastIndexOf('/');
         return fullName.substring(index+1);
     }
-    
+
     public long getContentLength() {
         return contentLength;
     }
-    
-    
+
+
     @Override
     public boolean equals(Object pObj) {
         if (this == pObj) {
             return true;
         }
-        if (!(pObj instanceof BinaryResource))
+        if (!(pObj instanceof BinaryResource)) {
             return false;
+        }
         BinaryResource bin = (BinaryResource) pObj;
         return bin.fullName.equals(fullName);
     }
@@ -160,4 +222,13 @@ public class BinaryResource implements Serializable, Comparable<BinaryResource>{
     public String toString() {
         return getName();
     }
+
+    public Date getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(Date lastModified) {
+        this.lastModified = lastModified;
+    }
+
 }

@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,14 +20,17 @@
 
 package com.docdoku.core.workflow;
 
-import java.util.ArrayList;
+import com.docdoku.core.common.User;
+
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import java.util.LinkedList;
 import java.util.List;
-import javax.persistence.*;
+import java.util.Map;
 
 /**
  * This class is the model used to create instances
- * of <a href="SerialActivity.html">SerialActivity</a> attached to
- * workflows.
+ * of {@link SerialActivity} attached to workflows.
  * 
  * @author Florent Garin
  * @version 1.0, 02/06/08
@@ -43,19 +46,19 @@ public class SerialActivityModel extends ActivityModel {
     }
 
     public SerialActivityModel(WorkflowModel pWorkflowModel, int pStep, List<TaskModel> pTaskModels, String pLifeCycleState) {
-        super(pWorkflowModel, pStep, pTaskModels, pLifeCycleState);      
+        super(pWorkflowModel, pStep, pTaskModels, pLifeCycleState);
     }
 
     public SerialActivityModel(WorkflowModel pWorkflowModel, String pLifeCycleState) {
-        this(pWorkflowModel, 0,  new ArrayList<TaskModel>(), pLifeCycleState);      
+        this(pWorkflowModel, 0,  new LinkedList<>(), pLifeCycleState);
     }
         
     @Override
-    public Activity createActivity() {
+    public Activity createActivity(Map<Role, User> roleUserMap) {
         Activity activity = new SerialActivity(step, lifeCycleState);
         List<Task> tasks = activity.getTasks();
         for(TaskModel model:taskModels){
-            Task task = model.createTask();
+            Task task = model.createTask(roleUserMap);
             task.setActivity(activity);
             tasks.add(task);
         }

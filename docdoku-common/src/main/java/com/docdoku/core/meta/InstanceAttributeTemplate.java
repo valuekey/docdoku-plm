@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,8 +19,9 @@
  */
 package com.docdoku.core.meta;
 
-import java.io.Serializable;
 import javax.persistence.*;
+import javax.xml.bind.annotation.XmlSeeAlso;
+import java.io.Serializable;
 
 /**
  * This class holds the definition of the custom attribute of the documents and parts
@@ -31,29 +32,33 @@ import javax.persistence.*;
  * @since   V1.0
  */
 @Table(name="INSTANCEATTRIBUTETEMPLATE")
+@XmlSeeAlso({DefaultAttributeTemplate.class, ListOfValuesAttributeTemplate.class})
+@Inheritance()
 @Entity
-public class InstanceAttributeTemplate implements Serializable {
+public abstract class InstanceAttributeTemplate implements Serializable, Cloneable {
 
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Id
-    private int id;
+    protected int id;
 
-    @Column(length=50)
-    private String name = "";
+    @Column(length=100)
+    protected String name = "";
 
-    private AttributeType attributeType;
+    protected boolean mandatory;
+
+    protected boolean locked;
 
     public enum AttributeType {
 
-        TEXT, NUMBER, DATE, BOOLEAN, URL
+        TEXT, NUMBER, DATE, BOOLEAN, URL, LOV
     }
+
 
     public InstanceAttributeTemplate() {
     }
 
-    public InstanceAttributeTemplate(String pName, AttributeType pAttributeType) {
+    public InstanceAttributeTemplate(String pName) {
         name = pName;
-        attributeType = pAttributeType;
     }
 
     public int getId() {
@@ -72,64 +77,57 @@ public class InstanceAttributeTemplate implements Serializable {
         this.name = name;
     }
 
-    public InstanceAttributeTemplate.AttributeType getAttributeType() {
-        return attributeType;
+    public boolean isMandatory() {
+        return mandatory;
     }
 
-    public void setAttributeType(InstanceAttributeTemplate.AttributeType attributeType) {
-        this.attributeType = attributeType;
+    public void setMandatory(boolean mandatory) {
+        this.mandatory = mandatory;
     }
 
-    public InstanceAttribute createInstanceAttribute() {
-        InstanceAttribute attr = null;
-        switch (attributeType) {
-            case TEXT:
-                attr = new InstanceTextAttribute();
-                attr.setName(name);
-                break;
-            case NUMBER:
-                attr = new InstanceNumberAttribute();
-                attr.setName(name);
-                break;
-            case BOOLEAN:
-                attr = new InstanceBooleanAttribute();
-                attr.setName(name);
-                break;
-            case DATE:
-                attr = new InstanceDateAttribute();
-                attr.setName(name);
-                break;
-            case URL :
-                attr = new InstanceURLAttribute();
-                attr.setName(name);
-                break;
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
+    public abstract InstanceAttribute createInstanceAttribute();
+
+    public abstract AttributeType getAttributeType();
+
+    @Override
+    public InstanceAttributeTemplate clone() {
+        try {
+            return (InstanceAttributeTemplate) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError();
         }
-        return attr;
     }
-
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         InstanceAttributeTemplate that = (InstanceAttributeTemplate) o;
 
-        if (id != that.id) return false;
-        if (!name.equals(that.name)) return false;
+        return id == that.id;
 
-        return true;
     }
 
     @Override
     public int hashCode() {
-        int result = id;
-        result = 31 * result + name.hashCode();
-        return result;
+        return id;
     }
 
     @Override
     public String toString() {
-        return name + "-" + attributeType;
+        return name;
     }
 }

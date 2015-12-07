@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,70 +19,30 @@
  */
 package com.docdoku.core.util;
 
-import com.docdoku.core.document.*;
+import com.docdoku.core.product.PartLink;
+import com.docdoku.core.product.PartLinkList;
 import com.docdoku.core.workflow.ActivityModel;
-import com.docdoku.core.workflow.Activity;
-import com.docdoku.core.workflow.WorkflowModel;
 import com.docdoku.core.workflow.TaskModel;
-import com.docdoku.core.workflow.Task;
-import com.docdoku.core.workflow.Workflow;
+import com.docdoku.core.workflow.WorkflowModel;
+import org.apache.commons.lang.StringUtils;
+
+import javax.swing.text.MaskFormatter;
 import java.text.Normalizer;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import javax.swing.text.MaskFormatter;
 
 /**
  *
  * @author Florent Garin
  */
 public class Tools {
+    private static final Logger LOGGER = Logger.getLogger(Tools.class.getName());
 
     private Tools() {
-    }
-
-    public static DocumentMaster resetParentReferences(DocumentMaster pDocM) {
-        for (DocumentIteration doc : pDocM.getDocumentIterations()) {
-            doc.setDocumentMaster(pDocM);
-        }
-
-        if (pDocM.getWorkflow() != null) {
-            resetParentReferences(pDocM.getWorkflow());
-        }
-
-        return pDocM;
-    }
-
-    public static DocumentMaster[] resetParentReferences(DocumentMaster[] pDocMs) {
-        for (DocumentMaster docM : pDocMs) {
-            resetParentReferences(docM);
-        }
-
-        return pDocMs;
-    }
-
-    private static Workflow resetParentReferences(Workflow pWf) {
-        for (Activity activity : pWf.getActivities()) {
-            activity.setWorkflow(pWf);
-            resetParentReferences(activity);
-        }
-
-        return pWf;
-    }
-
-    private static Activity resetParentReferences(Activity pActivity) {
-        for (Task task : pActivity.getTasks()) {
-            task.setActivity(pActivity);
-        }
-
-        return pActivity;
-    }
-
-    public static WorkflowModel[] resetParentReferences(WorkflowModel[] pWfs) {
-        for (WorkflowModel wf : pWfs) {
-            resetParentReferences(wf);
-        }
-
-        return pWfs;
     }
 
     public static WorkflowModel resetParentReferences(WorkflowModel pWf) {
@@ -102,43 +62,14 @@ public class Tools {
         return pActivity;
     }
 
-    /*
-    public static DocumentMasterTemplate[] resetParentReferences(DocumentMasterTemplate[] pTemplates) {
-        for (DocumentMasterTemplate template : pTemplates) {
-            resetParentReferences(template);
-        }
-
-        return pTemplates;
-    }
-    */
-
-    /*
-    public static DocumentMasterTemplate resetParentReferences(DocumentMasterTemplate pTemplate) {
-        for (InstanceAttributeTemplate attr : pTemplate.getAttributeTemplates()) {
-            attr.setDocumentMasterTemplate(pTemplate);
-        }
-
-        return pTemplate;
-    }
-    */
-
-    public static boolean safeEquals(Object o1, Object o2) {
-        if (o1 == null && o2 == null) {
-            return true;
-        } else if (o1 == null) {
-            return o2.equals(o1);
-        }
-        return o1.equals(o2);
-    }
-
     public static String unAccent(String s) {
         String temp = Normalizer.normalize(s, Normalizer.Form.NFD);
         Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-        return pattern.matcher(temp).replaceAll("");
+        return pattern.matcher(temp).replaceAll("").replaceAll("\\p{javaSpaceChar}", "_");
     }
 
     public static String increaseId(String id, String mask) throws ParseException {
-        System.out.println("#### Tools.increaseId id = " + id + " , mask = " + mask);
+        LOGGER.info("#### Tools.increaseId id = " + id + " , mask = " + mask);
         MaskFormatter formatter = new MaskFormatter(mask);
         formatter.setValueContainsLiteralCharacters(false);
         String value = formatter.stringToValue(id).toString();
@@ -148,108 +79,88 @@ public class Tools {
             char c = value.charAt(i);
             switch (c) {
                 case '9':
-                    if (increase) {
-                        newValue.append('0');
-                    } else {
-                        newValue.append('9');
-                    }
+                    newValue.append((increase) ? '0' : '9');
                     break;
 
                 case '8':
-                    if (increase) {
-                        newValue.append('9');
-                        increase = false;
-                    } else {
-                        newValue.append('8');
-                    }
-
+                    newValue.append((increase) ? '9' : '8');
+                    increase = false;
                     break;
 
                 case '7':
-                    if (increase) {
-                        newValue.append('8');
-                        increase = false;
-                    } else {
-                        newValue.append('7');
-                    }
-
+                    newValue.append((increase) ? '8' : '7');
+                    increase = false;
                     break;
 
                 case '6':
-                    if (increase) {
-                        newValue.append('7');
-                        increase = false;
-                    } else {
-                        newValue.append('6');
-                    }
-
+                    newValue.append((increase) ? '7' : '6');
+                    increase = false;
                     break;
 
                 case '5':
-                    if (increase) {
-                        newValue.append('6');
-                        increase = false;
-                    } else {
-                        newValue.append('5');
-                    }
-
+                    newValue.append((increase) ? '6' : '5');
+                    increase = false;
                     break;
 
                 case '4':
-                    if (increase) {
-                        newValue.append('5');
-                        increase = false;
-                    } else {
-                        newValue.append('4');
-                    }
-
+                    newValue.append((increase) ? '5' : '4');
+                    increase = false;
                     break;
 
                 case '3':
-                    if (increase) {
-                        newValue.append('4');
-                        increase = false;
-                    } else {
-                        newValue.append('3');
-                    }
-
+                    newValue.append((increase) ? '4' : '3');
+                    increase = false;
                     break;
 
                 case '2':
-                    if (increase) {
-                        newValue.append('3');
-                        increase = false;
-                    } else {
-                        newValue.append('2');
-                    }
-
+                    newValue.append((increase) ? '3' : '2');
+                    increase = false;
                     break;
 
                 case '1':
-                    if (increase) {
-                        newValue.append('2');
-                        increase = false;
-                    } else {
-                        newValue.append('1');
-                    }
-
+                    newValue.append((increase) ? '2' : '1');
+                    increase = false;
                     break;
 
                 case '0':
-                    if (increase) {
-                        newValue.append('1');
-                        increase = false;
-                    } else {
-                        newValue.append('0');
-                    }
-
+                    newValue.append((increase) ? '1' : '0');
+                    increase = false;
                     break;
 
                 default:
                     newValue.append(c);
+                    break;
             }
         }
         return formatter.valueToString(newValue.reverse().toString());
+    }
+    
+    public static boolean validateMask(String mask, String str){
+
+        // '*' goes for any alpha-numeric char, '#' for numbers only
+        if(mask == null || mask.length() == 0){
+            return true;
+        }
+
+        // Not same length
+        if(mask.length() != str.length()){
+            return false;
+        }
+
+        Pattern alphaNum = Pattern.compile("[a-zA-Z0-9]");
+
+        for (int i = 0; i < mask.length(); i++) {
+
+            if('*' == mask.charAt(i) && !alphaNum.matcher(str.charAt(i)+"").find()){
+                return false;
+            }
+            if ('#' == mask.charAt(i) && !Character.isDigit(str.charAt(i))){
+                return false;
+            }
+        }
+
+        return true;
+
     }
 
     public static String convertMask(String inputMask) {
@@ -296,4 +207,74 @@ public class Tools {
         }
         return maskBuilder.toString();
     }
+
+    public static String getPathAsString(List<PartLink> path) {
+        List<String> ids = new ArrayList<>();
+        for (PartLink link : path) {
+            ids.add(link.getFullId());
+        }
+        return String.join("-", ids); // java 8
+    }
+
+    public static String getPathInstanceAsString(List<PartLink> path, List<Integer> instancesIds) {
+
+        if(path.size() != instancesIds.size()){
+           throw new IllegalArgumentException("Path and instances must be same sized");
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < path.size(); i++){
+            sb.append(path.get(i).getFullId());
+            sb.append("-");
+            sb.append(instancesIds.get(i));
+            sb.append("-");
+        }
+
+        String s = sb.toString();
+        return s.substring(0, s.length() - 1);
+    }
+
+    public static String getPartLinksAsHumanString(Map<String, List<PartLinkList>> links){
+        return getPartLinkAsString(links, " -> ");
+    }
+
+    public static String getPartLinksAsExcelString(Map<String, List<PartLinkList>> links){
+        return getPartLinkAsString(links, " - ");
+    }
+
+    private static String getPartLinkAsString(Map<String, List<PartLinkList>> links, String joinWith) {
+        List<String> componentNumbers = new ArrayList<>();
+        List<String> pathStrings = new ArrayList<>();
+        List<String> typeStrings = new ArrayList<>();
+
+        for (String type : links.keySet()) {
+            List<PartLinkList> paths = links.get(type);
+
+            for (PartLinkList path : paths) {
+
+                for (PartLink partLink : path.getPath()) {
+                    String linkAsString = partLink.getComponent().getName() + " < " + partLink.getComponent().getNumber() + " > ";
+
+                    if (partLink.getReferenceDescription() != null && !partLink.getReferenceDescription().isEmpty()) {
+                        linkAsString += " ( " + partLink.getReferenceDescription() + " )";
+                    }
+                    componentNumbers.add(linkAsString);
+                }
+
+                String join = StringUtils.join(componentNumbers, joinWith);
+                pathStrings.add(type + ": " + join);
+                componentNumbers.clear();
+            }
+
+            String typeLines = StringUtils.join(pathStrings, "\n");
+            typeStrings.add(typeLines);
+            pathStrings.clear();
+        }
+
+        String fullString = StringUtils.join(typeStrings, "\n");
+        typeStrings.clear();
+
+        return fullString;
+    }
+
 }

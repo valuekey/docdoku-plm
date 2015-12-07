@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,20 +19,29 @@
  */
 package com.docdoku.server.dao;
 
-import com.docdoku.core.services.WorkflowModelNotFoundException;
-import com.docdoku.core.services.CreationException;
+import com.docdoku.core.document.DocumentMasterTemplate;
+import com.docdoku.core.exceptions.CreationException;
+import com.docdoku.core.exceptions.WorkflowModelAlreadyExistsException;
+import com.docdoku.core.exceptions.WorkflowModelNotFoundException;
+import com.docdoku.core.product.PartMasterTemplate;
+import com.docdoku.core.util.Tools;
+import com.docdoku.core.workflow.ActivityModel;
+import com.docdoku.core.workflow.TaskModel;
 import com.docdoku.core.workflow.WorkflowModel;
-import com.docdoku.core.services.WorkflowModelAlreadyExistsException;
 import com.docdoku.core.workflow.WorkflowModelKey;
 
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class WorkflowModelDAO {
+
+    private static final Logger LOGGER = Logger.getLogger(WorkflowModelDAO.class.getName());
+
 
     private EntityManager em;
     private Locale mLocale;
@@ -42,31 +51,51 @@ public class WorkflowModelDAO {
         mLocale = pLocale;
     }
 
+    public void removeAllActivityModels(WorkflowModelKey pKey) throws WorkflowModelNotFoundException {
+        em.createQuery("DELETE FROM TaskModel t WHERE t.activityModel.workflowModel.id = :id AND t.activityModel.workflowModel.workspaceId = :workspaceId")
+                .setParameter("id", pKey.getId())
+                .setParameter("workspaceId", pKey.getWorkspaceId()).executeUpdate();
+        em.createQuery("DELETE FROM ActivityModel a WHERE a.workflowModel.id = :id AND a.workflowModel.workspaceId = :workspaceId")
+                .setParameter("id", pKey.getId())
+                .setParameter("workspaceId", pKey.getWorkspaceId()).executeUpdate();
+    }
+
     public void removeWorkflowModel(WorkflowModelKey pKey) throws WorkflowModelNotFoundException {
         WorkflowModel model = loadWorkflowModel(pKey);
+        for(ActivityModel activity:model.getActivityModels()){
+            activity.setRelaunchActivity(null);
+        }
+        em.flush();
         em.remove(model);
     }
 
-    public WorkflowModel[] findAllWorkflowModels(String pWorkspaceId) {
-        WorkflowModel[] models;
-        Query query = em.createQuery("SELECT DISTINCT w FROM WorkflowModel w WHERE w.workspaceId = :workspaceId");
-        List listModels = query.setParameter("workspaceId", pWorkspaceId).getResultList();
-        models = new WorkflowModel[listModels.size()];
-        for (int i = 0; i < listModels.size(); i++) {
-            models[i] = (WorkflowModel) listModels.get(i);
-        }
-
-        return models;
+    public List<WorkflowModel> findAllWorkflowModels(String pWorkspaceId) {
+        TypedQuery<WorkflowModel> query = em.createQuery("SELECT DISTINCT w FROM WorkflowModel w WHERE w.workspaceId = :workspaceId",WorkflowModel.class);
+        return query.setParameter("workspaceId", pWorkspaceId).getResultList();
     }
 
     public void createWorkflowModel(WorkflowModel pModel) throws WorkflowModelAlreadyExistsException, CreationException {
         try {
             //the EntityExistsException is thrown only when flush occurs
+            //Because ActivityModel has a generated id which is part of the TaskModel's PK
+            //we force generated it to avoid cache issue with the TaskModel.
+            List<ActivityModel> activityModels = pModel.getActivityModels();
+            List<List<TaskModel>> taskModels=new LinkedList<>();
+            for(ActivityModel activityModel:activityModels){
+                taskModels.add(activityModel.getTaskModels());
+                activityModel.setTaskModels(new ArrayList<>());
+            }
             em.persist(pModel);
             em.flush();
+            int i=0;
+            for(ActivityModel activityModel:activityModels){
+                activityModel.setTaskModels(taskModels.get(i++));
+            }
         } catch (EntityExistsException pEEEx) {
+            LOGGER.log(Level.FINEST,null,pEEEx);
             throw new WorkflowModelAlreadyExistsException(mLocale, pModel);
         } catch (PersistenceException pPEx) {
+            LOGGER.log(Level.FINEST,null,pPEx);
             //EntityExistsException is case sensitive
             //whereas MySQL is not thus PersistenceException could be
             //thrown instead of EntityExistsException
@@ -81,5 +110,19 @@ public class WorkflowModelDAO {
         } else {
             return model;
         }
+    }
+
+    public boolean isInUseInDocumentMasterTemplate(WorkflowModel workflowModel) {
+        return !em.createNamedQuery("DocumentMasterTemplate.findWhereWorkflowModel", DocumentMasterTemplate.class)
+                .setParameter("workflowModel",workflowModel)
+                .getResultList()
+                .isEmpty();
+    }
+
+    public boolean isInUseInPartMasterTemplate(WorkflowModel workflowModel) {
+        return !em.createNamedQuery("PartMasterTemplate.findWhereWorkflowModel", PartMasterTemplate.class)
+                .setParameter("workflowModel",workflowModel)
+                .getResultList()
+                .isEmpty();
     }
 }

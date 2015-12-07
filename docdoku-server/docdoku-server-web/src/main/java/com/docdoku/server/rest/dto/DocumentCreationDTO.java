@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -37,6 +37,8 @@ public class DocumentCreationDTO implements Serializable, Comparable<DocumentCre
     private String workflowModelId;
     private String templateId;
     private String path;
+    private RoleMappingDTO[] roleMapping;
+    private ACLDTO acl;
 
     public DocumentCreationDTO() {
     }
@@ -101,6 +103,10 @@ public class DocumentCreationDTO implements Serializable, Comparable<DocumentCre
         this.templateId = templateId;
     }
 
+    public void setDocumentMsTemplate(String templateId) {
+        this.templateId = templateId;
+    }
+
     public String getWorkflowModelId() {
         return workflowModelId;
     }
@@ -117,6 +123,23 @@ public class DocumentCreationDTO implements Serializable, Comparable<DocumentCre
         this.path = path;
     }
 
+
+    public RoleMappingDTO[] getRoleMapping() {
+        return roleMapping;
+    }
+
+    public void setRoleMapping(RoleMappingDTO[] roleMapping) {
+        this.roleMapping = roleMapping;
+    }
+
+    public ACLDTO getAcl() {
+        return acl;
+    }
+
+    public void setAcl(ACLDTO acl) {
+        this.acl = acl;
+    }
+
     @Override
     public String toString() {
         return workspaceId + "-" + reference + "-" + version;
@@ -131,7 +154,7 @@ public class DocumentCreationDTO implements Serializable, Comparable<DocumentCre
             return false;
         }
         DocumentCreationDTO docM = (DocumentCreationDTO) pObj;
-        return ((docM.reference.equals(reference)) && (docM.workspaceId.equals(workspaceId)) && (docM.version.equals(version)));
+        return docM.reference.equals(reference) && docM.workspaceId.equals(workspaceId) && docM.version.equals(version);
 
     }
 

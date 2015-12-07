@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,27 +19,22 @@
  */
 package com.docdoku.server.dao;
 
-import com.docdoku.core.services.CreationException;
-import com.docdoku.core.services.FolderAlreadyExistsException;
-import com.docdoku.core.services.FolderNotFoundException;
-import com.docdoku.core.services.NotAllowedException;
-import com.docdoku.core.services.UserAlreadyExistsException;
-import com.docdoku.core.document.Folder;
-import com.docdoku.core.document.DocumentMaster;
 import com.docdoku.core.common.User;
-import com.docdoku.core.services.UserNotFoundException;
-import com.docdoku.core.common.Workspace;
-import com.docdoku.core.security.WorkspaceUserMembership;
 import com.docdoku.core.common.UserKey;
-
+import com.docdoku.core.common.Workspace;
+import com.docdoku.core.document.Folder;
+import com.docdoku.core.exceptions.*;
+import com.docdoku.core.security.WorkspaceUserMembership;
 import com.docdoku.core.security.WorkspaceUserMembershipKey;
-import java.util.List;
-import java.util.Locale;
+
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class UserDAO {
 
@@ -111,26 +106,21 @@ public class UserDAO {
         return memberships;
     }
 
-    public DocumentMaster[] removeUser(UserKey pKey) throws UserNotFoundException, NotAllowedException, FolderNotFoundException {
-        User user = loadUser(pKey);
-        removeUserMembership(new WorkspaceUserMembershipKey(pKey.getWorkspaceId(), pKey.getWorkspaceId(), pKey.getLogin()));
-        new SubscriptionDAO(em).removeAllSubscriptions(user);
-        new UserGroupDAO(mLocale, em).removeUserFromAllGroups(user);
-        List<DocumentMaster> docMs = new FolderDAO(mLocale, em).removeFolder(user.getWorkspaceId() + "/~" + user.getLogin());
-        boolean author = isDocMAuthor(user) || isDocAuthor(user) || isDocMTemplateAuthor(user) || isWorkflowModelAuthor(user);
-        boolean involved = isInvolvedInWFModel(user) || isInvolvedInWF(user);
+    public void removeUser(User pUser) throws UserNotFoundException, NotAllowedException, FolderNotFoundException, EntityConstraintException {
+        removeUserMembership(new WorkspaceUserMembershipKey(pUser.getWorkspaceId(), pUser.getWorkspaceId(), pUser.getLogin()));
+        new SubscriptionDAO(em).removeAllSubscriptions(pUser);
+        new UserGroupDAO(mLocale, em).removeUserFromAllGroups(pUser);
+        new RoleDAO(mLocale,em).removeUserFromRoles(pUser);
+        new ACLDAO(em).removeAclUserEntries(pUser);
+
+        boolean author = isDocMAuthor(pUser) || isDocAuthor(pUser) || isDocMTemplateAuthor(pUser) || isWorkflowModelAuthor(pUser);
+        boolean involved = isInvolvedInWF(pUser);
+
         if (author || involved) {
             throw new NotAllowedException(mLocale, "NotAllowedException8");
         } else {
-            em.remove(user);
-            return docMs.toArray(new DocumentMaster[docMs.size()]);
+            em.remove(pUser);
         }
-    }
-
-    public boolean isInvolvedInWFModel(User pUser) {
-        Query query = em.createQuery("SELECT DISTINCT u FROM User u WHERE EXISTS (SELECT t FROM TaskModel t WHERE t.worker = u AND t.worker = :user)");
-        List listUsers = query.setParameter("user", pUser).getResultList();
-        return !listUsers.isEmpty();
     }
 
     public boolean isInvolvedInWF(User pUser) {
@@ -190,4 +180,38 @@ public class UserDAO {
 
         return users;
     }
+
+    public User[] findReachableUsersForCaller(String callerLogin, String workspaceId) {
+
+        Map<String,User> users = new TreeMap<>();
+
+        List<String> listWorkspaceId = em.createQuery("SELECT u.workspaceId FROM User u WHERE u.login = :login")
+                .setParameter("login", callerLogin).getResultList();
+
+        List<User> listUsers = em.createQuery("SELECT u FROM User u where u.workspaceId IN :workspacesId")
+                .setParameter("workspacesId", listWorkspaceId).getResultList();
+
+
+        for (User listUser : listUsers) {
+            String loginUser = listUser.getLogin();
+            if (!users.keySet().contains(loginUser)) {
+                users.put(loginUser,listUser);
+            } else if(workspaceId.equals(listUser.getWorkspaceId())){
+                users.remove(loginUser);
+                users.put(loginUser,listUser);
+            }
+        }
+
+        return users.values().toArray(new User[users.size()]);
+
+    }
+
+    public boolean hasCommonWorkspace(String userLogin1, String userLogin2){
+        return ! em.createNamedQuery("findCommonWorkspacesForGivenUsers").
+                setParameter("userLogin1", userLogin1).
+                setParameter("userLogin2", userLogin2).
+                getResultList().
+                isEmpty();
+    }
+
 }

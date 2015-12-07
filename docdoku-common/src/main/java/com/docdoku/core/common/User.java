@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,15 +20,16 @@
 
 package com.docdoku.core.common;
 
+import javax.persistence.FetchType;
+import javax.persistence.Table;
 import java.io.Serializable;
-import javax.persistence.*;
 
 /**
  * This class represents a user in the context of a specific workspace.
  * 
  * @author Florent Garin
  * @version 1.0, 02/06/08
- * @since   V1.0
+ * @since V1.0
  */
 @Table(name="USERDATA")
 @javax.persistence.IdClass(com.docdoku.core.common.UserKey.class)
@@ -38,7 +39,7 @@ public class User implements Serializable, Cloneable {
     private String name;
     private String email;
     private String language;
-    @javax.persistence.Column(name = "WORKSPACE_ID", length = 50, nullable = false, insertable = false, updatable = false)
+    @javax.persistence.Column(name = "WORKSPACE_ID", length = 100, nullable = false, insertable = false, updatable = false)
     @javax.persistence.Id
     private String workspaceId = "";
     @javax.persistence.Id
@@ -58,6 +59,10 @@ public class User implements Serializable, Cloneable {
         login = pLogin;
         name = pName;
         email = pEmail;
+        language = pLanguage;
+    }
+
+    public User(String pLanguage){
         language = pLanguage;
     }
 
@@ -128,7 +133,7 @@ public class User implements Serializable, Cloneable {
             return false;
         }
         User user = (User) pObj;
-        return ((user.login.equals(login)) && (user.workspaceId.equals(workspaceId)));
+        return user.login.equals(login) && user.workspaceId.equals(workspaceId);
     }
 
     @Override

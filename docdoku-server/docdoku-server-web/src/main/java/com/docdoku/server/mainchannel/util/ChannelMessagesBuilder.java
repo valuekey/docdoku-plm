@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,30 +20,19 @@
 
 package com.docdoku.server.mainchannel.util;
 
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
+import javax.json.Json;
 
 public class ChannelMessagesBuilder {
 
-    // Peer declaration
-    public static String BuildWelcomeMessage(String userLogin) {
-        try {
-            JSONObject jsobj = new JSONObject();
-            jsobj.put("type", "listen");
-            jsobj.put("text", "welcome " + userLogin);
-            return jsobj.toString();
-        } catch (JSONException ex) {
-            return "welcome";
-        }
+    private ChannelMessagesBuilder() {
     }
 
-    public static String BuildJsonExMessage() {
-        try {
-            JSONObject jsobj = new JSONObject();
-            jsobj.put("error", "JSON_EXCEPTION");
-            return jsobj.toString();
-        } catch (JSONException ex) {
-            return "json exception";
-        }
+    // Peer declaration
+    public static String buildWelcomeMessage(String userLogin) {
+        return Json.createObjectBuilder()
+                .add("type", "listen")
+                .add("text", "welcome " + userLogin).build().toString();
     }
+
+
 }

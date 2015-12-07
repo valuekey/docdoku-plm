@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,32 +19,14 @@
  */
 package com.docdoku.core.product;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
-import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
-import javax.persistence.Table;
 
 /**
- * A link between an assembly represented as
- * <a href="PartIteration.html">PartIteration</a>
- * and a part represented as <a href="PartMaster.html">PartMaster</a>. 
+ * A link between an assembly represented as {@link PartIteration}
+ * and a part represented as {@link PartMaster}.
  * 
  * @author Florent Garin
  * @version 1.1, 15/10/11
@@ -54,16 +36,19 @@ import javax.persistence.Table;
 @Entity
 @NamedQueries({
     @NamedQuery(name="PartUsageLink.findByComponent",query="SELECT u FROM PartUsageLink u WHERE u.component.number LIKE :partNumber AND u.component.workspace.id = :workspaceId"),
-    @NamedQuery(name="PartUsageLink.getPartOwner",query="SELECT p FROM PartIteration p WHERE :usage MEMBER OF p.components")
+    @NamedQuery(name="PartUsageLink.getPartOwner",query="SELECT p FROM PartIteration p WHERE :usage MEMBER OF p.components"),
+    @NamedQuery(name="PartUsageLink.findOrphans",query="SELECT p FROM PartUsageLink p WHERE NOT EXISTS (SELECT pi FROM PartIteration pi WHERE p member of pi.components) ")
 })
-public class PartUsageLink implements Serializable, Cloneable {
+public class PartUsageLink implements Serializable, Cloneable, PartLink {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private int id;
     private double amount;
     private String unit;
+
     private String referenceDescription;
+
     @Column(name = "COMMENTDATA")
     private String comment;
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
@@ -81,7 +66,7 @@ public class PartUsageLink implements Serializable, Cloneable {
     joinColumns = {
         @JoinColumn(name = "PARTUSAGELINK_ID", referencedColumnName = "ID")
     })
-    private List<PartSubstituteLink> substitutes = new LinkedList<PartSubstituteLink>();
+    private List<PartSubstituteLink> substitutes = new LinkedList<>();
     
     @OrderColumn(name = "CADINSTANCE_ORDER")
     @JoinTable(name = "PARTUSAGELINK_CADINSTANCE",
@@ -92,78 +77,114 @@ public class PartUsageLink implements Serializable, Cloneable {
         @JoinColumn(name = "PARTUSAGELINK_ID", referencedColumnName = "ID")
     })
     @OneToMany(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CADInstance> cadInstances = new LinkedList<CADInstance>();
+    private List<CADInstance> cadInstances = new LinkedList<>();
+
+    private boolean optional;
 
     public PartUsageLink() {
     }
 
+    public PartUsageLink(PartMaster pComponent, double pAmount, String pUnit, boolean pOptional) {
+        component=pComponent;
+        amount=pAmount;
+        unit=pUnit;
+        optional=pOptional;
+    }
+
+    @Override
     public int getId() {
         return id;
+    }
+
+    @Override
+    public double getAmount() {
+        return amount;
+    }
+
+    @Override
+    public String getUnit() {
+        return unit;
+    }
+
+    @Override
+    public String getComment() {
+        return comment;
+    }
+
+    @Override
+    public boolean isOptional() {
+        return optional;
+    }
+
+    @Override
+    public PartMaster getComponent() {
+        return component;
+    }
+
+    @Override
+    public List<PartSubstituteLink> getSubstitutes() {
+        return substitutes;
+    }
+
+    @Override
+    public String getReferenceDescription() {
+        return referenceDescription;
+    }
+
+    @Override
+    public Character getCode() {
+        return 'u';
+    }
+
+    @Override
+    public String getFullId() {
+        return getCode()+""+getId();
+    }
+
+    @Override
+    public List<CADInstance> getCadInstances() {
+        return cadInstances;
     }
 
     public void setId(int id) {
         this.id = id;
     }
 
-    public double getAmount() {
-        return amount;
-    }
-
     public void setAmount(double amount) {
         this.amount = amount;
-    }
-
-    public String getUnit() {
-        return unit;
     }
 
     public void setUnit(String unit) {
         this.unit = unit;
     }
 
-    public void setComponent(PartMaster component) {
-        this.component = component;
-    }
-
-    public PartMaster getComponent() {
-        return component;
-    }
-
-    public List<PartSubstituteLink> getSubstitutes() {
-        return substitutes;
-    }
-
-    public void setSubstitutes(List<PartSubstituteLink> substitutes) {
-        this.substitutes = substitutes;
-    }
-
-    public String getComment() {
-        return comment;
+    public void setReferenceDescription(String referenceDescription) {
+        this.referenceDescription = referenceDescription;
     }
 
     public void setComment(String comment) {
         this.comment = comment;
     }
 
-    public String getReferenceDescription() {
-        return referenceDescription;
+    public void setComponent(PartMaster component) {
+        this.component = component;
     }
 
-    public void setReferenceDescription(String referenceDescription) {
-        this.referenceDescription = referenceDescription;
-    }
-
-    public List<CADInstance> getCadInstances() {
-        return cadInstances;
+    public void setSubstitutes(List<PartSubstituteLink> substitutes) {
+        this.substitutes = substitutes;
     }
 
     public void setCadInstances(List<CADInstance> cadInstances) {
         this.cadInstances = cadInstances;
     }
 
+    public void setOptional(boolean optional) {
+        this.optional = optional;
+    }
+
     @Override
     public PartUsageLink clone() {
-        PartUsageLink clone = null;
+        PartUsageLink clone;
         try {
             clone = (PartUsageLink) super.clone();
         } catch (CloneNotSupportedException e) {
@@ -171,14 +192,14 @@ public class PartUsageLink implements Serializable, Cloneable {
         }
 
         //perform a deep copy
-        List<PartSubstituteLink> clonedSubstitutes = new LinkedList<PartSubstituteLink>();
+        List<PartSubstituteLink> clonedSubstitutes = new LinkedList<>();
         for (PartSubstituteLink substitute : substitutes) {
             PartSubstituteLink clonedSubstitute = substitute.clone();
             clonedSubstitutes.add(clonedSubstitute);
         }
         clone.substitutes = clonedSubstitutes;
 
-        List<CADInstance> clonedCADInstances = new LinkedList<CADInstance>();
+        List<CADInstance> clonedCADInstances = new LinkedList<>();
         for (CADInstance cadInstance : cadInstances) {
             CADInstance clonedCADInstance = cadInstance.clone();
             clonedCADInstances.add(clonedCADInstance);
@@ -186,5 +207,9 @@ public class PartUsageLink implements Serializable, Cloneable {
         clone.cadInstances = clonedCADInstances;
 
         return clone;
+    }
+
+    public void addSubstitute(PartSubstituteLink partSubstituteLink) {
+        substitutes.add(partSubstituteLink);
     }
 }

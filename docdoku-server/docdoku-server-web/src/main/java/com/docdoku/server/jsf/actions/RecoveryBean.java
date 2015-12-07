@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -21,16 +21,20 @@
 package com.docdoku.server.jsf.actions;
 
 import com.docdoku.core.common.Account;
+import com.docdoku.core.exceptions.AccountNotFoundException;
+import com.docdoku.core.exceptions.PasswordRecoveryRequestNotFoundException;
 import com.docdoku.core.security.PasswordRecoveryRequest;
-import com.docdoku.core.services.AccountNotFoundException;
+import com.docdoku.core.services.IAccountManagerLocal;
 import com.docdoku.core.services.IMailerLocal;
 import com.docdoku.core.services.IUserManagerLocal;
-import com.docdoku.core.services.PasswordRecoveryRequestNotFoundException;
+
 import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
-import javax.faces.bean.ManagedBean;
+import javax.faces.context.FacesContext;
+import javax.inject.Named;
+import javax.servlet.http.HttpServletRequest;
 
-@ManagedBean(name= "recoveryBean")
+@Named("recoveryBean")
 @RequestScoped
 public class RecoveryBean {
 
@@ -38,6 +42,9 @@ public class RecoveryBean {
     private IMailerLocal mailer;
     @EJB
     private IUserManagerLocal userManager;
+    @EJB
+    private IAccountManagerLocal accountManager;
+
     private String login;
     private String newPassword;
     private String passwordRRUuid;
@@ -46,20 +53,24 @@ public class RecoveryBean {
     }
 
     public String changePassword() throws PasswordRecoveryRequestNotFoundException {
-        if(passwordRRUuid==null)
-            passwordRRUuid="";
-        
-        userManager.recoverPassword(passwordRRUuid, newPassword);
-        return "/recovery.xhtml";
+
+        String uuid = passwordRRUuid;
+
+        if(uuid == null){
+            uuid = "";
+        }
+
+        userManager.recoverPassword(uuid, newPassword);
+        HttpServletRequest request = (HttpServletRequest) (FacesContext.getCurrentInstance().getExternalContext().getRequest());
+        return request.getContextPath() + "/recovery.xhtml";
     }
 
     public String sendRecoveryMessage() throws AccountNotFoundException {
-        //Locale locale = FacesContext.getCurrentInstance().getViewRoot().getLocale();
-        Account account = userManager.getAccount(login);
+        Account account = accountManager.getAccount(login);
         PasswordRecoveryRequest passwdRR = userManager.createPasswordRecoveryRequest(account.getLogin());
         mailer.sendPasswordRecovery(account, passwdRR.getUuid());
-
-        return "/recoveryRequested.xhtml";
+        HttpServletRequest request = (HttpServletRequest) (FacesContext.getCurrentInstance().getExternalContext().getRequest());
+        return request.getContextPath() + "/recoveryRequested.xhtml";
     }
 
     public String getLogin() {

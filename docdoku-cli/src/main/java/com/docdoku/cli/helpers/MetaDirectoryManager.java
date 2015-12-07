@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -21,7 +21,6 @@
 package com.docdoku.cli.helpers;
 
 import java.io.*;
-import java.util.Date;
 import java.util.Properties;
 
 public class MetaDirectoryManager {
@@ -30,20 +29,22 @@ public class MetaDirectoryManager {
     private Properties indexProps;
 
 
-    private final static String META_DIRECTORY_NAME = ".dplm";
-    private final static String INDEX_FILE_NAME = "index.xml";
+    private static final String META_DIRECTORY_NAME = ".dplm";
+    private static final String INDEX_FILE_NAME = "index.xml";
 
-    private final static String PART_NUMBER_PROP = "partNumber";
-    private final static String REVISION_PROP = "revision";
-    private final static String ITERATION_PROP = "iteration";
-
-    private final static String LAST_MODIFIED_DATE_PROP = "lastModifiedDate";
-    private final static String DIGEST_PROP = "digest";
+    private static final String PART_NUMBER_PROP = "partNumber";
+    private static final String REVISION_PROP = "revision";
+    private static final String ITERATION_PROP = "iteration";
+    private static final String WORKSPACE_PROP = "workspace";
+    private static final String ID_PROP = "id";
+    private static final String LAST_MODIFIED_DATE_PROP = "lastModifiedDate";
+    private static final String DIGEST_PROP = "digest";
 
     public MetaDirectoryManager(File workingDirectory) throws IOException {
         this.metaDirectory=new File(workingDirectory,META_DIRECTORY_NAME);
-        if(!metaDirectory.exists())
+        if(!metaDirectory.exists()) {
             metaDirectory.mkdir();
+        }
 
         File indexFile = new File(metaDirectory,INDEX_FILE_NAME);
         indexProps = new Properties();
@@ -56,12 +57,11 @@ public class MetaDirectoryManager {
         }
     }
 
-
-
     private void saveIndex() throws IOException {
         File indexFile = new File(metaDirectory,INDEX_FILE_NAME);
-        if(!indexFile.exists())
+        if(!indexFile.exists()) {
             indexFile.createNewFile();
+        }
 
         OutputStream out = new BufferedOutputStream(new FileOutputStream(indexFile));
         indexProps.storeToXML(out, null);
@@ -69,6 +69,11 @@ public class MetaDirectoryManager {
 
     public void setPartNumber(String filePath, String partNumber) throws IOException {
         indexProps.setProperty(filePath + "." + PART_NUMBER_PROP, partNumber);
+        saveIndex();
+    }
+
+    public void setDocumentId(String filePath, String id) throws IOException {
+        indexProps.setProperty(filePath + "." + ID_PROP, id);
         saveIndex();
     }
 
@@ -87,18 +92,14 @@ public class MetaDirectoryManager {
         saveIndex();
     }
 
-    public void setLastModifiedDate(String filePath, Date lastModifiedDate) throws IOException {
-        setLastModifiedDate(filePath, lastModifiedDate.getTime());
+    public void setWorkspace(String filePath, String workspaceId) throws IOException {
+        indexProps.setProperty(filePath + "." + WORKSPACE_PROP, workspaceId+"");
+        saveIndex();
     }
 
     public void setDigest(String filePath, String digest) throws IOException {
         indexProps.setProperty(filePath + "." + DIGEST_PROP, digest);
         saveIndex();
-    }
-
-
-    public String getDigest(String filePath){
-        return indexProps.getProperty(filePath + "." + DIGEST_PROP);
     }
 
     public long getLastModifiedDate(String filePath){
@@ -109,6 +110,10 @@ public class MetaDirectoryManager {
         return indexProps.getProperty(filePath + "." + PART_NUMBER_PROP);
     }
 
+    public String getWorkspace(String filePath){
+        return indexProps.getProperty(filePath + "." + WORKSPACE_PROP);
+    }
+
     public String getRevision(String filePath){
         return indexProps.getProperty(filePath + "." + REVISION_PROP);
     }
@@ -117,4 +122,26 @@ public class MetaDirectoryManager {
         return Integer.parseInt(indexProps.getProperty(filePath + "." + ITERATION_PROP,"0"));
     }
 
+    public void deleteEntryInfo(String filePath) throws IOException {
+        indexProps.remove(filePath + "." + ID_PROP);
+        indexProps.remove(filePath + "." + PART_NUMBER_PROP);
+        indexProps.remove(filePath + "." + REVISION_PROP);
+        indexProps.remove(filePath + "." + ITERATION_PROP);
+        indexProps.remove(filePath + "." + LAST_MODIFIED_DATE_PROP);
+        indexProps.remove(filePath + "." + DIGEST_PROP);
+        indexProps.remove(filePath + "." + WORKSPACE_PROP);
+        saveIndex();
+    }
+
+    public String getDocumentId(String filePath) {
+        return indexProps.getProperty(filePath + "." + ID_PROP);
+    }
+
+    public boolean isDocumentRelated(String filePath) {
+        return getDocumentId(filePath) != null;
+    }
+
+    public boolean isPartRelated(String filePath) {
+        return getPartNumber(filePath) != null;
+    }
 }

@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -23,7 +23,7 @@ package com.docdoku.core.product;
 import java.io.Serializable;
 
 /**
- * Identity class of <a href="PartIteration.html">PartIteration</a> objects.
+ * Identity class of {@link PartIteration} objects.
  * 
  * @author Florent Garin
  */
@@ -48,9 +48,9 @@ public class PartIterationKey implements Serializable {
     @Override
     public int hashCode() {
         int hash = 1;
-	hash = 31 * hash + partRevision.hashCode();
+        hash = 31 * hash + partRevision.hashCode();
         hash = 31 * hash + iteration;
-	return hash;
+        return hash;
     }
     
     @Override
@@ -58,10 +58,11 @@ public class PartIterationKey implements Serializable {
         if (this == pObj) {
             return true;
         }
-        if (!(pObj instanceof PartIterationKey))
+        if (!(pObj instanceof PartIterationKey)) {
             return false;
+        }
         PartIterationKey key = (PartIterationKey) pObj;
-        return ((key.partRevision.equals(partRevision)) && (key.iteration==iteration));
+        return key.partRevision.equals(partRevision) && key.iteration==iteration;
     }
     
     @Override
@@ -72,16 +73,13 @@ public class PartIterationKey implements Serializable {
     public PartRevisionKey getPartRevision() {
         return partRevision;
     }
-
     public void setPartRevision(PartRevisionKey partRevision) {
         this.partRevision = partRevision;
     }
 
-    
     public int getIteration(){
         return iteration;
     }
-    
     public void setIteration(int pIteration){
         iteration=pIteration;
     }
@@ -89,8 +87,11 @@ public class PartIterationKey implements Serializable {
     public String getWorkspaceId() {
         return partRevision.getPartMaster().getWorkspace();
     }
-
     public String getPartMasterNumber() {
         return partRevision.getPartMaster().getNumber();
+    }
+
+    public String getPartRevisionVersion() {
+        return partRevision.getVersion();
     }
 }

@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,13 +19,19 @@
  */
 package com.docdoku.server.rest;
 
-import com.docdoku.core.common.User;
-import com.docdoku.core.meta.*;
+import com.docdoku.core.exceptions.*;
+import com.docdoku.core.exceptions.NotAllowedException;
+import com.docdoku.core.security.ACL;
 import com.docdoku.core.security.UserGroupMapping;
-import com.docdoku.core.services.IDocumentManagerLocal;
 import com.docdoku.core.services.IWorkflowManagerLocal;
-import com.docdoku.core.workflow.*;
-import com.docdoku.server.rest.dto.*;
+import com.docdoku.core.workflow.ActivityModel;
+import com.docdoku.core.workflow.WorkflowModel;
+import com.docdoku.core.workflow.WorkflowModelKey;
+import com.docdoku.server.rest.dto.ACLDTO;
+import com.docdoku.server.rest.dto.ActivityModelDTO;
+import com.docdoku.server.rest.dto.WorkflowModelDTO;
+import org.dozer.DozerBeanMapperSingletonWrapper;
+import org.dozer.Mapper;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.security.DeclareRoles;
@@ -33,15 +39,11 @@ import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.dozer.DozerBeanMapperSingletonWrapper;
-import org.dozer.Mapper;
-
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-
-import static com.docdoku.server.rest.dto.ActivityModelDTO.Type.SERIAL;
+import java.util.Map;
 
 /**
  *
@@ -51,10 +53,6 @@ import static com.docdoku.server.rest.dto.ActivityModelDTO.Type.SERIAL;
 @DeclareRoles(UserGroupMapping.REGULAR_USER_ROLE_ID)
 @RolesAllowed(UserGroupMapping.REGULAR_USER_ROLE_ID)
 public class WorkflowResource {
-
-    @EJB
-    private IDocumentManagerLocal documentService;
-
     @EJB
     private IWorkflowManagerLocal workflowService;
 
@@ -69,96 +67,101 @@ public class WorkflowResource {
     }
     
     @GET
-    @Produces("application/json;charset=UTF-8")
-    public WorkflowModelDTO[] getWorkflowsInWorkspace(@PathParam("workspaceId") String workspaceId) {
-        try {
+    @Produces(MediaType.APPLICATION_JSON)
+    public WorkflowModelDTO[] getWorkflowsInWorkspace(@PathParam("workspaceId") String workspaceId)
+            throws EntityNotFoundException, UserNotActiveException {
 
-            WorkflowModel[] workflowModels = workflowService.getWorkflowModels(workspaceId);
-            WorkflowModelDTO[] dtos = new WorkflowModelDTO[workflowModels.length];
-            
-            for(int i=0; i<workflowModels.length; i++){
-                dtos[i] = mapper.map(workflowModels[i], WorkflowModelDTO.class);
-            }
-            
-            return dtos;
-            
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
+        WorkflowModel[] workflowModels = workflowService.getWorkflowModels(workspaceId);
+        WorkflowModelDTO[] dtos = new WorkflowModelDTO[workflowModels.length];
+
+        for(int i=0; i<workflowModels.length; i++){
+            dtos[i] = mapper.map(workflowModels[i], WorkflowModelDTO.class);
         }
+
+        return dtos;
     }
 
     @GET
-    @Produces("application/json;charset=UTF-8")
     @Path("{workflowModelId}")
-    public WorkflowModelDTO getWorkflowInWorkspace(@PathParam("workspaceId") String workspaceId, @PathParam("workflowModelId") String workflowModelId) {
-        try{
-            WorkflowModel workflowModel = workflowService.getWorkflowModel(new WorkflowModelKey(workspaceId, workflowModelId));
-            WorkflowModelDTO workflowModelDTO = mapper.map(workflowModel, WorkflowModelDTO.class);
-            return workflowModelDTO;
-        }  catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
-        }
+    @Produces(MediaType.APPLICATION_JSON)
+    public WorkflowModelDTO getWorkflowInWorkspace(@PathParam("workspaceId") String workspaceId, @PathParam("workflowModelId") String workflowModelId)
+            throws EntityNotFoundException, UserNotActiveException {
+
+        WorkflowModel workflowModel = workflowService.getWorkflowModel(new WorkflowModelKey(workspaceId, workflowModelId));
+        return mapper.map(workflowModel, WorkflowModelDTO.class);
     }
 
     @DELETE
     @Path("{workflowModelId}")
-    public Response delWorkflowModel(@PathParam("workspaceId") String workspaceId, @PathParam("workflowModelId") String workflowModelId){
-        try {
-            workflowService.deleteWorkflowModel(new WorkflowModelKey(workspaceId, workflowModelId));
-            return Response.status(Response.Status.OK).build();
-        }  catch (com.docdoku.core.services.ApplicationException ex) {
-            throw new RestApiException(ex.toString(), ex.getMessage());
-        }
+    public Response delWorkflowModel(@PathParam("workspaceId") String workspaceId, @PathParam("workflowModelId") String workflowModelId)
+            throws EntityNotFoundException, AccessRightException, UserNotActiveException, EntityConstraintException {
+        workflowService.deleteWorkflowModel(new WorkflowModelKey(workspaceId, workflowModelId));
+        return Response.status(Response.Status.OK).build();
     }
 
     @PUT
-    @Produces("application/json;charset=UTF-8")
     @Path("{workflowModelId}")
-    public WorkflowModelDTO updateWorkflowModelInWorkspace(@PathParam("workspaceId") String workspaceId, @PathParam("workflowModelId") String workflowModelId, WorkflowModelDTO workflowModelDTOToPersist) {
-        try {
+    @Produces(MediaType.APPLICATION_JSON)
+    public WorkflowModelDTO updateWorkflowModelInWorkspace(@PathParam("workspaceId") String workspaceId, @PathParam("workflowModelId") String workflowModelId, WorkflowModelDTO workflowModelDTOToPersist)
+            throws EntityNotFoundException, AccessRightException, EntityAlreadyExistsException, CreationException, UserNotActiveException, NotAllowedException {
 
-            workflowService.deleteWorkflowModel(new WorkflowModelKey(workspaceId, workflowModelId));
+        WorkflowModelKey workflowModelKey = new WorkflowModelKey(workspaceId, workflowModelId);
+        List<ActivityModelDTO> activityModelDTOsList = workflowModelDTOToPersist.getActivityModels();
+        ActivityModel[] activityModels = extractActivityModelFromDTO(activityModelDTOsList);
+        WorkflowModel workflowModel = workflowService.updateWorkflowModel(workflowModelKey, workflowModelDTOToPersist.getFinalLifeCycleState(), activityModels);
+        return mapper.map(workflowModel, WorkflowModelDTO.class);
+    }
+    @PUT
+    @Path("{workflowModelId}/acl")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateACL(@PathParam("workspaceId") String pWorkspaceId, @PathParam("workflowModelId") String workflowModelId, ACLDTO acl)
+            throws EntityNotFoundException, UserNotActiveException, AccessRightException {
+        if (!acl.getGroupEntries().isEmpty() || !acl.getUserEntries().isEmpty()) {
 
-            return this.createWorkflowModelInWorkspace(workspaceId, workflowModelDTOToPersist);
+            Map<String,String> userEntries = new HashMap<>();
+            Map<String,String> groupEntries = new HashMap<>();
 
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            ex.printStackTrace();
-            throw new RestApiException(ex.toString(), ex.getMessage());
+            for (Map.Entry<String, ACL.Permission> entry : acl.getUserEntries().entrySet()) {
+                userEntries.put(entry.getKey(), entry.getValue().name());
+            }
+
+            for (Map.Entry<String, ACL.Permission> entry : acl.getGroupEntries().entrySet()) {
+                groupEntries.put(entry.getKey(), entry.getValue().name());
+            }
+
+            workflowService.updateACLForWorkflow(pWorkspaceId, workflowModelId, userEntries, groupEntries);
+        }else{
+            workflowService.removeACLFromWorkflow(pWorkspaceId, workflowModelId);
         }
+        return Response.ok().build();
     }
 
     @POST
-    @Produces("application/json;charset=UTF-8")
-    public WorkflowModelDTO createWorkflowModelInWorkspace(@PathParam("workspaceId") String workspaceId, WorkflowModelDTO workflowModelDTOToPersist) {
-        try {
+    @Produces(MediaType.APPLICATION_JSON)
+    public WorkflowModelDTO createWorkflowModelInWorkspace(@PathParam("workspaceId") String workspaceId, WorkflowModelDTO workflowModelDTOToPersist)
+            throws EntityNotFoundException, EntityAlreadyExistsException, UserNotActiveException, NotAllowedException, AccessRightException, CreationException {
+        List<ActivityModelDTO> activityModelDTOsList = workflowModelDTOToPersist.getActivityModels();
+        ActivityModel[] activityModels = extractActivityModelFromDTO(activityModelDTOsList);
+        WorkflowModel workflowModel = workflowService.createWorkflowModel(workspaceId, workflowModelDTOToPersist.getReference(), workflowModelDTOToPersist.getFinalLifeCycleState(), activityModels);
+        return mapper.map(workflowModel, WorkflowModelDTO.class);
+    }
 
-            User[] users = documentService.getUsers(workspaceId);
+    private ActivityModel[] extractActivityModelFromDTO(List<ActivityModelDTO> activityModelDTOsList) throws NotAllowedException {
+        Map<Integer,ActivityModel> activityModels = new HashMap<>();
 
-            List<ActivityModelDTO> activityModelDTOsList = workflowModelDTOToPersist.getActivityModels();
+        for(int i=0; i<activityModelDTOsList.size(); i++){
+            ActivityModelDTO activityModelDTO = activityModelDTOsList.get(i);
+            ActivityModel activityModel = mapper.map(activityModelDTO, ActivityModel.class);
+            activityModels.put(activityModel.getStep(),activityModel);
 
-            ActivityModel[] activityModels = new ActivityModel[activityModelDTOsList.size()];
-            for(int i=0; i<activityModelDTOsList.size(); i++){
-                activityModels[i] = mapper.map(activityModelDTOsList.get(i), ActivityModel.class);
-
-                List<TaskModel> taskModelList = activityModels[i].getTaskModels();
-                for(TaskModel taskModel : taskModelList){
-                    String login = taskModel.getWorker().getLogin();
-                    for(int j=0; j<users.length; j++){
-                        if(users[j].getLogin().equals(login))
-                            taskModel.setWorker(users[j]);
-                    }
-                }
+            Integer relaunchStep = activityModelDTO.getRelaunchStep();
+            if(relaunchStep != null && relaunchStep < i){
+                ActivityModel relaunchActivity = activityModels.get(relaunchStep);
+                activityModel.setRelaunchActivity(relaunchActivity);
             }
-
-            WorkflowModel workflowModel = workflowService.createWorkflowModel(workspaceId, workflowModelDTOToPersist.getReference(), workflowModelDTOToPersist.getFinalLifeCycleState(), activityModels);
-
-            WorkflowModelDTO dto = mapper.map(workflowModel, WorkflowModelDTO.class);
-            return dto;
-
-        } catch (com.docdoku.core.services.ApplicationException ex) {
-            ex.printStackTrace();
-            throw new RestApiException(ex.toString(), ex.getMessage());
         }
+
+        return activityModels.values().toArray(new ActivityModel[activityModels.size()]);
     }
     
 }

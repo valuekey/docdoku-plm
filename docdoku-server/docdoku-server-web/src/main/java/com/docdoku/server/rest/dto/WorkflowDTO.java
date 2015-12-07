@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -22,16 +22,18 @@ package com.docdoku.server.rest.dto;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-public class WorkflowDTO implements Serializable {
+public class WorkflowDTO implements Serializable, Comparable<WorkflowDTO> {
 
     private int id;
     private String finalLifeCycleState;
     private List<ActivityDTO> activities;
+    private Date abortedDate;
 
     public WorkflowDTO() {
-        activities = new ArrayList<ActivityDTO>();
+        activities = new ArrayList<>();
     }
 
     public List<ActivityDTO> getActivities() {
@@ -56,14 +58,22 @@ public class WorkflowDTO implements Serializable {
 
     public String getLifeCycleState() {
         ActivityDTO current = getCurrentActivity();
-        return current==null?finalLifeCycleState:current.getLifeCycleState();
+        return (current==null)?finalLifeCycleState:current.getLifeCycleState();
+    }
+
+    public Date getAbortedDate() {
+        return (abortedDate!=null) ? (Date) abortedDate.clone() : null;
+    }
+    public void setAbortedDate(Date abortedDate) {
+        this.abortedDate = (abortedDate != null) ? (Date) abortedDate.clone() : null;
     }
 
     public ActivityDTO getCurrentActivity() {
-        if (getCurrentStep() < activities.size())
+        if (getCurrentStep() < activities.size()) {
             return activities.get(getCurrentStep());
-        else
+        } else {
             return null;
+        }
     }
     
     public void setId(int id) {
@@ -73,12 +83,38 @@ public class WorkflowDTO implements Serializable {
     public int getCurrentStep() {
         int i = 0;
         for (ActivityDTO activity : activities) {
-            if (activity.isComplete())
+            if (activity.isComplete()) {
                 i++;
-            else
+            } else {
                 break;
+            }
         }
         return i;
     }
 
+    @Override
+    public int compareTo(WorkflowDTO o) {
+        return o.getAbortedDate().compareTo(this.getAbortedDate());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        WorkflowDTO that = (WorkflowDTO) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id;
+        result = 31 * result + (finalLifeCycleState != null ? finalLifeCycleState.hashCode() : 0);
+        result = 31 * result + (activities != null ? activities.hashCode() : 0);
+        result = 31 * result + (abortedDate != null ? abortedDate.hashCode() : 0);
+        return result;
+    }
 }

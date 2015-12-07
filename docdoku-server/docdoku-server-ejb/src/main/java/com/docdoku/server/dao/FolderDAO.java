@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,27 +20,28 @@
 
 package com.docdoku.server.dao;
 
-import com.docdoku.core.services.CreationException;
-import com.docdoku.core.services.FolderAlreadyExistsException;
-import com.docdoku.core.services.FolderNotFoundException;
+import com.docdoku.core.document.DocumentRevision;
 import com.docdoku.core.document.Folder;
-import com.docdoku.core.document.DocumentMaster;
+import com.docdoku.core.exceptions.CreationException;
+import com.docdoku.core.exceptions.EntityConstraintException;
+import com.docdoku.core.exceptions.FolderAlreadyExistsException;
+import com.docdoku.core.exceptions.FolderNotFoundException;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
-import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class FolderDAO {
     
     private EntityManager em;
     private Locale mLocale;
+    private static final Logger LOGGER = Logger.getLogger(FolderDAO.class.getName());
     
     public FolderDAO(Locale pLocale, EntityManager pEM) {
         em = pEM;
@@ -54,10 +55,11 @@ public class FolderDAO {
     
     public Folder loadFolder(String pCompletePath) throws FolderNotFoundException {
         Folder folder = em.find(Folder.class,pCompletePath);
-        if (folder == null)
+        if (folder == null) {
             throw new FolderNotFoundException(mLocale, pCompletePath);
-        else
+        } else {
             return folder;
+        }
     }
     
     public void createFolder(Folder pFolder) throws FolderAlreadyExistsException, CreationException{
@@ -66,23 +68,26 @@ public class FolderDAO {
             em.persist(pFolder);
             em.flush();
         }catch(EntityExistsException pEEEx){
+            LOGGER.log(Level.FINEST,null,pEEEx);
             throw new FolderAlreadyExistsException(mLocale, pFolder);
         }catch(PersistenceException pPEx){
             //EntityExistsException is case sensitive
             //whereas MySQL is not thus PersistenceException could be
             //thrown instead of EntityExistsException
+            LOGGER.log(Level.FINEST,null,pPEx);
             throw new CreationException(mLocale);
         }
     }
     
     public Folder[] getSubFolders(String pCompletePath){
         Folder[] folders;
-        Query query = em.createQuery("SELECT DISTINCT f FROM Folder f WHERE f.parentFolder.completePath = :completePath");
+        TypedQuery<Folder> query = em.createQuery("SELECT DISTINCT f FROM Folder f WHERE f.parentFolder.completePath = :completePath", Folder.class);
         query.setParameter("completePath",pCompletePath);
         List listFolders = query.getResultList();
         folders = new Folder[listFolders.size()];
-        for(int i=0;i<listFolders.size();i++)
-            folders[i]=(Folder) listFolders.get(i);
+        for(int i=0;i<listFolders.size();i++) {
+            folders[i] = (Folder) listFolders.get(i);
+        }
         
         return folders;
     }
@@ -90,68 +95,64 @@ public class FolderDAO {
     public Folder[] getSubFolders(Folder pFolder){
         return getSubFolders(pFolder.getCompletePath());
     }
-    
-    //TODO performance should be improved
-    private Set<Folder> getAllSubFolders(Folder pFolder){
-        Set<Folder> allSubFolders = new HashSet<Folder>();
-        Folder[] subFolders = getSubFolders(pFolder);
-        allSubFolders.addAll(Arrays.asList(subFolders));
-        
-        for(Folder subFolder:subFolders)
-            allSubFolders.addAll(getAllSubFolders(subFolder));
-        return allSubFolders;
-    }
-    
-    public List<DocumentMaster> removeFolder(String pCompletePath) throws FolderNotFoundException{
+
+    public void removeFolder(String pCompletePath) throws FolderNotFoundException, EntityConstraintException {
         Folder folder = em.find(Folder.class,pCompletePath);
-        if(folder==null)
+        if(folder==null) {
             throw new FolderNotFoundException(mLocale, pCompletePath);
+        }
         
-        return removeFolder(folder);
+        removeFolder(folder);
     }
     
-    public List<DocumentMaster> removeFolder(Folder pFolder){
-        DocumentMasterDAO docMDAO=new DocumentMasterDAO(mLocale,em);
-        List<DocumentMaster> allDocM = new LinkedList<DocumentMaster>();
-        List<DocumentMaster> docMs = docMDAO.findDocMsByFolder(pFolder.getCompletePath());
-        allDocM.addAll(docMs);
-        
-        for(DocumentMaster docM:allDocM)
-            docMDAO.removeDocM(docM);
-        
+    public void removeFolder(Folder pFolder) throws EntityConstraintException {
         Folder[] subFolders = getSubFolders(pFolder);
-        for(Folder subFolder:subFolders)
-            allDocM.addAll(removeFolder(subFolder));
+        for(Folder subFolder:subFolders) {
+            removeFolder(subFolder);
+        }
         
         em.remove(pFolder);
         //flush to insure the right delete order to avoid integrity constraint
         //violation on folder.
         em.flush();
-        
-        return allDocM;
     }
 
-    public List<DocumentMaster> moveFolder(Folder pFolder, Folder pNewFolder) throws FolderAlreadyExistsException, CreationException{
-        DocumentMasterDAO docMDAO=new DocumentMasterDAO(mLocale,em);
-        List<DocumentMaster> allDocMs = new LinkedList<DocumentMaster>();
-        List<DocumentMaster> docMs = docMDAO.findDocMsByFolder(pFolder.getCompletePath());
-        allDocMs.addAll(docMs);
+    public List<DocumentRevision> moveFolder(Folder pFolder, Folder pNewFolder) throws FolderAlreadyExistsException, CreationException{
+        DocumentRevisionDAO docRDAO=new DocumentRevisionDAO(mLocale,em);
+        List<DocumentRevision> allDocRs = new LinkedList<>();
+        List<DocumentRevision> docRs = docRDAO.findDocRsByFolder(pFolder.getCompletePath());
+        allDocRs.addAll(docRs);
 
-        for(DocumentMaster docM:allDocMs){
-            docM.setLocation(pNewFolder);
+        for(DocumentRevision docR:allDocRs){
+            docR.setLocation(pNewFolder);
         }
 
         Folder[] subFolders = getSubFolders(pFolder);
         for(Folder subFolder:subFolders){
             Folder newSubFolder = new Folder(pNewFolder.getCompletePath(),subFolder.getShortName());
             createFolder(newSubFolder);
-            allDocMs.addAll(moveFolder(subFolder,newSubFolder));
+            allDocRs.addAll(moveFolder(subFolder, newSubFolder));
         }
         em.remove(pFolder);
         //flush to insure the right delete order to avoid integrity constraint
         //violation on folder.
         em.flush();
 
-        return allDocMs;
+        return allDocRs;
     }
+
+    public List<DocumentRevision> findDocumentRevisionsInFolder(Folder pFolder) {
+        DocumentRevisionDAO docRDAO = new DocumentRevisionDAO(mLocale, em);
+        List<DocumentRevision> allDocRs = new LinkedList<>();
+        List<DocumentRevision> docRs = docRDAO.findDocRsByFolder(pFolder.getCompletePath());
+        allDocRs.addAll(docRs);
+
+        Folder[] subFolders = getSubFolders(pFolder);
+        for (Folder subFolder : subFolders) {
+            allDocRs.addAll(findDocumentRevisionsInFolder(subFolder));
+        }
+
+        return allDocRs;
+    }
+
 }

@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -22,31 +22,16 @@
 package com.docdoku.core.product;
 
 import com.docdoku.core.common.User;
+
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.JoinTable;
-import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 /**
- * Represents a marker on the 3D scene, actually a
- * <a href="ConfigurationItem.html">ConfigurationItem</a>.
- * May be attached to one or several <a href="PartMaster.html">PartMaster</a>s.
+ * Represents a marker on the 3D scene, actually a {@link ConfigurationItem}.
+ * May be attached to one or several {@link PartMaster}s.
  * 
  * @author Florent Garin
  * @version 1.1, 14/08/12
@@ -82,7 +67,7 @@ public class Marker implements Serializable{
     private Set<PartMaster> relatedParts = new HashSet<PartMaster>();
     
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns({
         @JoinColumn(name = "AUTHOR_LOGIN", referencedColumnName = "LOGIN"),
         @JoinColumn(name = "AUTHOR_WORKSPACE_ID", referencedColumnName = "WORKSPACE_ID")

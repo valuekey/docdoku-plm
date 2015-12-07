@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -23,90 +23,89 @@ package com.docdoku.core.document;
 import java.io.Serializable;
 
 /**
+ * Identity class of {@link DocumentMaster} objects.
  *
  * @author Florent Garin
  */
 public class DocumentMasterKey implements Serializable, Comparable<DocumentMasterKey>, Cloneable {
 
-    private String workspaceId;
+    private String workspace;
     private String id;
-    private String version;
 
 
     public DocumentMasterKey() {
     }
-    
-    public DocumentMasterKey(String pWorkspaceId, String pId, String pVersion) {
-        workspaceId=pWorkspaceId;
-        id=pId;
-        version = pVersion;
+
+    public DocumentMasterKey(String pWorkspaceId, String pId) {
+        workspace = pWorkspaceId;
+        id = pId;
     }
 
 
+    public String getWorkspace() {
+        return workspace;
+    }
 
-    public String getWorkspaceId() {
-        return workspaceId;
+    public void setWorkspace(String pWorkspaceId) {
+        workspace = pWorkspaceId;
     }
-    
-    public void setWorkspaceId(String pWorkspaceId) {
-        workspaceId = pWorkspaceId;
-    }
-    
+
     public String getId() {
         return id;
     }
-    
+
     public void setId(String pId) {
         id = pId;
     }
-    
-    public String getVersion() {
-        return version;
-    }
 
-    public void setVersion(String pVersion){
-        version=pVersion;
-    }
-    
+
     @Override
     public String toString() {
-        return workspaceId + "-" + id + "-" + version;
+        return workspace + "-" + id;
     }
 
+
     @Override
-    public boolean equals(Object pObj) {
-        if (this == pObj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (!(pObj instanceof DocumentMasterKey))
+        if (o == null || getClass() != o.getClass()) {
             return false;
-        DocumentMasterKey key = (DocumentMasterKey) pObj;
-        return ((key.id.equals(id)) && (key.workspaceId.equals(workspaceId)) && (key.version.equals(version)));
+        }
+
+        DocumentMasterKey that = (DocumentMasterKey) o;
+
+        if (!id.equals(that.id)) {
+            return false;
+        }
+        if (!workspace.equals(that.workspace)) {
+            return false;
+        }
+
+        return true;
     }
 
     @Override
     public int hashCode() {
-        int hash = 1;
-	hash = 31 * hash + workspaceId.hashCode();
-	hash = 31 * hash + id.hashCode();
-        hash = 31 * hash + version.hashCode();
-	return hash;
+        int result = workspace.hashCode();
+        result = 31 * result + id.hashCode();
+        return result;
     }
 
-    public int compareTo(DocumentMasterKey pDocMKey) {
-        int wksComp = workspaceId.compareTo(pDocMKey.workspaceId);
-        if (wksComp != 0)
+
+    public int compareTo(DocumentMasterKey pKey) {
+        int wksComp = workspace.compareTo(pKey.workspace);
+        if (wksComp != 0) {
             return wksComp;
-        int idComp = id.compareTo(pDocMKey.id);
-        if (idComp != 0)
-            return idComp;
-        else
-            return version.compareTo(pDocMKey.version);
+        } else {
+            return id.compareTo(pKey.id);
+        }
     }
-    
+
     @Override
     public DocumentMasterKey clone() {
-        DocumentMasterKey clone = null;
+        DocumentMasterKey clone;
         try {
             clone = (DocumentMasterKey) super.clone();
         } catch (CloneNotSupportedException e) {

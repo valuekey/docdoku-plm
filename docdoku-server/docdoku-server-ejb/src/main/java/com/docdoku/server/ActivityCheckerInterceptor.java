@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -21,21 +21,23 @@ package com.docdoku.server;
 
 import com.docdoku.core.common.User;
 import com.docdoku.core.document.DocumentIteration;
-import com.docdoku.core.document.DocumentMaster;
+import com.docdoku.core.document.DocumentRevision;
+import com.docdoku.core.exceptions.NotAllowedException;
+import com.docdoku.core.exceptions.WorkflowNotFoundException;
 import com.docdoku.core.services.IUserManagerLocal;
-import com.docdoku.core.services.NotAllowedException;
 import com.docdoku.core.workflow.Task;
 import com.docdoku.core.workflow.TaskKey;
 import com.docdoku.core.workflow.Workflow;
 import com.docdoku.server.dao.TaskDAO;
 import com.docdoku.server.dao.WorkflowDAO;
-import java.util.Locale;
+
 import javax.ejb.EJB;
 import javax.interceptor.AroundInvoke;
 import javax.interceptor.Interceptor;
 import javax.interceptor.InvocationContext;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.util.Locale;
 
 @CheckActivity
 @Interceptor
@@ -54,13 +56,16 @@ public class ActivityCheckerInterceptor {
         User user = userManager.checkWorkspaceReadAccess(workspaceId);
         Task task = new TaskDAO(new Locale(user.getLanguage()), em).loadTask(taskKey);
         Workflow workflow = task.getActivity().getWorkflow();
-        DocumentMaster docM = new WorkflowDAO(em).getTarget(workflow);
-        DocumentIteration doc = docM.getLastIteration();
+        DocumentRevision docR = new WorkflowDAO(em).getDocumentTarget(workflow);
+        if(docR == null){
+            throw new WorkflowNotFoundException(new Locale(user.getLanguage()),workflow.getId());
+        }
+        DocumentIteration doc = docR.getLastIteration();
         if (em.createNamedQuery("findLogByDocumentAndUserAndEvent").
                 setParameter("userLogin", user.getLogin()).
                 setParameter("documentWorkspaceId", doc.getWorkspaceId()).
-                setParameter("documentId", doc.getDocumentMasterId()).
-                setParameter("documentVersion", doc.getDocumentMasterVersion()).
+                setParameter("documentId", doc.getId()).
+                setParameter("documentVersion", doc.getVersion()).
                 setParameter("documentIteration", doc.getIteration()).
                 setParameter("event", "DOWNLOAD").
                 getResultList().isEmpty()) {

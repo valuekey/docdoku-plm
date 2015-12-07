@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -23,8 +23,8 @@ package com.docdoku.core.product;
 import java.io.Serializable;
 
 /**
- * Identity class of <a href="PartRevision.html">PartRevision</a> objects.
- * 
+ * Identity class of {@link PartRevision} objects.
+ *
  * @author Florent Garin
  */
 public class PartRevisionKey implements Serializable, Comparable<PartRevisionKey>, Cloneable {
@@ -37,12 +37,12 @@ public class PartRevisionKey implements Serializable, Comparable<PartRevisionKey
     }
 
     public PartRevisionKey(String pWorkspaceId, String pNumber, String pVersion) {
-        partMaster= new PartMasterKey(pWorkspaceId, pNumber);
+        partMaster = new PartMasterKey(pWorkspaceId, pNumber);
         version = pVersion;
     }
-    
+
     public PartRevisionKey(PartMasterKey pPartMasterKey, String pVersion) {
-        partMaster=pPartMasterKey;
+        partMaster = pPartMasterKey;
         version = pVersion;
     }
 
@@ -53,16 +53,23 @@ public class PartRevisionKey implements Serializable, Comparable<PartRevisionKey
     public void setPartMaster(PartMasterKey partMaster) {
         this.partMaster = partMaster;
     }
-    
-    
+
+    public String getWorkspaceId() {
+        return partMaster.getWorkspace();
+    }
+
+    public String getPartMasterNumber() {
+        return partMaster.getNumber();
+    }
+
     public String getVersion() {
         return version;
     }
 
-    public void setVersion(String pVersion){
-        version=pVersion;
+    public void setVersion(String pVersion) {
+        version = pVersion;
     }
-    
+
     @Override
     public String toString() {
         return partMaster + "-" + version;
@@ -73,28 +80,30 @@ public class PartRevisionKey implements Serializable, Comparable<PartRevisionKey
         if (this == pObj) {
             return true;
         }
-        if (!(pObj instanceof PartRevisionKey))
+        if (!(pObj instanceof PartRevisionKey)) {
             return false;
+        }
         PartRevisionKey key = (PartRevisionKey) pObj;
-        return ((key.partMaster.equals(partMaster)) && (key.version.equals(version)));
+        return key.partMaster.equals(partMaster) && key.version.equals(version);
     }
 
     @Override
     public int hashCode() {
         int hash = 1;
-	hash = 31 * hash + partMaster.hashCode();
+        hash = 31 * hash + partMaster.hashCode();
         hash = 31 * hash + version.hashCode();
-	return hash;
+        return hash;
     }
 
     public int compareTo(PartRevisionKey pKey) {
         int wksMaster = partMaster.compareTo(pKey.partMaster);
-        if (wksMaster != 0)
+        if (wksMaster != 0) {
             return wksMaster;
-        else
+        } else {
             return version.compareTo(pKey.version);
+        }
     }
-    
+
     @Override
     public PartRevisionKey clone() {
         PartRevisionKey clone = null;

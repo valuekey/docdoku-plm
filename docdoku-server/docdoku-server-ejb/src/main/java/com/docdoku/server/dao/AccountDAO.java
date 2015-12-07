@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,19 +20,20 @@
 
 package com.docdoku.server.dao;
 
-import com.docdoku.core.services.AccountNotFoundException;
-import com.docdoku.core.services.AccountAlreadyExistsException;
-import com.docdoku.core.services.CreationException;
-import com.docdoku.core.*;
 import com.docdoku.core.common.Account;
+import com.docdoku.core.common.Workspace;
+import com.docdoku.core.exceptions.AccountAlreadyExistsException;
+import com.docdoku.core.exceptions.AccountNotFoundException;
+import com.docdoku.core.exceptions.CreationException;
 import com.docdoku.core.security.Credential;
 import com.docdoku.core.security.UserGroupMapping;
-import com.docdoku.core.common.Workspace;
-import java.util.*;
+
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
-import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import java.util.List;
+import java.util.Locale;
 
 public class AccountDAO {
     
@@ -48,7 +49,7 @@ public class AccountDAO {
         mLocale=Locale.getDefault();
         em=pEM;
     }
-    
+
     public void createAccount(Account pAccount, String pPassword) throws AccountAlreadyExistsException, CreationException {
         try{
             //the EntityExistsException is thrown only when flush occurs 
@@ -81,20 +82,35 @@ public class AccountDAO {
     
     public Account loadAccount(String pLogin) throws AccountNotFoundException {
         Account account = em.find(Account.class,pLogin);
-        if (account == null)
+        if (account == null) {
             throw new AccountNotFoundException(mLocale, pLogin);
-        else
+        } else {
             return account;
+        }
     }
     
     public Workspace[] getAdministratedWorkspaces(Account pAdmin) {
         Workspace[] workspaces;
-        Query query = em.createQuery("SELECT DISTINCT w FROM Workspace w WHERE w.admin = :admin");
-        List listWorkspaces = query.setParameter("admin",pAdmin).getResultList();
+        TypedQuery<Workspace> query = em.createQuery("SELECT DISTINCT w FROM Workspace w WHERE w.admin = :admin", Workspace.class);
+        List<Workspace> listWorkspaces = query.setParameter("admin",pAdmin).getResultList();
         workspaces = new Workspace[listWorkspaces.size()];
-        for(int i=0;i<listWorkspaces.size();i++)
-            workspaces[i]=(Workspace) listWorkspaces.get(i);
+        for(int i=0;i<listWorkspaces.size();i++) {
+            workspaces[i] = listWorkspaces.get(i);
+        }
         
         return workspaces;    
     }
+
+    public Workspace[] getAllWorkspaces() {
+        Workspace[] workspaces;
+        TypedQuery<Workspace> query = em.createQuery("SELECT DISTINCT w FROM Workspace w", Workspace.class);
+        List<Workspace> listWorkspaces = query.getResultList();
+        workspaces = new Workspace[listWorkspaces.size()];
+        for(int i=0;i<listWorkspaces.size();i++) {
+            workspaces[i] = listWorkspaces.get(i);
+        }
+
+        return workspaces;
+    }
+
 }

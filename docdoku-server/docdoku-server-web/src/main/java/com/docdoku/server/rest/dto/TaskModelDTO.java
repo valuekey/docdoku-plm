@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,7 +20,6 @@
 
 package com.docdoku.server.rest.dto;
 
-import com.docdoku.server.rest.dto.UserDTO;
 import java.io.Serializable;
 
 /**
@@ -32,10 +31,18 @@ public class TaskModelDTO implements Serializable {
     private int num;
     private String title;
     private String instructions;
-    private UserDTO worker;
+    private RoleDTO role;
     private int duration;
 
     public TaskModelDTO() {
+    }
+
+    public TaskModelDTO(int num, String title, String instructions, RoleDTO role, int duration) {
+        this.num = num;
+        this.title = title;
+        this.instructions = instructions;
+        this.role = role;
+        this.duration = duration;
     }
 
     public int getNum() {
@@ -70,11 +77,11 @@ public class TaskModelDTO implements Serializable {
         this.instructions = instructions;
     }
 
-    public UserDTO getWorker() {
-        return worker;
+    public RoleDTO getRole() {
+        return role;
     }
 
-    public void setWorker(UserDTO worker) {
-        this.worker = worker;
+    public void setRole(RoleDTO role) {
+        this.role = role;
     }
 }

@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,16 +20,15 @@
 
 package com.docdoku.server.dao;
 
-import com.docdoku.core.services.TaskNotFoundException;
-import com.docdoku.core.workflow.Task;
 import com.docdoku.core.common.User;
+import com.docdoku.core.exceptions.TaskNotFoundException;
+import com.docdoku.core.workflow.Task;
 import com.docdoku.core.workflow.TaskKey;
-import java.util.List;
-import java.util.Locale;
-
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.util.List;
+import java.util.Locale;
 
 public class TaskDAO {
     
@@ -48,10 +47,11 @@ public class TaskDAO {
     
     public Task loadTask(TaskKey pTaskKey) throws TaskNotFoundException {
         Task task = em.find(Task.class,pTaskKey);
-        if (task == null)
+        if (task == null) {
             throw new TaskNotFoundException(mLocale, pTaskKey);
-        else
+        } else {
             return task;
+        }
     }
     
     public Task[] findTasks(User pUser){
@@ -60,8 +60,9 @@ public class TaskDAO {
         query.setParameter("user",pUser);
         List listTasks = query.getResultList();
         tasks = new Task[listTasks.size()];
-        for(int i=0;i<listTasks.size();i++)
-            tasks[i]=(Task) listTasks.get(i);
+        for(int i=0;i<listTasks.size();i++) {
+            tasks[i] = (Task) listTasks.get(i);
+        }
         
         return tasks;
     }

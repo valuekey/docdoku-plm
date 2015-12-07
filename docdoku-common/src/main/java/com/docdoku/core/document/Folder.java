@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,14 +20,15 @@
 
 package com.docdoku.core.document;
 
-import java.io.Serializable;
-import java.util.Stack;
+import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import java.io.Serializable;
+import java.util.Stack;
 
 /**
- * The <a href="Folder.html">Folder</a>
- * class is the unitary element of the tree structure.
+ * The {@link Folder} class is the unitary element of the tree structure.
  * Like in a regular file system, folder may contain other folders or documents.  
  * 
  * @author Florent Garin
@@ -35,10 +36,10 @@ import javax.persistence.Table;
  * @since   V1.0
  */
 @Table(name="FOLDER")
-@javax.persistence.Entity
+@Entity
 public class Folder implements Serializable, Comparable<Folder> {
-       
-    
+
+    @Column(length=255)
     @javax.persistence.Id
     private String completePath="";
             
@@ -47,7 +48,7 @@ public class Folder implements Serializable, Comparable<Folder> {
     
     public Folder() {
     }
-    
+
     public Folder(String pCompletePath) {
         completePath = pCompletePath;
         if (!isRoot() && !isHome()){
@@ -56,30 +57,21 @@ public class Folder implements Serializable, Comparable<Folder> {
         }
     }
 
-    public void setCompletePath(String completePath) {
-        this.completePath = completePath;
+    public Folder(String pParentFolderPath, String pShortName) {
+        this(pParentFolderPath + "/" + pShortName);
     }
-
-    public void setParentFolder(Folder parentFolder) {
-        this.parentFolder = parentFolder;
-    }
-    
 
     public String getWorkspaceId(){
         return Folder.parseWorkspaceId(completePath);
     }
     
     public static String parseWorkspaceId(String pCompletePath){
-        if(!pCompletePath.contains("/"))
+        if(!pCompletePath.contains("/")) {
             return pCompletePath;
-        else{
+        }else{
             int index = pCompletePath.indexOf('/');
             return pCompletePath.substring(0, index);
         }
-    }
-    
-    public Folder(String pParentFolderPath, String pShortName) {
-        this(pParentFolderPath + "/" + pShortName);
     }
     
     public boolean isRoot() {
@@ -89,7 +81,7 @@ public class Folder implements Serializable, Comparable<Folder> {
     public boolean isHome() {
         try {
             int index = completePath.lastIndexOf('/');
-            return (completePath.charAt(index+1) == '~');
+            return completePath.charAt(index+1) == '~';
         } catch (IndexOutOfBoundsException pIOOBEx) {
             return false;
         }
@@ -98,7 +90,7 @@ public class Folder implements Serializable, Comparable<Folder> {
     public boolean isPrivate() {
         try {
             int index = completePath.indexOf('/');
-            return (completePath.charAt(index+1) == '~');
+            return completePath.charAt(index+1) == '~';
         } catch (IndexOutOfBoundsException pIOOBEx) {
             return false;
         }
@@ -109,8 +101,9 @@ public class Folder implements Serializable, Comparable<Folder> {
         if (isPrivate()) {
             int beginIndex = completePath.indexOf('/');
             int endIndex = completePath.indexOf("/", beginIndex+1);
-            if(endIndex==-1)
-                endIndex=completePath.length();
+            if(endIndex==-1) {
+                endIndex = completePath.length();
+            }
             
             owner = completePath.substring(beginIndex+2, endIndex);
         }
@@ -132,7 +125,7 @@ public class Folder implements Serializable, Comparable<Folder> {
     
     public Folder[] getAllFolders() {
         Folder currentFolder = this;
-        Stack<Folder> foldersStack = new Stack<Folder>();
+        Stack<Folder> foldersStack = new Stack<>();
         
         while (!(currentFolder == null)) {
             foldersStack.push(currentFolder);
@@ -140,27 +133,44 @@ public class Folder implements Serializable, Comparable<Folder> {
         }
         
         Folder[] folders = new Folder[foldersStack.size()];
-        for (int i = 0; !foldersStack.empty(); i++) {
-            folders[i] = foldersStack.pop();
-        }
-        return folders;
-    }
 
-    public void changeName(String pNewName) {
-        if (!isRoot() && !isHome()){
-            int index = completePath.lastIndexOf('/');
-            completePath = completePath.substring(0, index + 1) + pNewName;
+        int i = 0;
+
+        while(!foldersStack.empty()){
+            folders[i++] = foldersStack.pop();
         }
+
+        return folders;
     }
     
     public String getShortName() {
-        if(isRoot())
+        if(isRoot()) {
             return completePath;
+        }
 
         int index = completePath.lastIndexOf('/');
         return completePath.substring(index + 1);
     }
-    
+
+    public String getRoutePath() {
+        int index = completePath.indexOf('/');
+
+        if (index == -1) {
+            return "";
+        } else {
+            return completePath.substring(index + 1).replaceAll("/", ":");
+        }
+    }
+
+    public String getFoldersPath() {
+        String path = getRoutePath();
+
+        if (path != null && path.length() > 0) {
+            return "folders/" + path;
+        } else {
+            return "folders";
+        }
+    }
     
     public static Folder createRootFolder(String pWorkspaceId) {
         return new Folder(pWorkspaceId);
@@ -188,8 +198,9 @@ public class Folder implements Serializable, Comparable<Folder> {
         if (this == pObj) {
             return true;
         }
-        if (!(pObj instanceof Folder))
+        if (!(pObj instanceof Folder)) {
             return false;
+        }
         Folder folder = (Folder) pObj;
         return folder.completePath.equals(completePath);
     }

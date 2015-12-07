@@ -15,6 +15,14 @@
             #{i18nUserAddingForm['title']}
         </ui:define>
         <ui:define name="content">
+            <f:loadBundle var="i18nManageUsers" basename="com.docdoku.server.localization.admin.manageUsers_resource"/>
+            <ol class="breadcrumb">
+                <li><h:link value="#{i18nTemplate['toplinks.admin']}" outcome="/admin/workspace/workspacesMenu.xhtml" />
+                    <span class="divider">/</span></li>
+                <li><h:link value="#{i18nManageUsers['main.title']}" outcome="/admin/workspace/manageUsers.xhtml" />
+                    <span class="divider">/</span></li>
+                <li class="active">#{i18nUserAddingForm['main.title']}</li>
+            </ol>
 
             <div id="sidebar" class="well well-large">
                 <h3>#{i18nUserAddingForm['sidebar.title']}</h3>
@@ -22,7 +30,7 @@
             </div>
 
             <h2>#{i18nUserAddingForm['main.title']}</h2>
-            <h3>#{i18nUserAddingForm['section.title']}</h3>
+            <h3>#{i18nUserAddingForm['section.title']} #{adminStateBean.selectedGroup != "" ? adminStateBean.selectedGroup : adminStateBean.selectedWorkspace}</h3>
 
 
             <h:form>

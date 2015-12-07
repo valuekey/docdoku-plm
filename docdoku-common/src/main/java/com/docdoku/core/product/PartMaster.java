@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -22,31 +22,13 @@ package com.docdoku.core.product;
 import com.docdoku.core.common.User;
 import com.docdoku.core.common.Version;
 import com.docdoku.core.common.Workspace;
+
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
-import javax.persistence.OrderColumn;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 /**
  * This class holds the unchanging aspects of a part.
@@ -56,65 +38,63 @@ import javax.persistence.TemporalType;
  *
  * @author Florent Garin
  * @version 1.1, 18/05/11
- * @since   V1.1
+ * @since V1.1
  */
-@Table(name="PARTMASTER")
+@Table(name = "PARTMASTER")
 @IdClass(PartMasterKey.class)
 @Entity
 @NamedQueries({
-    @NamedQuery(name="PartMaster.findByNumber", query="SELECT pm FROM PartMaster pm WHERE pm.number LIKE :partNumber AND pm.workspace.id = :workspaceId"),
-    @NamedQuery(name="PartMaster.findByWorkspace", query="SELECT pm FROM PartMaster pm WHERE pm.workspace.id = :workspaceId ORDER BY pm.number"),
-    @NamedQuery(name="PartMaster.countByWorkspace", query="SELECT count(pm) FROM PartMaster pm WHERE pm.workspace.id = :workspaceId")
+        @NamedQuery(name = "PartMaster.findByNameOrNumber", query = "SELECT pm FROM PartMaster pm WHERE (pm.name LIKE :partName OR pm.number LIKE :partNumber) AND pm.workspace.id = :workspaceId"),
+        @NamedQuery(name = "PartMaster.findByWorkspace", query = "SELECT pm FROM PartMaster pm WHERE pm.workspace.id = :workspaceId ORDER BY pm.creationDate DESC")
 })
 public class PartMaster implements Serializable {
 
-    @Column(name="PARTNUMBER", length = 255)
+    @Column(name = "PARTNUMBER", length = 100)
     @Id
     private String number = "";
-    
+
     @Id
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
     private Workspace workspace;
-    
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumns({
-        @JoinColumn(name = "AUTHOR_LOGIN", referencedColumnName = "LOGIN"),
-        @JoinColumn(name = "AUTHOR_WORKSPACE_ID", referencedColumnName = "WORKSPACE_ID")
+            @JoinColumn(name = "AUTHOR_LOGIN", referencedColumnName = "LOGIN"),
+            @JoinColumn(name = "AUTHOR_WORKSPACE_ID", referencedColumnName = "WORKSPACE_ID")
     })
     private User author;
-    
-    
-    @OrderColumn(name="ALTERNATE_ORDER")
-    @CollectionTable(name="PARTMASTER_ALTERNATE",joinColumns={
-        @JoinColumn(name="PARTMASTER_WORKSPACE_ID", referencedColumnName="WORKSPACE_ID"),
-        @JoinColumn(name="PARTMASTER_PARTNUMBER", referencedColumnName="PARTNUMBER")
-    })    
+
+
+    @OrderColumn(name = "ALTERNATE_ORDER")
+    @CollectionTable(name = "PARTMASTER_ALTERNATE", joinColumns = {
+            @JoinColumn(name = "PARTMASTER_WORKSPACE_ID", referencedColumnName = "WORKSPACE_ID"),
+            @JoinColumn(name = "PARTMASTER_PARTNUMBER", referencedColumnName = "PARTNUMBER")
+    })
     @ElementCollection(fetch = FetchType.LAZY)
-    private List<PartAlternateLink> alternates = new LinkedList<PartAlternateLink>();
-    
+    private List<PartAlternateLink> alternates = new LinkedList<>();
+
     @Temporal(TemporalType.TIMESTAMP)
     private java.util.Date creationDate;
-    
+
     private String name;
 
     private String type;
 
-    @Lob
-    private String description;
-    
-    
-    @OneToMany(mappedBy = "partMaster", cascade = CascadeType.ALL, fetch = FetchType.EAGER)    
+
+    @OneToMany(mappedBy = "partMaster", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @OrderBy("version ASC")
-    private List<PartRevision> partRevisions = new ArrayList<PartRevision>();
+    private List<PartRevision> partRevisions = new ArrayList<>();
 
     private boolean standardPart;
-    
+
+    private boolean attributesLocked;
+
     public PartMaster() {
     }
 
     public PartMaster(Workspace pWorkspace,
-            String pNumber,
-            User pAuthor) {
+                      String pNumber,
+                      User pAuthor) {
         this(pWorkspace, pNumber);
         author = pAuthor;
     }
@@ -148,7 +128,6 @@ public class PartMaster implements Serializable {
         this.number = number;
     }
 
-  
     public List<PartAlternateLink> getAlternates() {
         return alternates;
     }
@@ -156,7 +135,6 @@ public class PartMaster implements Serializable {
     public void setAlternates(List<PartAlternateLink> alternates) {
         this.alternates = alternates;
     }
-
 
     public List<PartRevision> getPartRevisions() {
         return partRevisions;
@@ -173,39 +151,66 @@ public class PartMaster implements Serializable {
     public void setStandardPart(boolean standardPart) {
         this.standardPart = standardPart;
     }
-    
-        
+
+
     public PartRevision getLastRevision() {
-        int index = partRevisions.size()-1;
-        if(index < 0)
+        int index = partRevisions.size() - 1;
+        if (index < 0) {
             return null;
-        else
+        } else {
             return partRevisions.get(index);
+        }
     }
-    
+
     public PartRevision removeLastRevision() {
-        int index = partRevisions.size()-1;
-        if(index < 0)
+        int index = partRevisions.size() - 1;
+        if (index < 0) {
             return null;
-        else
+        } else {
             return partRevisions.remove(index);
+        }
     }
-    
-    public PartRevision createNextRevision(User pUser){
-        PartRevision lastRev=getLastRevision();
+
+    public List<PartRevision> getAllReleasedRevisions() {
+        List<PartRevision> releasedRevisions = new ArrayList<>();
+        for (int index = partRevisions.size() - 1; index >= 0; index--) {
+            PartRevision partRevision = partRevisions.get(index);
+            if (partRevision.isReleased()) {
+                releasedRevisions.add(partRevision);
+            }
+        }
+        return releasedRevisions;
+    }
+
+    public PartRevision getLastReleasedRevision() {
+        for (int index = partRevisions.size() - 1; index >= 0; index--) {
+            PartRevision partRevision = partRevisions.get(index);
+            if (partRevision.isReleased()) {
+                return partRevision;
+            }
+        }
+        return null;
+    }
+
+    public void removeRevision(PartRevision partR) {
+        this.partRevisions.remove(partR);
+    }
+
+    public PartRevision createNextRevision(User pUser) {
+        PartRevision lastRev = getLastRevision();
         Version version;
-        if(lastRev==null)
+        if (lastRev == null) {
             version = new Version("A");
-        else{
+        } else {
             version = new Version(lastRev.getVersion());
             version.increase();
         }
-        
-        PartRevision rev = new PartRevision(this,version,pUser);
+
+        PartRevision rev = new PartRevision(this, version, pUser);
         partRevisions.add(rev);
         return rev;
     }
-    
+
     public Workspace getWorkspace() {
         return workspace;
     }
@@ -224,15 +229,7 @@ public class PartMaster implements Serializable {
 
 
     public PartMasterKey getKey() {
-        return new PartMasterKey(getWorkspaceId(),number);
-    }
-        
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+        return new PartMasterKey(getWorkspaceId(), number);
     }
 
     public String getWorkspaceId() {
@@ -247,30 +244,41 @@ public class PartMaster implements Serializable {
         this.type = type;
     }
 
+    public boolean isAttributesLocked() {
+        return attributesLocked;
+    }
+
+    public void setAttributesLocked(boolean attributesLocked) {
+        this.attributesLocked = attributesLocked;
+    }
+
     @Override
     public boolean equals(Object pObj) {
         if (this == pObj) {
             return true;
         }
-        if (!(pObj instanceof PartMaster))
+        if (!(pObj instanceof PartMaster)) {
             return false;
+        }
+
         PartMaster partM = (PartMaster) pObj;
-        return ((partM.number.equals(number)) && (partM.getWorkspaceId().equals(getWorkspaceId())));
-        
+        return partM.number.equals(number) &&
+                partM.getWorkspaceId().equals(getWorkspaceId());
+
     }
- 
+
     @Override
     public int hashCode() {
         int hash = 1;
-	    hash = 31 * hash + getWorkspaceId().hashCode();
-	    hash = 31 * hash + number.hashCode();
-	    return hash;
+        hash = 31 * hash + getWorkspaceId().hashCode();
+        hash = 31 * hash + number.hashCode();
+        return hash;
     }
 
 
-    
     @Override
     public String toString() {
         return number;
     }
+
 }

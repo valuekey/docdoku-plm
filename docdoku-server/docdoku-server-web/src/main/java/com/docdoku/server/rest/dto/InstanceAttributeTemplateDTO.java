@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -26,18 +26,27 @@ import java.io.Serializable;
 public class InstanceAttributeTemplateDTO implements Serializable {
 
     private String name;
+
+    private boolean mandatory;
+
     private AttributeType attributeType;
 
+    private String lovName;
+
+    private boolean locked;
+
     public enum AttributeType {
-        TEXT, NUMBER, DATE, BOOLEAN, URL
+        TEXT, NUMBER, DATE, BOOLEAN, URL, LOV
     }
 
     public InstanceAttributeTemplateDTO() {
     }
 
-    public InstanceAttributeTemplateDTO(String pName, AttributeType pAttributeType) {
+    public InstanceAttributeTemplateDTO(String pName, AttributeType pAttributeType, boolean pMandatory, boolean locked) {
         name = pName;
         attributeType = pAttributeType;
+        mandatory = pMandatory;
+        this.locked = locked;
     }
 
     
@@ -49,12 +58,36 @@ public class InstanceAttributeTemplateDTO implements Serializable {
         this.name = name;
     }
 
+    public boolean isMandatory() {
+        return mandatory;
+    }
+
+    public void setMandatory(boolean mandatory) {
+        this.mandatory = mandatory;
+    }
+
     public InstanceAttributeTemplateDTO.AttributeType getAttributeType() {
         return attributeType;
     }
 
     public void setAttributeType(InstanceAttributeTemplateDTO.AttributeType attributeType) {
         this.attributeType = attributeType;
+    }
+
+    public String getLovName() {
+        return lovName;
+    }
+
+    public void setLovName(String lovName) {
+        this.lovName = lovName;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 
     @Override

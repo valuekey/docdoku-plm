@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,13 +19,9 @@
  */
 package com.docdoku.core.workflow;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 import javax.persistence.*;
-import javax.persistence.Id;
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * Workflows organize tasks around documents on which they're applied to.  
@@ -36,30 +32,52 @@ import javax.persistence.Id;
  */
 @Table(name="WORKFLOW")
 @javax.persistence.Entity
-public class Workflow implements Serializable, Cloneable {
+public class Workflow implements Serializable {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     private int id;
+
     @OneToMany(mappedBy = "workflow", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @OrderBy("step ASC")
-    private List<Activity> activities = new LinkedList<Activity>();
+    private List<Activity> activities = new LinkedList<>();
+
+    @javax.persistence.Temporal(javax.persistence.TemporalType.TIMESTAMP)
+    private Date abortedDate;
+
     private String finalLifeCycleState;
 
+    public Workflow() {
+    }
     public Workflow(String pFinalLifeCycleState) {
         finalLifeCycleState = pFinalLifeCycleState;
     }
 
-    public Workflow() {
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
     }
 
-    public Collection<Task> getRunningTasks() {
+    public List<Activity> getActivities() {
+        return activities;
+    }
+    public void setActivities(List<Activity> activities) {
+        this.activities = activities;
+        for(Activity activity : activities){
+            activity.setWorkflow(this);
+        }
+    }
 
-        Activity current = getCurrentActivity();
-        if (current != null) {
-            return current.getOpenTasks();
+    public Activity getActivity(int pIndex) {
+        return activities.get(pIndex);
+    }
+    public Activity getCurrentActivity() {
+        if (getCurrentStep() < activities.size()) {
+            return getActivity(getCurrentStep());
         } else {
-            return new ArrayList<Task>();
+            return null;
         }
     }
 
@@ -75,36 +93,36 @@ public class Workflow implements Serializable, Cloneable {
         return i;
     }
 
-    public Activity getCurrentActivity() {
-        if (getCurrentStep() < activities.size()) {
-            return getActivity(getCurrentStep());
-        } else {
-            return null;
-        }
-    }
-
     public String getFinalLifeCycleState() {
         return finalLifeCycleState;
     }
-
-    public int getId() {
-        return id;
-    }
-
-    public java.util.List<Activity> getActivities() {
-        return activities;
-    }
-
-    public void setActivities(java.util.List<Activity> activities) {
-        this.activities = activities;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
     public void setFinalLifeCycleState(String finalLifeCycleState) {
         this.finalLifeCycleState = finalLifeCycleState;
+    }
+
+    public Date getAbortedDate() {
+        return (abortedDate!=null) ? (Date) abortedDate.clone() : null;
+    }
+    public void setAbortedDate(Date abortedDate) {
+        this.abortedDate = (abortedDate!=null) ? (Date) abortedDate.clone() : null;
+    }
+
+    public Collection<Task> getRunningTasks() {
+
+        Activity current = getCurrentActivity();
+        if (current != null) {
+            return current.getOpenTasks();
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    public Collection<Task> getTasks(){
+        Collection<Task> tasks = new ArrayList<>();
+        for(Activity activity:activities){
+            tasks.addAll(activity.getTasks());
+        }
+        return tasks;
     }
 
     public int numberOfSteps() {
@@ -112,43 +130,43 @@ public class Workflow implements Serializable, Cloneable {
     }
 
     public List<String> getLifeCycle() {
-        List<String> lc = new LinkedList<String>();
+        List<String> lc = new LinkedList<>();
         for (Activity activity : activities) {
             lc.add(activity.getLifeCycleState());
         }
 
         return lc;
     }
-
     public String getLifeCycleState() {
         Activity current = getCurrentActivity();
         return current == null ? finalLifeCycleState : current.getLifeCycleState();
     }
 
-    public Activity getActivity(int pIndex) {
-        return activities.get(pIndex);
-    }
-
-    /**
-     * perform a deep clone operation
-     */
-    @Override
-    public Workflow clone() {
-        Workflow clone = null;
-        try {
-            clone = (Workflow) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new InternalError();
-        }
-        //perform a deep copy
-        List<Activity> clonedActivities = new LinkedList<Activity>();
+    public void abort() {
         for (Activity activity : activities) {
-            Activity clonedActivity = activity.clone();
-            clonedActivity.setWorkflow(clone);
-            clonedActivities.add(clonedActivity);
+            for(Task task : activity.getTasks()){
+                task.stop();
+            }
         }
-        clone.activities = clonedActivities;
-        return clone;
+        this.setAbortedDate(new Date());
+    }
+    public void relaunch(int relaunchActivityStep) {
+        for(Activity a :activities){
+            if(a.getStep() < relaunchActivityStep){ 
+                for(Task t : a.getTasks()){
+                    t.reset(Task.Status.NOT_TO_BE_DONE);
+                }
+            }
+            if(a.getStep() >= relaunchActivityStep){
+                for(Task t : a.getTasks()){
+                    t.reset(Task.Status.NOT_STARTED);
+                }
+            }
+        }
+
+        Activity currentActivity = activities.get(relaunchActivityStep);
+        currentActivity.relaunch();
+
     }
 
     @Override

@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -22,22 +22,14 @@ package com.docdoku.core.security;
 
 import com.docdoku.core.common.User;
 import com.docdoku.core.common.UserGroup;
+
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.MapKey;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
 
 /**
- * This class can be attached to a
- * <a href="DocumentMaster.html">DocumentMaster</a> so that an access control
+ * This class can be attached to any entity so that an access control
  * list will be applied.
  * In that way, the default access rights defined at the workspace level will be
  * overridden.
@@ -48,13 +40,15 @@ import javax.persistence.Table;
  */
 @Table(name="ACL")
 @Entity
+@NamedQueries ({
+    @NamedQuery(name="ACL.removeUserEntries", query = "DELETE FROM ACLUserEntry a WHERE a.acl.id = :aclId"),
+    @NamedQuery(name="ACL.removeUserGroupEntries", query = "DELETE FROM ACLUserGroupEntry a WHERE a.acl.id = :aclId")
+})
 public class ACL implements Serializable, Cloneable{
-
 
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     @Id
     private int id;
-
 
     @OneToMany(cascade=CascadeType.ALL, mappedBy="acl", fetch=FetchType.EAGER)
     @MapKey(name="principal")
@@ -64,7 +58,11 @@ public class ACL implements Serializable, Cloneable{
     @MapKey(name="principal")
     private Map<UserGroup,ACLUserGroupEntry> groupEntries=new HashMap<UserGroup,ACLUserGroupEntry>();
 
-    public enum Permission{FORBIDDEN, READ_ONLY, FULL_ACCESS}
+    public enum Permission{
+        FORBIDDEN,
+        READ_ONLY,
+        FULL_ACCESS
+    }
 
     private boolean enabled=true;
 
@@ -94,9 +92,9 @@ public class ACL implements Serializable, Cloneable{
             return !userAccess.getPermission().equals(Permission.FORBIDDEN);
         else{
             for(Map.Entry<UserGroup, ACLUserGroupEntry> entry:groupEntries.entrySet()){
-                if(entry.getKey().isMember(user))
-                    if(!entry.getValue().getPermission().equals(Permission.FORBIDDEN))
-                        return true;
+                if(entry.getKey().isMember(user) && !entry.getValue().getPermission().equals(Permission.FORBIDDEN)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -108,15 +106,14 @@ public class ACL implements Serializable, Cloneable{
             return userAccess.getPermission().equals(Permission.FULL_ACCESS);
         else{
             for(Map.Entry<UserGroup, ACLUserGroupEntry> entry:groupEntries.entrySet()){
-                if(entry.getKey().isMember(user))
-                    if(entry.getValue().getPermission().equals(Permission.FULL_ACCESS))
-                        return true;
+                if(entry.getKey().isMember(user) && entry.getValue().getPermission().equals(Permission.FULL_ACCESS)) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    
     public void addEntry(User user, Permission perm){
         userEntries.put(user, new ACLUserEntry(this,user,perm));
     }
@@ -133,20 +130,36 @@ public class ACL implements Serializable, Cloneable{
         groupEntries.remove(group);
     }
 
+    public Map<User, ACLUserEntry> getUserEntries() {
+        return userEntries;
+    }
+
+    public void setUserEntries(Map<User, ACLUserEntry> userEntries) {
+        this.userEntries = userEntries;
+    }
+
+    public Map<UserGroup, ACLUserGroupEntry> getGroupEntries() {
+        return groupEntries;
+    }
+
+    public void setGroupEntries(Map<UserGroup, ACLUserGroupEntry> groupEntries) {
+        this.groupEntries = groupEntries;
+    }
+
     /**
      * perform a deep clone operation
      */
     @Override
     public ACL clone() {
-        ACL clone = null;
+        ACL clone;
         try {
             clone = (ACL) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new InternalError();
         }
         //perform a deep copy
-        Map<User,ACLUserEntry> clonedUserEntries = new HashMap<User,ACLUserEntry>();
-        for (Map.Entry<User,ACLUserEntry> entry : clonedUserEntries.entrySet()) {
+        Map<User,ACLUserEntry> clonedUserEntries = new HashMap<>();
+        for (Map.Entry<User,ACLUserEntry> entry : userEntries.entrySet()) {
             ACLUserEntry aclEntry = entry.getValue().clone();
             aclEntry.setACL(clone);
             clonedUserEntries.put(entry.getKey(),aclEntry);
@@ -154,14 +167,32 @@ public class ACL implements Serializable, Cloneable{
         clone.userEntries = clonedUserEntries;
 
         //perform a deep copy
-        Map<UserGroup,ACLUserGroupEntry> clonedGroupEntries = new HashMap<UserGroup,ACLUserGroupEntry>();
-        for (Map.Entry<UserGroup,ACLUserGroupEntry> entry : clonedGroupEntries.entrySet()) {
+        Map<UserGroup,ACLUserGroupEntry> clonedGroupEntries = new HashMap<>();
+        for (Map.Entry<UserGroup,ACLUserGroupEntry> entry : groupEntries.entrySet()) {
             ACLUserGroupEntry aclEntry = entry.getValue().clone();
             aclEntry.setACL(clone);
             clonedGroupEntries.put(entry.getKey(),aclEntry);
         }
         clone.groupEntries = clonedGroupEntries;
         return clone;
+    }
+
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof ACL)) {
+            return false;
+        }
+        ACL acl = (ACL) obj;
+        return acl.id == id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
     }
 
 }

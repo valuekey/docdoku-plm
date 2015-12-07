@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,14 +20,17 @@
 
 package com.docdoku.core.workflow;
 
-import java.util.*;
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Table;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
- * <a href="SerialActivity.html">SerialActivity</a> is an activity where
+ * SerialActivity is an activity where
  * all tasks are launched subsequently in a specific order.
  * For the workflow to proceed to the next step, all tasks of 
- * <a href="SerialActivity.html">SerialActivity</a> should have been completed.
+ * SerialActivity should have been completed.
  * 
  * @author Florent Garin
  * @version 1.0, 02/06/08
@@ -36,8 +39,6 @@ import javax.persistence.*;
 @Table(name="SERIALACTIVITY")
 @Entity
 public class SerialActivity extends Activity {
-    
-
     public SerialActivity() {
 
     }
@@ -49,34 +50,40 @@ public class SerialActivity extends Activity {
     @Override
     public boolean isStopped() {
         for(Task task:tasks)
-            if(task.isRejected())
+            if(task.isRejected()) {
                 return true;
+            }
         
         return false;
     }
 
     @Override
     public Collection<Task> getOpenTasks() {
-        List<Task> runningTasks = new ArrayList<Task>();
-        if (!isComplete() && !isStopped()) {          
+        List<Task> runningTasks = new ArrayList<>();
+        if (!isComplete() && !isStopped()) {
             for(Task task:tasks){
-                if(task.isInProgress() || task.isNotStarted()){
+                if (task.isInProgress() || task.isNotStarted()) {
                     runningTasks.add(task);
                     break;
                 }
-            }     
+            }
         }
         return runningTasks;
     }
     
     @Override
     public boolean isComplete() {
-        for(Task task:tasks)
-            if(!task.isApproved())
+        for(Task task:tasks) {
+            if (!(task.isApproved() || task.isNotToBeDone())) {
                 return false;
+            }
+        }
         
         return true;
     }
-    
-    
+
+    @Override
+    public void relaunch(){
+        tasks.get(0).start();
+    }
 }

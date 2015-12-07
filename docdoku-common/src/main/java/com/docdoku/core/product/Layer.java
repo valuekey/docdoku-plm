@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -22,16 +22,16 @@
 package com.docdoku.core.product;
 
 import com.docdoku.core.common.User;
+
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.*;
 
 /**
- * A Layer is a collection of <a href="Marker.html">Marker</a>s that can be
- * manipulated as a whole.
- * Layers belong to a <a href="ConfigurationItem.html">ConfigurationItem</a>.
+ * A Layer is a collection of {@link Marker}s that can be manipulated as a whole.
+ * Layers belong to a {@link ConfigurationItem}.
  * 
  * @author Florent Garin
  * @version 1.1, 14/08/12
@@ -49,7 +49,7 @@ public class Layer implements Serializable{
     @Id
     private int id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns({
         @JoinColumn(name = "AUTHOR_LOGIN", referencedColumnName = "LOGIN"),
         @JoinColumn(name = "AUTHOR_WORKSPACE_ID", referencedColumnName = "WORKSPACE_ID")
@@ -77,14 +77,17 @@ public class Layer implements Serializable{
         @JoinColumn(name = "CONFIGURATIONITEM_WORKSPACE_ID", referencedColumnName = "WORKSPACE_ID")
     })
     private ConfigurationItem configurationItem;
-        
+
+    private String color;
+
     public Layer() {
     }
 
-    public Layer(String pName, User pAuthor, ConfigurationItem pConfigurationItem) {
+    public Layer(String pName, User pAuthor, ConfigurationItem pConfigurationItem, String color) {
         this.name=pName;
         this.author=pAuthor;
         this.configurationItem=pConfigurationItem;
+        this.color=color;
     }
     
     public User getAuthor() {
@@ -144,4 +147,11 @@ public class Layer implements Serializable{
         this.markers.remove(marker);
     }
 
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
 }

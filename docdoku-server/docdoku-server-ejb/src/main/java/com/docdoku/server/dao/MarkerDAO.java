@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,12 +19,11 @@
  */
 package com.docdoku.server.dao;
 
+import com.docdoku.core.exceptions.MarkerNotFoundException;
 import com.docdoku.core.product.Marker;
-import com.docdoku.core.services.MarkerNotFoundException;
-
-import java.util.Locale;
 
 import javax.persistence.EntityManager;
+import java.util.Locale;
 
 public class MarkerDAO {
 

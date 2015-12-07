@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -21,17 +21,12 @@
 
 package com.docdoku.core.product;
 
+import javax.persistence.*;
 import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
 
 /**
  * Represents a CAD instance of a specific part defined in a
- * <a href="PartUsageLink.html">PartUsageLink</a>
- * or <a href="PartSubstituteLink.html">PartSubstituteLink</a>. 
+ * {@link PartUsageLink} {@link PartSubstituteLink}.
  * Using its attributes: translation and orientation on the three axis we'll be
  * able to create the mesh to render it.
  * 
@@ -78,34 +73,20 @@ public class CADInstance implements Serializable, Cloneable {
      * Radian orientation on z axis.
      */
     private double rz;
-    
 
-    private Positioning positioning;   
-    public enum Positioning {ABSOLUTE, PARENT_RELATIVE}
     
     public CADInstance() {
     }
 
-    public CADInstance(double tx, double ty, double tz, double rx, double ry, double rz, Positioning positioning) {
+    public CADInstance(double tx, double ty, double tz, double rx, double ry, double rz) {
         this.tx = tx;
         this.ty = ty;
         this.tz = tz;
         this.rx = rx;
         this.ry = ry;
         this.rz = rz;
-        this.positioning = positioning;
     }
     
-    
-
-    public Positioning getPositioning() {
-        return positioning;
-    }
-
-    public void setPositioning(Positioning positioning) {
-        this.positioning = positioning;
-    }
-
 
     public double getRx() {
         return rx;
@@ -165,7 +146,7 @@ public class CADInstance implements Serializable, Cloneable {
 
     @Override
     public CADInstance clone() {
-        CADInstance clone = null;
+        CADInstance clone;
         try {
             clone = (CADInstance) super.clone();
         } catch (CloneNotSupportedException e) {

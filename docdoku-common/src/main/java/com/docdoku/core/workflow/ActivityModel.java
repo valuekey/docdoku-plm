@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -20,11 +20,15 @@
 
 package com.docdoku.core.workflow;
 
-import java.io.Serializable;
-import java.util.*;
+import com.docdoku.core.common.User;
+
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlTransient;
+import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Defines common attributes and behaviors for activities model.
@@ -34,11 +38,14 @@ import javax.xml.bind.annotation.XmlTransient;
  * @since   V1.0
  */
 @Table(name="ACTIVITYMODEL")
-@javax.persistence.IdClass(com.docdoku.core.workflow.ActivityModelKey.class)
 @XmlSeeAlso({SerialActivityModel.class, ParallelActivityModel.class})
 @Inheritance()
 @Entity
 public abstract class ActivityModel implements Serializable, Cloneable {
+
+    @javax.persistence.Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
 
     @ManyToOne(optional=false, fetch=FetchType.EAGER)
     @JoinColumns({
@@ -49,18 +56,21 @@ public abstract class ActivityModel implements Serializable, Cloneable {
     
     @OneToMany(mappedBy = "activityModel", cascade=CascadeType.ALL, fetch=FetchType.EAGER)
     @OrderBy("num")
-    protected List<TaskModel> taskModels=new LinkedList<TaskModel>();
-    
-    @javax.persistence.Id
+    protected List<TaskModel> taskModels=new LinkedList<>();
+
     protected int step;
-    
-    @javax.persistence.Column(name = "WORKFLOWMODEL_ID", length=50, nullable = false, insertable = false, updatable = false)
-    @javax.persistence.Id
-    private String workflowModelId="";
-    
-    @javax.persistence.Column(name = "WORKSPACE_ID", length=50, nullable = false, insertable = false, updatable = false)
-    @javax.persistence.Id
-    private String workspaceId="";
+
+    @ManyToOne(optional = true,fetch=FetchType.EAGER)
+    @JoinTable (
+            name="ACTIVITYMODEL_RELAUNCH",
+            joinColumns={
+                    @JoinColumn(name="ACTIVITYMODEL_ID", referencedColumnName="ID")
+            },
+            inverseJoinColumns={
+                    @JoinColumn(name="RELAUNCHACTIVITYMODEL_ID", referencedColumnName="ID")
+            }
+    )
+    private ActivityModel relaunchActivity;
     
     protected String lifeCycleState;
 
@@ -78,10 +88,8 @@ public abstract class ActivityModel implements Serializable, Cloneable {
     
     public void setWorkflowModel(WorkflowModel pWorkflowModel){
         workflowModel=pWorkflowModel;
-        workflowModelId=workflowModel.getId();
-        workspaceId=workflowModel.getWorkspaceId();
     }
-    
+
     public int getStep(){
         return step;
     }
@@ -94,18 +102,18 @@ public abstract class ActivityModel implements Serializable, Cloneable {
         return lifeCycleState;
     }
 
-    
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public void setTaskModels(List<TaskModel> taskModels) {
         this.taskModels = taskModels;
     }
 
-    public String getWorkspaceId() {
-        return workspaceId;
-    }
-
-    public String getWorkflowModelId() {
-        return workflowModelId;
-    }
 
     @XmlTransient
     public WorkflowModel getWorkflowModel() {
@@ -138,20 +146,29 @@ public abstract class ActivityModel implements Serializable, Cloneable {
     public List<TaskModel> getTaskModels() {
         return taskModels;
     }
-    
+
+    @XmlTransient
+    public ActivityModel getRelaunchActivity() {
+        return relaunchActivity;
+    }
+
+    public void setRelaunchActivity(ActivityModel relaunchActivity) {
+        this.relaunchActivity = relaunchActivity;
+    }
+
     /**
      * perform a deep clone operation
      */
     @Override
     public ActivityModel clone() {
-        ActivityModel clone = null;
+        ActivityModel clone;
         try {
             clone = (ActivityModel) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new InternalError();
         }
         //perform a deep copy
-        List<TaskModel> clonedTaskModels = new LinkedList<TaskModel>();
+        List<TaskModel> clonedTaskModels = new LinkedList<>();
         for (TaskModel taskModel : taskModels) {
             TaskModel clonedTaskModel=taskModel.clone();
             clonedTaskModel.setActivityModel(clone);
@@ -161,6 +178,6 @@ public abstract class ActivityModel implements Serializable, Cloneable {
         return clone;
     }
 
-    public abstract Activity createActivity();
+    public abstract Activity createActivity(Map<Role, User> roleUserMap);
 
 }

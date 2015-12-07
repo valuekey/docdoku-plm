@@ -1,6 +1,6 @@
 /*
  * DocDoku, Professional Open Source
- * Copyright 2006 - 2013 DocDoku SARL
+ * Copyright 2006 - 2015 DocDoku SARL
  *
  * This file is part of DocDokuPLM.
  *
@@ -19,9 +19,13 @@
  */
 package com.docdoku.core.product;
 
+import com.docdoku.core.common.User;
 import com.docdoku.core.common.Workspace;
-import java.io.Serializable;
+
 import javax.persistence.*;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class represents an entire product or some portion
@@ -40,23 +44,25 @@ import javax.persistence.*;
  */
 @Table(name="CONFIGURATIONITEM")
 @NamedQueries({
+        @NamedQuery(name="ConfigurationItem.getConfigurationItemsInWorkspace",query="SELECT DISTINCT ci FROM ConfigurationItem ci WHERE ci.workspace.id = :workspaceId"),
         @NamedQuery(name="ConfigurationItem.getEffectivities",query="SELECT e FROM Effectivity e WHERE e.configurationItem = :configurationItem"),
-        @NamedQuery(name="ConfigurationItem.findByDesignItem",query="SELECT c FROM ConfigurationItem c WHERE c.designItem = :designItem")
+        @NamedQuery(name="ConfigurationItem.findByDesignItem",query="SELECT c FROM ConfigurationItem c WHERE c.designItem = :designItem"),
+        @NamedQuery(name="ConfigurationItem.findByPathToPathLink",query="SELECT c FROM ConfigurationItem c WHERE :pathToPathLink member of c.pathToPathLinks")
 })
 @javax.persistence.IdClass(com.docdoku.core.product.ConfigurationItemKey.class)
 @Entity
 public class ConfigurationItem implements Serializable {
 
-
-    @Column(length = 50)
+    @Column(length = 100)
     @Id
     private String id = "";
     
     @Id
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
     private Workspace workspace;
-    
 
+
+    @Lob
     private String description;
        
     /**
@@ -70,10 +76,29 @@ public class ConfigurationItem implements Serializable {
     })
     private PartMaster designItem;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumns({
+            @JoinColumn(name = "AUTHOR_LOGIN", referencedColumnName = "LOGIN"),
+            @JoinColumn(name = "AUTHOR_WORKSPACE_ID", referencedColumnName = "WORKSPACE_ID")
+    })
+    private User author;
+
+    @OneToMany(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(name = "CONFIGURATIONITEM_P2PLINK",
+            inverseJoinColumns = {
+                    @JoinColumn(name = "PATHTOPATHLINK_ID", referencedColumnName = "ID")
+            },
+            joinColumns = {
+                    @JoinColumn(name="CONFIGURATIONITEM_ID", referencedColumnName="ID"),
+                    @JoinColumn(name="WORKSPACE_ID", referencedColumnName="WORKSPACE_ID")
+            })
+    private List<PathToPathLink> pathToPathLinks =new ArrayList<>();
+
     public ConfigurationItem() {
     }
 
-    public ConfigurationItem(Workspace pWorkspace, String pId, String pDescription) {
+    public ConfigurationItem(User author,Workspace pWorkspace, String pId, String pDescription) {
+        this.author = author;
         this.workspace=pWorkspace;
         this.id=pId;
         this.description=pDescription;
@@ -116,23 +141,52 @@ public class ConfigurationItem implements Serializable {
         this.workspace = workspace;
     }
 
-        @Override
+    public ConfigurationItemKey getKey(){
+        return new ConfigurationItemKey(getWorkspaceId(),getId());
+    }
+
+    public User getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(User author) {
+        this.author = author;
+    }
+
+    public List<PathToPathLink> getPathToPathLinks() {
+        return pathToPathLinks;
+    }
+
+    public void setPathToPathLinks(List<PathToPathLink> pathToPathLinks) {
+        this.pathToPathLinks = pathToPathLinks;
+    }
+
+    public void addPathToPathLink(PathToPathLink pathToPathLink) {
+        pathToPathLinks.add(pathToPathLink);
+    }
+
+    public void removePathToPathLink(PathToPathLink pathToPathLink) {
+        pathToPathLinks.remove(pathToPathLink);
+    }
+
+    @Override
     public boolean equals(Object pObj) {
         if (this == pObj) {
             return true;
         }
-        if (!(pObj instanceof ConfigurationItem))
+        if (!(pObj instanceof ConfigurationItem)) {
             return false;
+        }
         ConfigurationItem ci = (ConfigurationItem) pObj;
-        return ((ci.id.equals(id)) && (ci.getWorkspaceId().equals(getWorkspaceId())));
+        return ci.id.equals(id) && ci.getWorkspaceId().equals(getWorkspaceId());
     }
     
     @Override
     public int hashCode() {
         int hash = 1;
-	    hash = 31 * hash + getWorkspaceId().hashCode();
-	    hash = 31 * hash + id.hashCode();
-	    return hash;
+        hash = 31 * hash + getWorkspaceId().hashCode();
+        hash = 31 * hash + id.hashCode();
+        return hash;
     }
     
     @Override
