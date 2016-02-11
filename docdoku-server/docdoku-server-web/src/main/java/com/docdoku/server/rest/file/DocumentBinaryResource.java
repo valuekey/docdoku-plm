@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.text.Normalizer;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
@@ -117,7 +118,7 @@ public class DocumentBinaryResource {
     private String uploadAFile(Part formPart,DocumentIterationKey docPK)
             throws EntityNotFoundException, EntityAlreadyExistsException, AccessRightException, NotAllowedException, CreationException, UserNotActiveException, StorageException, IOException {
 
-        String fileName = formPart.getSubmittedFileName();
+        String fileName = Normalizer.normalize(formPart.getSubmittedFileName(), Normalizer.Form.NFC);
         // Init the binary resource with a null length
         BinaryResource binaryResource = documentService.saveFileInDocument(docPK, fileName, 0);
         OutputStream outputStream = dataManager.getBinaryResourceOutputStream(binaryResource);
@@ -212,9 +213,9 @@ public class DocumentBinaryResource {
     private InputStream getConvertedBinaryResource(BinaryResource binaryResource, String outputFormat) throws FileConversionException {
         try {
             if(ctx.isCallerInRole(UserGroupMapping.REGULAR_USER_ROLE_ID)){
-                return documentResourceGetterService.getConvertedResource(outputFormat, binaryResource);
+                return documentResourceGetterService.getDocumentConvertedResource(outputFormat, binaryResource);
             }else{
-                return guestProxy.getConvertedResource(outputFormat, binaryResource);
+                return guestProxy.getDocumentConvertedResource(outputFormat, binaryResource);
             }
         } catch (Exception e) {
             throw new FileConversionException(e);

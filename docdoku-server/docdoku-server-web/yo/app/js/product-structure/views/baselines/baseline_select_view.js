@@ -48,7 +48,7 @@ define([
 
             this.fetchPathToPathLinkTypes();
 
-			return this ;
+			return this;
 		},
 
 		bindDomElements:function(){
@@ -110,17 +110,18 @@ define([
         onTypeChanged:function(){
             this.$selectConfSpec.show();
             App.config.linkType = null;
-
             var selectedType = this.$selectConfSpec.val();
 
-			if(selectedType==='latest-filters'){
+			if (selectedType==='latest-filters') {
                 this.changeLatest();
-			}else if(selectedType==='baseline'){
+                this.fetchPathToPathLinkTypes();
+
+			} else if (selectedType==='baseline') {
                 this.changeBaseline();
-			}else if(selectedType==='serial-number'){
+
+			} else if (selectedType==='serial-number') {
                 this.changeInstance();
             }
-            this.fetchPathToPathLinkTypes();
 		},
 
         isSerialNumberSelected:function(){
@@ -145,9 +146,13 @@ define([
             this.$selectLatestFilter.hide();
             this.$selectBaselineSpec.show();
             this.$divergeSwitchContainer.hide();
-            this.trigger('config_spec:changed', this.$selectBaselineSpec.val());
+
             var baseline = this.baselineCollection.findWhere({id:parseInt(this.$selectBaselineSpec.val(),10)});
             this.setDescription(baseline ? baseline.getDescription() : '');
+
+            App.config.linkType = null;
+            this.fetchPathToPathLinkTypes();
+            this.trigger('config_spec:changed', this.$selectBaselineSpec.val());
         },
 
         changeInstance:function(){
@@ -155,16 +160,22 @@ define([
             this.$selectLatestFilter.hide();
             this.$selectProdInstSpec.show();
             this.$divergeSwitchContainer.hide();
-            this.trigger('config_spec:changed', this.$selectProdInstSpec.val());
+
             this.setDescription('');
+
+            App.config.linkType = null;
+            this.fetchPathToPathLinkTypes();
+            this.trigger('config_spec:changed', this.$selectProdInstSpec.val());
         },
 
         fetchPathToPathLinkTypes:function(){
             var url = App.config.contextPath + '/api/workspaces/' + App.config.workspaceId + '/products/' + App.config.productId ;
 
             var selectedType = this.$selectConfSpec.val();
-            if(selectedType==='serial-number'){
+            if (selectedType === 'serial-number') {
                 url+= '/product-instances/' + this.$selectProdInstSpec.val().substr(3);
+            } else if (selectedType === 'baseline') {
+                url+= '/baselines/' + this.$selectBaselineSpec.val();
             }
             url+= '/path-to-path-links-types';
 

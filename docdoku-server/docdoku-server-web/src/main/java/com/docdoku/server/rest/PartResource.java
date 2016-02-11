@@ -131,18 +131,7 @@ public class PartResource {
         for(PartIteration partIteration:partIterations){
             partRevisions.add(partIteration.getPartRevision());
         }
-
-        List<PartRevisionDTO> partRevisionDTOs = new ArrayList<>();
-
-        for(PartRevision partRevision:partRevisions){
-            PartRevisionDTO partRevisionDTO = mapper.map(partRevision, PartRevisionDTO.class);
-            partRevisionDTO.setNumber(partRevision.getPartNumber());
-            partRevisionDTO.setPartKey(partRevision.getPartNumber() + "-" + partRevision.getVersion());
-            partRevisionDTO.setName(partRevision.getPartMaster().getName());
-            partRevisionDTO.setStandardPart(partRevision.getPartMaster().isStandardPart());
-
-            partRevisionDTOs.add(partRevisionDTO);
-        }
+        List<PartRevisionDTO> partRevisionDTOs = getPartRevisionDTO(partRevisions);
 
         return partRevisionDTOs;
     }
@@ -161,17 +150,7 @@ public class PartResource {
             partRevisions.add(partIteration.getPartRevision());
         }
 
-        List<PartRevisionDTO> partRevisionDTOs = new ArrayList<>();
-
-        for(PartRevision partRevision:partRevisions){
-            PartRevisionDTO partRevisionDTO = mapper.map(partRevision, PartRevisionDTO.class);
-            partRevisionDTO.setNumber(partRevision.getPartNumber());
-            partRevisionDTO.setPartKey(partRevision.getPartNumber() + "-" + partRevision.getVersion());
-            partRevisionDTO.setName(partRevision.getPartMaster().getName());
-            partRevisionDTO.setStandardPart(partRevision.getPartMaster().isStandardPart());
-            partRevisionDTOs.add(partRevisionDTO);
-        }
-
+        List<PartRevisionDTO> partRevisionDTOs = getPartRevisionDTO(partRevisions);
         return partRevisionDTOs;
     }
 
@@ -280,7 +259,7 @@ public class PartResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response checkOut(@PathParam("workspaceId") String workspaceId, @PathParam("partNumber") String partNumber, @PathParam("partVersion") String partVersion)
-            throws EntityNotFoundException, EntityAlreadyExistsException, CreationException, AccessRightException, NotAllowedException {
+            throws EntityNotFoundException, EntityAlreadyExistsException, CreationException, AccessRightException, NotAllowedException, UserNotActiveException {
 
         PartRevisionKey revisionKey = new PartRevisionKey(workspaceId, partNumber, partVersion);
         productService.checkOutPart(revisionKey);
@@ -712,6 +691,23 @@ public class PartResource {
             data[i++] =new DocumentRevisionKey(dto.getWorkspaceId(), dto.getDocumentMasterId(), dto.getVersion());
         }
         return data;
+    }
+
+    private List<PartRevisionDTO> getPartRevisionDTO(Set<PartRevision> partRevisions) throws UserNotFoundException, WorkspaceNotFoundException, UserNotActiveException, PartRevisionNotFoundException {
+        List<PartRevisionDTO> partRevisionDTOs = new ArrayList<>();
+
+        for(PartRevision partRevision:partRevisions){
+            if(!productService.canAccess(partRevision.getKey())) {
+                continue;
+            }
+            PartRevisionDTO partRevisionDTO = mapper.map(partRevision, PartRevisionDTO.class);
+            partRevisionDTO.setNumber(partRevision.getPartNumber());
+            partRevisionDTO.setPartKey(partRevision.getPartNumber() + "-" + partRevision.getVersion());
+            partRevisionDTO.setName(partRevision.getPartMaster().getName());
+            partRevisionDTO.setStandardPart(partRevision.getPartMaster().isStandardPart());
+            partRevisionDTOs.add(partRevisionDTO);
+        }
+        return partRevisionDTOs;
     }
 
 }

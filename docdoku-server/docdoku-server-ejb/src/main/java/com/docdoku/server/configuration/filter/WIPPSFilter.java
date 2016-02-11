@@ -23,10 +23,7 @@ package com.docdoku.server.configuration.filter;
 
 import com.docdoku.core.common.User;
 import com.docdoku.core.configuration.PSFilter;
-import com.docdoku.core.product.PartIteration;
-import com.docdoku.core.product.PartLink;
-import com.docdoku.core.product.PartMaster;
-import com.docdoku.core.product.PartSubstituteLink;
+import com.docdoku.core.product.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,8 +60,10 @@ public class WIPPSFilter extends PSFilter {
     @Override
     public List<PartIteration> filter(PartMaster part) {
         List<PartIteration> partIterations = new ArrayList<>();
-        PartIteration partIteration = part.getLastRevision().getLastIteration();
-        partIterations.add(partIteration);
+        PartIteration partIteration = getLastAccessibleIteration(part);
+        if(partIteration != null) {
+            partIterations.add(partIteration);
+        }
         return partIterations;
     }
 
@@ -84,5 +83,14 @@ public class WIPPSFilter extends PSFilter {
 
         return links;
     }
+
+    private PartIteration getLastAccessibleIteration(PartMaster partMaster) {
+        PartIteration iteration = null;
+        for(int i = partMaster.getPartRevisions().size()-1; i >= 0 && iteration == null; i--) {
+            iteration = partMaster.getPartRevisions().get(i).getLastAccessibleIteration(user);
+        }
+        return iteration;
+    }
+
 
 }

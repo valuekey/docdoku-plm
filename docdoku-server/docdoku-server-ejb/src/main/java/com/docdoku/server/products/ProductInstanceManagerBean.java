@@ -401,7 +401,7 @@ public class ProductInstanceManagerBean implements IProductInstanceManagerLocal 
             }
 
             @Override
-            public void onPathWalk(List<PartLink> path, List<PartMaster> parts) {
+            public boolean onPathWalk(List<PartLink> path, List<PartMaster> parts) {
                 // Find pathData in previous iteration which is on this path. Copy it.
                 String pathAsString = Tools.getPathAsString(path);
                 for (PathDataMaster pathDataMaster : lastIteration.getPathDataMasterList()) {
@@ -409,6 +409,7 @@ public class ProductInstanceManagerBean implements IProductInstanceManagerLocal 
                         pathDataMasterList.add(clonePathDataMaster(pathDataMaster));
                     }
                 }
+                return true;
             }
 
             private PathDataMaster clonePathDataMaster(PathDataMaster pathDataMaster) {
@@ -504,23 +505,26 @@ public class ProductInstanceManagerBean implements IProductInstanceManagerLocal 
 
     @RolesAllowed(UserGroupMapping.REGULAR_USER_ROLE_ID)
     @Override
-    public ProductInstanceMaster removeFileFromProductInstanceIteration(String workspaceId, int iteration, String fullName, ProductInstanceMaster productInstanceMaster) throws UserNotFoundException, AccessRightException, WorkspaceNotFoundException, UserNotActiveException, FileNotFoundException {
+    public ProductInstanceMaster removeFileFromProductInstanceIteration(String workspaceId, int iteration, String fullName, ProductInstanceMasterKey productInstanceMasterKey) throws UserNotFoundException, AccessRightException, WorkspaceNotFoundException, UserNotActiveException, FileNotFoundException, ProductInstanceMasterNotFoundException {
 
         User user = userManager.checkWorkspaceReadAccess(workspaceId);
         Locale userLocale = new Locale(user.getLanguage());
+        ProductInstanceMaster productInstanceMaster =  getProductInstanceMaster(productInstanceMasterKey);
 
         ProductInstanceIteration productInstanceIteration = productInstanceMaster.getProductInstanceIterations().get(iteration - 1);
         BinaryResourceDAO binDAO = new BinaryResourceDAO(userLocale, em);
         BinaryResource file = binDAO.loadBinaryResource(fullName);
         checkProductInstanceWriteAccess(workspaceId, productInstanceMaster, user);
 
+        productInstanceIteration.removeFile(file);
+        binDAO.removeBinaryResource(file);
+
         try {
             dataManager.deleteData(file);
         } catch (StorageException e) {
             LOGGER.log(Level.INFO, null, e);
         }
-        productInstanceIteration.removeFile(file);
-        binDAO.removeBinaryResource(file);
+
         return productInstanceMaster;
 
     }
@@ -570,7 +574,18 @@ public class ProductInstanceManagerBean implements IProductInstanceManagerLocal 
         ProductInstanceMasterDAO productInstanceMasterDAO = new ProductInstanceMasterDAO(userLocale, em);
         ProductInstanceMaster prodInstM = productInstanceMasterDAO.loadProductInstanceMaster(new ProductInstanceMasterKey(serialNumber, workspaceId, configurationItemId));
         checkProductInstanceWriteAccess(workspaceId, prodInstM, user);
+
         productInstanceMasterDAO.deleteProductInstanceMaster(prodInstM);
+
+        for (ProductInstanceIteration pii : prodInstM.getProductInstanceIterations()) {
+            for (BinaryResource file : pii.getAttachedFiles()) {
+                try {
+                    dataManager.deleteData(file);
+                } catch (StorageException e) {
+                    LOGGER.log(Level.INFO, null, e);
+                }
+            }
+        }
     }
 
     @RolesAllowed(UserGroupMapping.REGULAR_USER_ROLE_ID)
@@ -840,6 +855,7 @@ public class ProductInstanceManagerBean implements IProductInstanceManagerLocal 
         }
 
         prodInstI.getPathDataMasterList().remove(pathDataMaster);
+        pathDataMasterDAO.removePathData(pathDataMaster);
 
         for(PathDataIteration pathDataIteration : pathDataMaster.getPathDataIterations()) {
             for (BinaryResource file : pathDataIteration.getAttachedFiles()) {
@@ -850,9 +866,6 @@ public class ProductInstanceManagerBean implements IProductInstanceManagerLocal 
                 }
             }
         }
-
-
-        pathDataMasterDAO.removePathData(pathDataMaster);
     }
 
     @RolesAllowed({UserGroupMapping.REGULAR_USER_ROLE_ID})
@@ -1027,13 +1040,15 @@ public class ProductInstanceManagerBean implements IProductInstanceManagerLocal 
             throw new NotAllowedException(userLocale, "NotAllowedException52");
         }
 
+        pathDataIteration.removeFile(file);
+        binDAO.removeBinaryResource(file);
+
         try {
             dataManager.deleteData(file);
         } catch (StorageException e) {
             LOGGER.log(Level.INFO, null, e);
         }
-        pathDataIteration.removeFile(file);
-        binDAO.removeBinaryResource(file);
+
         return productInstanceMaster;
     }
 
@@ -1221,7 +1236,7 @@ public class ProductInstanceManagerBean implements IProductInstanceManagerLocal 
         if (prodInstM.getAcl() == null) {
             // Check if the item has no ACL
             return userManager.checkWorkspaceReadAccess(workspaceId);
-        } else if (prodInstM.getAcl().hasWriteAccess(user)) {
+        } else if (prodInstM.getAcl().hasReadAccess(user)) {
             // Check if there is a write access
             return user;
         } else {
@@ -1253,13 +1268,16 @@ public class ProductInstanceManagerBean implements IProductInstanceManagerLocal 
 
     private void checkNameValidity(String name, Locale locale) throws NotAllowedException {
         if (!NamingConvention.correct(name)) {
-            throw new NotAllowedException(locale, "NotAllowedException9");
+            throw new NotAllowedException(locale, "NotAllowedException9", name);
         }
     }
 
     private void checkNameFileValidity(String name, Locale locale) throws NotAllowedException {
+        if (name != null) {
+            name = name.trim();
+        }
         if (!NamingConvention.correctNameFile(name)) {
-            throw new NotAllowedException(locale, "NotAllowedException9");
+            throw new NotAllowedException(locale, "NotAllowedException9", name);
         }
     }
 

@@ -288,8 +288,8 @@ public class DocumentManagerBean implements IDocumentManagerWS, IDocumentManager
         }
 
         User user = userManager.checkWorkspaceReadAccess(pBinaryResource.getWorkspaceId());
-        DocumentRevisionDAO documentMasterDAO = new DocumentRevisionDAO(new Locale(user.getLanguage()), em);
-        return documentMasterDAO.findDocumentIterationByBinaryResource(pBinaryResource);
+        DocumentRevisionDAO documentRevisionDAO = new DocumentRevisionDAO(new Locale(user.getLanguage()), em);
+        return documentRevisionDAO.findDocumentIterationByBinaryResource(pBinaryResource);
     }
 
     @RolesAllowed(UserGroupMapping.REGULAR_USER_ROLE_ID)
@@ -986,6 +986,12 @@ public class DocumentManagerBean implements IDocumentManagerWS, IDocumentManager
                 throw new NotAllowedException(userLocale, "NotAllowedException27");
             }
             DocumentIteration doc = docR.removeLastIteration();
+
+            DocumentDAO docDAO = new DocumentDAO(em);
+            docDAO.removeDoc(doc);
+            docR.setCheckOutDate(null);
+            docR.setCheckOutUser(null);
+
             for (BinaryResource file : doc.getAttachedFiles()) {
                 try {
                     dataManager.deleteData(file);
@@ -994,10 +1000,6 @@ public class DocumentManagerBean implements IDocumentManagerWS, IDocumentManager
                 }
             }
 
-            DocumentDAO docDAO = new DocumentDAO(em);
-            docDAO.removeDoc(doc);
-            docR.setCheckOutDate(null);
-            docR.setCheckOutUser(null);
             return docR;
         } else {
             throw new NotAllowedException(userLocale, "NotAllowedException19");
@@ -1066,7 +1068,6 @@ public class DocumentManagerBean implements IDocumentManagerWS, IDocumentManager
 
             folderDAO.removeFolder(folder);
             return allDocRevisionKey.toArray(new DocumentRevisionKey[allDocRevisionKey.size()]);
-
         }
     }
 
@@ -1139,6 +1140,14 @@ public class DocumentManagerBean implements IDocumentManagerWS, IDocumentManager
             throw new EntityConstraintException(locale, "EntityConstraintException7");
         }
 
+        DocumentMaster documentMaster = docR.getDocumentMaster();
+        boolean isLastRevision = documentMaster.getDocumentRevisions().size() == 1;
+        if (isLastRevision) {
+            documentMasterDAO.removeDocM(documentMaster);
+        } else {
+            docRDAO.removeRevision(docR);
+        }
+
         for (DocumentIteration doc : docR.getDocumentIterations()) {
             for (BinaryResource file : doc.getAttachedFiles()) {
                 try {
@@ -1149,14 +1158,6 @@ public class DocumentManagerBean implements IDocumentManagerWS, IDocumentManager
 
                 esIndexer.delete(doc);
             }
-        }
-
-        DocumentMaster documentMaster = docR.getDocumentMaster();
-        boolean isLastRevision = documentMaster.getDocumentRevisions().size() == 1;
-        if (isLastRevision) {
-            documentMasterDAO.removeDocM(documentMaster);
-        } else {
-            docRDAO.removeRevision(docR);
         }
     }
 
@@ -1197,14 +1198,17 @@ public class DocumentManagerBean implements IDocumentManagerWS, IDocumentManager
         user = checkDocumentRevisionWriteAccess(docR.getKey());
 
         if (isCheckoutByUser(user, docR) && docR.getLastIteration().equals(document)) {
+            document.removeFile(file);
+            binDAO.removeBinaryResource(file);
+
             try {
                 dataManager.deleteData(file);
             } catch (StorageException e) {
                 LOGGER.log(Level.INFO, null, e);
             }
-            document.removeFile(file);
-            binDAO.removeBinaryResource(file);
+
             return docR;
+
         } else {
             throw new NotAllowedException(userLocale, "NotAllowedException24");
         }
@@ -1260,10 +1264,15 @@ public class DocumentManagerBean implements IDocumentManagerWS, IDocumentManager
         DocumentMasterTemplate template = binDAO.getDocumentTemplateOwner(file);
         checkDocumentTemplateWriteAccess(template, user);
 
-        dataManager.deleteData(file);
-
         template.removeFile(file);
         binDAO.removeBinaryResource(file);
+
+        try {
+            dataManager.deleteData(file);
+        } catch (StorageException e) {
+            LOGGER.log(Level.INFO, null, e);
+        }
+
         return template;
     }
 
@@ -1886,13 +1895,16 @@ public class DocumentManagerBean implements IDocumentManagerWS, IDocumentManager
 
     private void checkNameValidity(String name, Locale locale) throws NotAllowedException {
         if (!NamingConvention.correct(name)) {
-            throw new NotAllowedException(locale, "NotAllowedException9");
+            throw new NotAllowedException(locale, "NotAllowedException9", name);
         }
     }
 
     private void checkNameFileValidity(String name, Locale locale) throws NotAllowedException {
+        if (name != null) {
+            name = name.trim();
+        }
         if (!NamingConvention.correctNameFile(name)) {
-            throw new NotAllowedException(locale, "NotAllowedException9");
+            throw new NotAllowedException(locale, "NotAllowedException9", name);
         }
     }
 

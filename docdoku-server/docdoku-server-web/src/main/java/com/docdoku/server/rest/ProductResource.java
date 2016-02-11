@@ -38,6 +38,7 @@ import com.docdoku.server.rest.collections.InstanceCollection;
 import com.docdoku.server.rest.dto.*;
 import com.docdoku.server.rest.dto.baseline.BaselinedPartDTO;
 import com.docdoku.server.rest.dto.baseline.PathChoiceDTO;
+import com.docdoku.server.rest.util.FileDownloadTools;
 import com.docdoku.server.rest.util.FileExportEntity;
 import org.dozer.DozerBeanMapperSingletonWrapper;
 import org.dozer.Mapper;
@@ -143,21 +144,31 @@ public class ProductResource {
         Component component = productService.filterProductStructure(ciKey, filter, decodedPath, 1);
 
         List<Component> components = component.getComponents();
-        PartRevisionDTO[] partsDTO = new PartRevisionDTO[components.size()];
-
+        List<PartRevisionDTO> partsRevisions = new ArrayList<>();
         for (int i = 0; i < components.size(); i++) {
-            PartRevision lastRevision = components.get(i).getPartMaster().getLastRevision();
-            partsDTO[i] = mapper.map(lastRevision, PartRevisionDTO.class);
-            partsDTO[i].setNumber(lastRevision.getPartNumber());
-            partsDTO[i].setPartKey(lastRevision.getPartNumber() + "-" + lastRevision.getVersion());
-            partsDTO[i].setName(lastRevision.getPartMaster().getName());
-            partsDTO[i].setStandardPart(lastRevision.getPartMaster().isStandardPart());
+            PartIteration retainedIteration = components.get(i).getRetainedIteration();
+            //If no iteration has been retained, then take the last revision (the first one).
+            PartRevision partRevision = retainedIteration == null ? components.get(i).getPartMaster().getLastRevision() : retainedIteration.getPartRevision();
+            if(!productService.canAccess(partRevision.getKey())) {
+                continue;
+            }
+            PartRevisionDTO dto = mapper.map(partRevision, PartRevisionDTO.class);
+            dto.getPartIterations().clear();
+            //specify the iteration only if an iteration has been retained.
+            if(retainedIteration != null) {
+                dto.getPartIterations().add(mapper.map(retainedIteration, PartIterationDTO.class));
+            }
+            dto.setNumber(partRevision.getPartNumber());
+            dto.setPartKey(partRevision.getPartNumber() + "-" + partRevision.getVersion());
+            dto.setName(partRevision.getPartMaster().getName());
+            dto.setStandardPart(partRevision.getPartMaster().isStandardPart());
 
-            List<ModificationNotificationDTO> notificationDTOs = getModificationNotificationDTOs(lastRevision);
-            partsDTO[i].setNotifications(notificationDTOs);
+            List<ModificationNotificationDTO> notificationDTOs = getModificationNotificationDTOs(partRevision);
+            dto.setNotifications(notificationDTOs);
+            partsRevisions.add(dto);
         }
 
-        return partsDTO;
+        return partsRevisions.toArray(new PartRevisionDTO[partsRevisions.size()]);
     }
 
     @GET
@@ -165,29 +176,28 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     public ComponentDTO filterProductStructure(@PathParam("workspaceId") String workspaceId, @PathParam("ciId") String ciId, @QueryParam("configSpec") String configSpecType, @QueryParam("path") String path, @QueryParam("depth") Integer depth, @QueryParam("linkType") String linkType, @QueryParam("diverge") boolean diverge)
             throws EntityNotFoundException, UserNotActiveException, AccessRightException, NotAllowedException, EntityConstraintException {
+
         ConfigurationItemKey ciKey = new ConfigurationItemKey(workspaceId, ciId);
-
         PSFilter filter = productService.getPSFilter(ciKey, configSpecType, diverge);
-
         Component component;
-        String serialNumber = null;
 
-        if(configSpecType.startsWith("pi-")){
-            serialNumber = configSpecType.substring(3);
-        }
-
-        if(linkType == null){
+        if (linkType == null) {
             List<PartLink> decodedPath = productService.decodePath(ciKey, path);
-            component = productService.filterProductStructure(ciKey,filter,decodedPath,depth);
-        }else {
-            component = productService.filterProductStructureOnLinkType(ciKey, filter, serialNumber, path, linkType);
+            component = productService.filterProductStructure(ciKey, filter, decodedPath, depth);
+        } else {
+            component = productService.filterProductStructureOnLinkType(ciKey, filter, configSpecType, path, linkType);
         }
 
-        if(component == null){
+        if (component == null) {
             throw new IllegalArgumentException();
         }
 
-        return createComponentDTO(component,workspaceId,ciId,serialNumber);
+        String serialNumber = null;
+        if (configSpecType.startsWith("pi-")) {
+            serialNumber = configSpecType.substring(3);
+        }
+
+        return createComponentDTO(component, workspaceId, ciId, serialNumber);
     }
 
     @GET
@@ -445,9 +455,12 @@ public class ProductResource {
             }
         }
 
+        String fileName = FileDownloadTools.getFileName(ciId+"-"+configSpecType+"-export", "zip");
+        String contentDisposition = FileDownloadTools.getContentDisposition("attachment", fileName);
+
         return Response.ok()
                 .header("Content-Type", "application/download")
-                .header("Content-Disposition", "attachment; filename=\""+ciId+"-"+configSpecType+"-export.zip\"")
+                .header("Content-Disposition", contentDisposition)
                 .entity(fileExportEntity).build();
     }
 
@@ -590,6 +603,11 @@ public class ProductResource {
         }
 
         PartRevision partR = retainedIteration.getPartRevision();
+
+        // Filter ACL on partR
+        if(!productService.canAccess(partR.getKey())){
+            return null;
+        }
 
         List<PartLink> path = component.getPath();
         PartLink usageLink = path.get(path.size()-1);
