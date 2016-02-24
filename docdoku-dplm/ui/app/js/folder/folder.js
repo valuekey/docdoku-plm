@@ -365,7 +365,8 @@
                     $scope.form={
                         selected:0,
                         part:0,
-                        document:1
+                        document:1,
+                        add_to_part:2
                     };
 
                     var onError = function(error){

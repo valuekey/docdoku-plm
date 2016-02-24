@@ -319,9 +319,16 @@
                     args.push(part.description);
                 }
 
+                if(part.revision) {
+                    args.push('-r');
+                    args.push(part.revision);
+                }
+
                 if (part.standard) {
                     args.push('-s');
                 }
+
+
 
                 args.push(filePath);
 

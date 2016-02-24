@@ -25,10 +25,7 @@ import com.docdoku.cli.helpers.AccountsManager;
 import com.docdoku.cli.helpers.FileHelper;
 import com.docdoku.cli.helpers.LangHelper;
 import com.docdoku.cli.tools.ScriptingTools;
-import com.docdoku.core.product.PartIterationKey;
-import com.docdoku.core.product.PartMaster;
-import com.docdoku.core.product.PartRevision;
-import com.docdoku.core.product.PartRevisionKey;
+import com.docdoku.core.product.*;
 import com.docdoku.core.services.IProductManagerWS;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -44,6 +41,9 @@ public class PartCreationCommand extends BaseCommandLine {
 
     @Option(metaVar = "<partnumber>", name = "-o", aliases = "--part", required = true, usage = "the part number of the part to save")
     private String partNumber;
+
+    @Option(metaVar = "<revision>", name="-r", aliases = "--revision", usage="specify revision of the part to retrieve ('A', 'B'...); default is the latest")
+    private String revision;
 
     @Option(metaVar = "<partname>", name = "-N", aliases = "--partname", usage = "the part name of the part to save")
     private String partName;
@@ -63,10 +63,17 @@ public class PartCreationCommand extends BaseCommandLine {
     @Override
     public void execImpl() throws Exception {
         IProductManagerWS productS = ScriptingTools.createProductService(getServerURL(), user, password);
-        PartMaster partMaster = productS.createPartMaster(workspace, partNumber, partName, standardPart, null, description, null, null, null, null);
-        PartRevision pr = partMaster.getLastRevision();
-        PartRevisionKey partRPK = new PartRevisionKey(workspace, partNumber, pr.getVersion());
-        PartIterationKey partIPK = new PartIterationKey(partRPK, pr.getLastIteration().getIteration());
+
+        PartIterationKey partIPK;
+        if(revision != null) {
+            PartRevision pr = productS.getPartRevision(new PartRevisionKey(workspace,partNumber,revision));
+            partIPK = new PartIterationKey(workspace,partNumber,revision,pr.getLastIterationNumber());
+
+        } else {
+            PartRevision pr = productS.createPartMaster(workspace, partNumber, partName, standardPart, null, description, null, null, null, null).getLastRevision();
+            PartRevisionKey partRPK = new PartRevisionKey(workspace, partNumber, pr.getVersion());
+            partIPK = new PartIterationKey(partRPK, pr.getLastIteration().getIteration());
+        }
         FileHelper fh = new FileHelper(user,password,output,new AccountsManager().getUserLocale(user));
         fh.uploadNativeCADFile(getServerURL(), cadFile, partIPK);
     }

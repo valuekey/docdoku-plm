@@ -9,6 +9,11 @@
             </span>
         </div>
         <div flex>
+           <span class="clickable subtitle" ng-class="{selected: form.selected===form.add_to_part}"  ng-click="form.selected=form.add_to_part">
+                <i class="fa fa fa-arrow-circle-right" ng-if="form.selected===form.document"></i> {{'ADD_TO_PART'|translate}}
+            </span>
+        </div>
+        <div flex>
            <span class="clickable subtitle" ng-class="{selected: form.selected===form.document}"  ng-click="form.selected=form.document">
             <i class="fa fa fa-arrow-circle-right" ng-if="form.selected===form.document"></i> {{'CREATE_DOCUMENT'|translate}}
         </span>
@@ -35,6 +40,28 @@
                 <md-checkbox ng-model="newPart.standard" aria-label="">
                     {{'STANDARD'|translate}}
                 </md-checkbox>
+            </div>
+            <div class="row">
+                <md-button aria-label="" class="md-raised md-primary">
+                    {{'SAVE'|translate}}
+                </md-button>
+            </div>
+        </form>
+    </div>
+    <div ng-if="form.selected===form.add_to_part">
+        <form name="partEditForm" ng-submit="partEditForm.$valid && createPart()">
+            <div class="row">
+                <label class="label-margin">{{'WORKSPACE' | translate}}</label>
+                <i class="fa fa-globe"></i>
+                <select ng-model="newPart.workspace">
+                    <option ng-repeat="workspace in workspaces" value="{{workspace}}">
+                        {{workspace}}
+                    </option>
+                </select>
+            </div>
+            <div class="row">
+                <md-text-float label="{{'PART_NUMBER' | translate}}" ng-model="newPart.partNumber"  required="true"></md-text-float>
+                <md-text-float label="{{'VERSION' | translate}}" ng-model="newPart.revision"  required="true"></md-text-float>
             </div>
             <div class="row">
                 <md-button aria-label="" class="md-raised md-primary">

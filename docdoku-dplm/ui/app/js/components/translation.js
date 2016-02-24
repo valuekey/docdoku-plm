@@ -6,6 +6,7 @@
 
             $translateProvider
                 .translations('en', {
+                    ADD_TO_PART: 'Add to part',
                     CUT: 'Cut',
                     COPY: 'Copy',
                     PASTE: 'Paste',
@@ -101,9 +102,11 @@
                     DOWNLOAD_ALL:'Download all files',
                     FILE_ANALYSIS:'Files analysis',
                     DOWNLOADING:'Download in progress',
-                    SIZE:'Size'
+                    SIZE:'Size',
+                    VERSION: 'Version'
                 })
                 .translations('fr', {
+                    ADD_TO_PART: 'Ajouter à un article',
                     CUT: 'Couper',
                     COPY: 'Copier',
                     PASTE: 'Coller',
@@ -199,7 +202,8 @@
                     DOWNLOAD_ALL:'Télécharger tous les fichiers',
                     FILE_ANALYSIS:'Analyse des fichiers',
                     DOWNLOADING:'Téléchargement en cours',
-                    SIZE:'Taille'
+                    SIZE:'Taille',
+                    VERSION: 'Version'
                 });
 
             $translateProvider.preferredLanguage(localStorage.lang || 'en');
