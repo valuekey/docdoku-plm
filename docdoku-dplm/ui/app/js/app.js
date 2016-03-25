@@ -36,6 +36,7 @@
         'dplm.services.workspaces',
         'dplm.services.confirm',
         'dplm.services.prompt',
+        'dplm.services.output',
 
         'dplm.services.3d',
         'dplm.directives.filechange',
@@ -45,6 +46,7 @@
         'dplm.filters.timeago',
         'dplm.filters.last',
         'dplm.filters.join',
+        'dplm.filters.humanreadablesize',
 
         'dplm.contextmenu',
         'dplm.menu'
@@ -73,8 +75,14 @@
                 }
             };
 
-            $scope.isSameBaseRoute = function(route) {
-                return $location.path().indexOf(route)!==-1;
+            $scope.isSelectedWorkspace = function(workspace){
+                var currentParts = $location.path().split('/');
+                return currentParts[1] === 'workspace'  && workspace === currentParts[2];
+            };
+
+            $scope.isSelectedFolder = function(folderUuid) {
+                var currentParts = $location.path().split('/');
+                return currentParts[1] === 'folder'  && folderUuid === currentParts[2];
             };
         });
 

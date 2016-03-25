@@ -29,13 +29,16 @@ import com.docdoku.core.meta.InstanceAttributeTemplate;
 import com.docdoku.core.product.*;
 import com.docdoku.core.security.ACL;
 import com.docdoku.core.security.UserGroupMapping;
+import com.docdoku.core.services.IImporterManagerLocal;
 import com.docdoku.core.services.IProductInstanceManagerLocal;
 import com.docdoku.core.services.IProductManagerLocal;
+import com.docdoku.core.util.FileIO;
 import com.docdoku.server.rest.dto.*;
 import com.docdoku.server.rest.dto.baseline.BaselineDTO;
 import com.docdoku.server.rest.dto.product.ProductInstanceCreationDTO;
 import com.docdoku.server.rest.dto.product.ProductInstanceIterationDTO;
 import com.docdoku.server.rest.dto.product.ProductInstanceMasterDTO;
+import com.docdoku.server.rest.file.util.BinaryResourceUpload;
 import com.docdoku.server.rest.util.InstanceAttributeFactory;
 import org.dozer.DozerBeanMapperSingletonWrapper;
 import org.dozer.Mapper;
@@ -45,9 +48,16 @@ import javax.annotation.security.DeclareRoles;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,6 +76,9 @@ public class ProductInstancesResource {
 
     @EJB
     private IProductManagerLocal productService;
+
+    @EJB
+    private IImporterManagerLocal importerService;
 
     private Mapper mapper;
 
@@ -170,7 +183,7 @@ public class ProductInstancesResource {
             }
         }
 
-        ProductInstanceMaster productInstanceMaster = productInstanceService.updateProductInstance(workspaceId,iteration,productInstanceCreationDTO.getIterationNote(),new ConfigurationItemKey(workspaceId, productInstanceCreationDTO.getConfigurationItemId()), productInstanceCreationDTO.getSerialNumber(), productInstanceCreationDTO.getBasedOn().getId(), attributes, links, documentLinkComments);
+        ProductInstanceMaster productInstanceMaster = productInstanceService.updateProductInstance(workspaceId, iteration, productInstanceCreationDTO.getIterationNote(), new ConfigurationItemKey(workspaceId, productInstanceCreationDTO.getConfigurationItemId()), productInstanceCreationDTO.getSerialNumber(), productInstanceCreationDTO.getBasedOn().getId(), attributes, links, documentLinkComments);
 
         return mapper.map(productInstanceMaster, ProductInstanceMasterDTO.class);
     }
@@ -181,7 +194,7 @@ public class ProductInstancesResource {
     public ProductInstanceMasterDTO getProductInstance(@PathParam("workspaceId") String workspaceId, @PathParam("ciId") String configurationItemId, @PathParam("serialNumber") String serialNumber)
             throws EntityNotFoundException, UserNotActiveException {
 
-        ProductInstanceMaster productInstanceMaster = productInstanceService.getProductInstanceMaster(new ProductInstanceMasterKey(serialNumber,workspaceId,configurationItemId));
+        ProductInstanceMaster productInstanceMaster = productInstanceService.getProductInstanceMaster(new ProductInstanceMasterKey(serialNumber, workspaceId, configurationItemId));
         ConfigurationItemKey ciKey = new ConfigurationItemKey(workspaceId,configurationItemId);
         ProductInstanceMasterDTO dto = mapper.map(productInstanceMaster, ProductInstanceMasterDTO.class);
 
@@ -405,7 +418,7 @@ public class ProductInstancesResource {
     @Path("{serialNumber}/pathdata/{pathDataId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response deletePathData(@PathParam("workspaceId") String workspaceId, @PathParam("ciId") String configurationItemId, @PathParam("serialNumber") String serialNumber, @PathParam("pathDataId") int pathDataId) throws UserNotActiveException, WorkspaceNotFoundException, UserNotFoundException, ProductInstanceMasterNotFoundException, AccessRightException, NotAllowedException {
-        productInstanceService.deletePathData(workspaceId,configurationItemId,serialNumber,pathDataId);
+        productInstanceService.deletePathData(workspaceId, configurationItemId, serialNumber, pathDataId);
         return Response.ok().build();
     }
 
@@ -527,7 +540,7 @@ public class ProductInstancesResource {
             }
         }
 
-        PathDataMaster pathDataMaster = productInstanceService.updatePathData(workspaceId, configurationItemId, serialNumber, pathDataIterationCreationDTO.getId(),iteration, attributes, pathDataIterationCreationDTO.getIterationNote(), links, documentLinkComments);
+        PathDataMaster pathDataMaster = productInstanceService.updatePathData(workspaceId, configurationItemId, serialNumber, pathDataIterationCreationDTO.getId(), iteration, attributes, pathDataIterationCreationDTO.getIterationNote(), links, documentLinkComments);
 
 
         PathDataMasterDTO dto = mapper.map(pathDataMaster, PathDataMasterDTO.class);
@@ -636,6 +649,38 @@ public class ProductInstancesResource {
         }
         return dtos;
     }
+
+    @POST
+    @Path("import")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response importAttributes(@Context HttpServletRequest request,
+                                     @PathParam("workspaceId") String workspaceId,
+                                     @QueryParam("autoFreezeAfterUpdate") boolean autoFreezeAfterUpdate,
+                                     @QueryParam("permissiveUpdate") boolean permissiveUpdate,
+                                     @QueryParam("revisionNote") String revisionNote)
+            throws Exception {
+
+        Collection<Part> parts = request.getParts();
+
+        if(parts.isEmpty() || parts.size() > 1){
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
+        Part part = parts.iterator().next();
+        String name = FileIO.getFileNameWithoutExtension(part.getSubmittedFileName());
+        String extension = FileIO.getExtension(part.getSubmittedFileName());
+
+        File importFile = Files.createTempFile("product-" + name, "-import.tmp" + (extension == null ? "" : "." + extension)).toFile();
+        long length = BinaryResourceUpload.uploadBinary(new BufferedOutputStream(new FileOutputStream(importFile)), part);
+        importerService.importIntoPathData(workspaceId, importFile, name+"."+extension, revisionNote, autoFreezeAfterUpdate, permissiveUpdate);
+
+        importFile.deleteOnExit();
+
+        return Response.noContent().build();
+
+    }
+
 
     private DocumentRevisionKey[] createDocumentRevisionKeys(Set<DocumentRevisionDTO> dtos) {
         DocumentRevisionKey[] data = new DocumentRevisionKey[dtos.size()];

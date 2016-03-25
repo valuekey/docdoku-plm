@@ -39,6 +39,7 @@ import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Locale;
 
 /**
  *
@@ -52,7 +53,7 @@ public class DocumentCheckOutCommand extends BaseCommandLine {
     @Option(metaVar = "<id>", name = "-o", aliases = "--id", usage = "the id of the document to check out; if not specified choose the document corresponding to the file")
     private String id;
 
-    @Argument(metaVar = "[<file>] | <dir>]", index=0, usage = "specify the file of the document to check out or the path where files are stored (default is working directory)")
+    @Argument(metaVar = "[<file> | <dir>]", index=0, usage = "specify the file of the document to check out or the path where files are stored (default is working directory)")
     private File path = new File(System.getProperty("user.dir"));
 
     @Option(name="-n", aliases = "--no-download", usage="do not download the files of the document if any")
@@ -96,10 +97,17 @@ public class DocumentCheckOutCommand extends BaseCommandLine {
 
     private void checkoutDocument(String id, String pRevision) throws IOException, UserNotFoundException, WorkspaceNotFoundException, UserNotActiveException, LoginException, NoSuchAlgorithmException, NotAllowedException, FileAlreadyExistsException, AccessRightException, CreationException, DocumentRevisionNotFoundException {
 
+        Locale locale = new AccountsManager().getUserLocale(user);
+
         DocumentRevisionKey documentRevisionKey = new DocumentRevisionKey(workspace, id, pRevision);
 
         DocumentRevision dr = documentS.getDocumentRevision(documentRevisionKey);
         DocumentIteration di = dr.getLastIteration();
+
+        output.printInfo(
+                LangHelper.getLocalizedMessage("CheckingOutDocument",locale)
+                        + " : "
+                        + id + "-" + dr.getVersion() + "-" + di.getIteration() + " (" + workspace + ")");
 
         if(!dr.isCheckedOut()) {
             try{
@@ -111,7 +119,7 @@ public class DocumentCheckOutCommand extends BaseCommandLine {
         }
 
         if(!noDownload && !di.getAttachedFiles().isEmpty()){
-            FileHelper fh = new FileHelper(user,password,output,new AccountsManager().getUserLocale(user));
+            FileHelper fh = new FileHelper(user,password,output,locale);
             fh.downloadDocumentFiles(getServerURL(), path, workspace, id, dr, di, force);
         }
 

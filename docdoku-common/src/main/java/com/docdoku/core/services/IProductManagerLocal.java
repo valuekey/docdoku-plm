@@ -175,6 +175,8 @@ public interface IProductManagerLocal{
      */
     boolean canUserAccess(User user, PartIterationKey partIKey) throws PartRevisionNotFoundException, PartIterationNotFoundException;
 
+    boolean canWrite(PartRevisionKey partRKey) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, PartRevisionNotFoundException, AccessRightException;
+
     Conversion getConversion(PartIterationKey partIterationKey) throws UserNotFoundException, WorkspaceNotFoundException, UserNotActiveException, PartRevisionNotFoundException, AccessRightException, PartIterationNotFoundException ;
 
     Conversion createConversion(PartIterationKey partIterationKey) throws UserNotFoundException, WorkspaceNotFoundException, UserNotActiveException, PartRevisionNotFoundException, AccessRightException, PartIterationNotFoundException, CreationException;
@@ -182,6 +184,12 @@ public interface IProductManagerLocal{
     void removeConversion(PartIterationKey partIterationKey) throws UserNotFoundException, WorkspaceNotFoundException, UserNotActiveException, PartRevisionNotFoundException, AccessRightException, PartIterationNotFoundException;
     
     void endConversion(PartIterationKey partIterationKey, boolean succeed) throws UserNotFoundException, WorkspaceNotFoundException, UserNotActiveException, PartRevisionNotFoundException, AccessRightException, PartIterationNotFoundException;
+
+    Import createImport(String workspaceId, String fileName) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, CreationException;
+    List<Import> getImports(String workspaceId) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException;
+    Import getImport(String workspaceId, String id) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, AccessRightException;
+    void endImport(String workspaceId, String id, ImportResult importResult) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, AccessRightException;
+    void removeImport(String workspaceId, String id) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, AccessRightException;
 
     void updateACLForPartMasterTemplate(String workspaceId, String templateId, Map<String, String> userEntries, Map<String, String> groupEntries) throws UserNotFoundException, UserNotActiveException, WorkspaceNotFoundException, AccessRightException, PartMasterTemplateNotFoundException;
 
