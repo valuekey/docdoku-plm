@@ -1,18 +1,8 @@
-<div class="tabs default" layout="horizontal">
-    <div flex ng-class="{selected:action.selected == action.folders}">
-        <a ng-href="#/workspace/{{workspace}}/documents/folders">{{'FOLDERS' | translate}}</a>
-    </div>
-    <div flex ng-class="{selected:action.selected == action.checkedOut}">
-        <a ng-href="#/workspace/{{workspace}}/documents/checkedOut">{{'CHECKED_OUT' | translate}}</a>
-    </div>
-</div>
-
 <md-content class="md-padding">
 
-    <div ng-if="action.selected == action.folders">
-        <folders></folders>
-    </div>
-    <div ng-if="action.selected == action.checkedOut && !loadingDocuments && documents.length">
+    <folders></folders>
+
+    <div ng-if="!loadingDocuments && documents.length">
         <div class="row">
             <md-button class="md-raised md-primary" ng-click="downloadAll()" aria-label="">{{'DOWNLOAD_ALL' | translate}}</md-button>
             <span>

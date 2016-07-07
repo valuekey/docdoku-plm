@@ -1,6 +1,14 @@
 <md-content class="md-padding">
     <div layout="horizontal" class="md-padding">
-        
+
+        <md-button class="md-margin md-raised md-primary" aria-label="" href="#/workspace/{{workspace}}/documents/checkedOut">
+            <i class="fa fa-sign-out"></i>
+            {{'CHECKED_OUT' | translate}}
+            <md-tooltip>
+                {{'CHECKED_OUT'|translate}}
+            </md-tooltip>
+        </md-button>
+
         <md-button class="md-margin md-raised md-primary" aria-label="" href="#/workspace/{{workspace}}/documents/folders/~{{configuration.user}}">
             <i class="path fa fa-home" ng-class="{selected:path==='~'+configuration.user}"></i>
             {{'HOME_FOLDER'|translate}}
