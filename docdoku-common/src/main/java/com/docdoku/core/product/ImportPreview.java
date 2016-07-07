@@ -18,18 +18,38 @@
  * along with DocDokuPLM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.docdoku.server.importers;
+package com.docdoku.core.product;
 
-import com.docdoku.core.product.ImportResult;
-import com.docdoku.core.product.PartRevision;
-
-import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
-public interface PartImporter {
+/**
+ * A class to stock dry run result, a preview of the import
+ * @author Laurent Le Van
+ * @since 29/06/2016
+ */
+public class ImportPreview {
 
-    ImportResult importFile(String workspaceId, File file, String revisionNote, boolean autoCheckout, boolean autoCheckin, boolean permissiveUpdate);
-    boolean canImportFile(String importFileName);
-    List<PartRevision> dryRunImport(String workspaceId, File file, String originalFileName, boolean autoCheckout, boolean autoCheckin, boolean permissiveUpdate);
+    /**
+     * Part revisions which will be checked out
+     */
+    private List<PartRevision> partRevsToCheckout;
+
+    public ImportPreview(){
+                this.partRevsToCheckout = new ArrayList<>();
+    }
+
+    public ImportPreview(List<PartRevision> partRevisions){
+        this.partRevsToCheckout = partRevisions;
+    }
+
+    public List<PartRevision> getPartRevsToCheckout(){
+        return partRevsToCheckout;
+    }
+
+    public void setPartRevisions(List<PartRevision> partRevsToCheckout){
+        this.partRevsToCheckout = partRevsToCheckout;
+    }
+
 
 }
