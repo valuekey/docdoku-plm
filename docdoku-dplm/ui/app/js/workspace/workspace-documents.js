@@ -4,7 +4,7 @@
 
     angular.module('dplm.workspace.documents', [])
 
-        .controller('WorkspaceDocumentsController', function ($scope, $q, $filter, $window, $timeout, $routeParams, CliService, ConfigurationService, FolderService, NotificationService) {
+        .controller('WorkspaceDocumentsController', function ($scope, $q, $filter, $timeout, $routeParams, CliService, ConfigurationService, FolderService, NotificationService) {
 
             $scope.path = $routeParams.path;
             $scope.decodedPath = $filter('decodePath')($routeParams.path);
@@ -62,12 +62,6 @@
                 $scope.error = null;
                 return CliService.getCheckedOutDocumentsRevisions($scope.workspace, $filter('decodePath')($scope.path))
                     .then(onListResults, onError);
-            };
-
-            $scope.showInBrowser = function () {
-                var host = ConfigurationService.configuration.host;
-                var port = ConfigurationService.configuration.port;
-                $window.open('http://' + host + ':' + port + '/product-management/#' + $scope.workspace);
             };
 
             $scope.refreshCurrent = function(){

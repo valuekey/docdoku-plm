@@ -24,7 +24,7 @@
                 });
         })
 
-        .controller('WorkspaceController', function ($scope,$routeParams,WorkspaceService) {
+        .controller('WorkspaceController', function ($scope,$routeParams,WorkspaceService,ConfigurationService,$window) {
 
             $scope.tabs={
                 selected:
@@ -38,6 +38,13 @@
             $scope.workspace = $routeParams.workspace;
 
             WorkspaceService.addLastVisited($scope.workspace);
+
+            $scope.showInBrowser = function () {
+                var host = ConfigurationService.configuration.host;
+                var port = ConfigurationService.configuration.port;
+                var protocol = ConfigurationService.configuration.ssl ? 'https://' : 'http://';
+                $window.open(protocol + host + ':' + port + '/product-management/#' + $scope.workspace);
+            };
 
         });
 
