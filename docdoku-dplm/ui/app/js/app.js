@@ -84,6 +84,8 @@
                 var currentParts = $location.path().split('/');
                 return currentParts[1] === 'folder'  && folderUuid === currentParts[2];
             };
+
+            $scope.downloadFolder = FolderService.folders.length ? {path: FolderService.folders[0].path } : undefined;
         });
 
 })();
