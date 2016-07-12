@@ -212,6 +212,8 @@ define([
                     };
                     formData.append('upload', this.file);
                     xhr.send(formData);
+                } else {
+                    this.partCheckoutList = null;
                 }
 
                 this.importForm = false;
@@ -234,7 +236,7 @@ define([
                 };
 
                 this.deleteImportStatus();
-                
+
                 var importUrl = baseUrl + '?' + $.param(params);
 
                 var xhr = new XMLHttpRequest();
