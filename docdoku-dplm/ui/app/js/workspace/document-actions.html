@@ -7,10 +7,6 @@
             {{f.path | fileshortname}}
         </option>
     </select>
-    <label class="hide-input small cursor">
-        <i class="fa fa-plus"></i> {{'ADD_FOLDER' | translate}}
-        <input file-change="addFolder($event,files)" type="file" webkitdirectory/>
-    </label>
 </div>
 
 <div class="md-actions" ng-if="!document.busy">
