@@ -28,24 +28,30 @@
             </md-button>
         </div>
     </div>
-  <md-content class="menu-list" ng-class="{expanded: foldersExpanded}" droppable on-file-dropped="onFileDropped(path)">
-   <md-list>
-    <md-item ng-repeat="folder in folders | orderBy:'-favorite'" ng-controller="FolderMenuController">
-      <md-item-content>
-            <div class="md-tile-content small">
-                <md-button ng-class="{'md-raised':isSelectedFolder(folder.uuid)}"  aria-label="" href="#/folder/{{folder.uuid}}" class="md-primary">
-                  <i ng-if="isSelectedFolder(folder.uuid)" class="fa fa-folder-open"></i>
-                  <i ng-if="folder.newStuff" class="fa fa-download" title="{{'NEW_STUFF'|translate}}"></i>
-                  {{folder.path | fileshortname}}
-                    <md-tooltip>
-                        {{folder.path}}
-                    </md-tooltip>
-              </md-button>
-            </div>
-      </md-item-content>
-    </md-item>
-  </md-list>
-  </md-content>
+    <md-content class="menu-list" ng-class="{expanded: foldersExpanded}" droppable on-file-dropped="onFileDropped(path)">
+        <md-list>
+            <md-item ng-repeat="folder in folders | orderBy:'-favorite'" ng-controller="FolderMenuController">
+                <md-item-content>
+                    <div class="md-tile-content small">
+                        <md-button ng-class="{'md-raised':isSelectedFolder(folder.uuid)}"  aria-label="" href="#/folder/{{folder.uuid}}" class="md-primary">
+                            <i ng-if="isSelectedFolder(folder.uuid)" class="fa fa-folder-open"></i>
+                            <i ng-if="folder.newStuff" class="fa fa-bell">
+                                <md-tooltip>
+                                    {{'NEW_STUFF'|translate}}
+                                </md-tooltip>
+                            </i>
+                            <span>
+                                {{folder.path | fileshortname}}
+                                <md-tooltip>
+                                    {{folder.path}}
+                                </md-tooltip>
+                            </span>
+                        </md-button>
+                    </div>
+                </md-item-content>
+            </md-item>
+        </md-list>
+    </md-content>
   <i class="list-toggle fa" ng-class="{'fa-caret-up': foldersExpanded,'fa-caret-down': !foldersExpanded}" ng-click="toggleFolders()"></i>
 
   <h3 ng-if="configuration.host" class="subtitle" ng-controller="WorkspaceMenuController">
