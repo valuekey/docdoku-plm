@@ -170,9 +170,6 @@
                         });
                     });
 
-                    $scope.folder = {};
-                    $scope.folder.path = FolderService.folders.length ? FolderService.folders[0].path : '';
-
                     var onError = function(error){
                         $scope.error = error;
                     };
