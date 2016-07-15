@@ -3316,7 +3316,6 @@ public class ProductManagerBean implements IProductManagerWS, IProductManagerLoc
         }
 
         final ProductInstanceIteration finalProductInstanceIteration = productInstanceIteration;
-        final Integer[] count = {0};
 
         PSFilterVisitor psFilterVisitor = new PSFilterVisitor(em, user, filter) {
             @Override
@@ -3384,7 +3383,6 @@ public class ProductManagerBean implements IProductManagerWS, IProductManagerLoc
                     }
                     rows.add(row);
                 }
-                count[0]++;
                 return true;
             }
 
