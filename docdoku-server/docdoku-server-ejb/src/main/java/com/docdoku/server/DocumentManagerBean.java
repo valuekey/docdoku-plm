@@ -1159,8 +1159,8 @@ public class DocumentManagerBean implements IDocumentManagerLocal {
             throw new NotAllowedException(locale, "NotAllowedException22");
         }
 
-        BaselinedDocumentDAO baselinedDocumentDAO = new BaselinedDocumentDAO(locale, em);
-        if (baselinedDocumentDAO.hasDocumentRevision(pDocRPK)) {
+        DocumentBaselineDAO documentBaselineDAO = new DocumentBaselineDAO(em, locale);
+        if (documentBaselineDAO.existBaselinedDocument(pDocRPK.getWorkspaceId(), pDocRPK.getDocumentMasterId(), pDocRPK.getVersion())) {
             throw new EntityConstraintException(locale, "EntityConstraintException6");
         }
 
