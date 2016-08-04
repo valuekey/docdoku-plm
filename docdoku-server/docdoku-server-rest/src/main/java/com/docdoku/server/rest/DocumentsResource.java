@@ -79,7 +79,6 @@ public class DocumentsResource {
         return documentResource;
     }
 
-    // TODO: remove configSpec
     @GET
     @ApiOperation(value = "Get documents in workspace", response = DocumentRevisionDTO.class, responseContainer = "List")
     @Produces(MediaType.APPLICATION_JSON)
@@ -89,7 +88,7 @@ public class DocumentsResource {
 
         int maxResult = 20;
 
-        DocumentRevision[] docRs = documentService.getAllDocumentsInWorkspace(workspaceId, start, maxResult);
+        DocumentRevision[] docRs = documentService.getFilteredDocumentsInWorkspace(workspaceId, start, maxResult);
         DocumentRevisionDTO[] docRsDTOs = new DocumentRevisionDTO[docRs.length];
 
         for (int i = 0; i < docRs.length; i++) {
