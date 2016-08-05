@@ -34,7 +34,7 @@ import com.docdoku.core.query.QueryContext;
 import com.docdoku.core.query.QueryField;
 import com.docdoku.core.query.QueryResultRow;
 import com.docdoku.core.util.Tools;
-import com.docdoku.server.helpers.LangHelper;
+import com.docdoku.core.util.LangHelper;
 import com.docdoku.server.rest.collections.QueryResult;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.ss.usermodel.*;
@@ -52,6 +52,8 @@ import java.util.logging.Logger;
  * @author Chadid Asmae
  */
 public class ExcelGenerator {
+
+    private static final String BUNDLE_NAME = "com.docdoku.server.localization.LocalStrings";
 
     private static final Logger LOGGER = Logger.getLogger(ExcelGenerator.class.getName());
 
@@ -167,7 +169,7 @@ public class ExcelGenerator {
     }
 
     private String[] createXLSHeaderRow(String header, String[] columns, Locale locale) {
-        LangHelper langHelper = new LangHelper(locale);
+        LangHelper langHelper = new LangHelper(BUNDLE_NAME,locale);
         String[] headerFormatted = new String[header.split(";").length];
         int headerIndex = 0;
 
@@ -181,7 +183,7 @@ public class ExcelGenerator {
                     columnTranslated = column.substring(column.indexOf(".") + 1);
                 }
                 else {
-                    columnTranslated = langHelper.getLocalizedMessage(column.trim(), locale);
+                    columnTranslated = langHelper.getLocalizedMessage(column.trim());
                 }
                 headerFormatted[headerIndex++] = columnTranslated != null ? columnTranslated : column;
             }

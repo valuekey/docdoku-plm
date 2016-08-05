@@ -18,7 +18,7 @@
  * along with DocDokuPLM.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.docdoku.server.helpers;
+package com.docdoku.core.util;
 
 
 import java.util.Locale;
@@ -26,22 +26,17 @@ import java.util.ResourceBundle;
 
 public class LangHelper {
 
-    private static final String DEFAULT_BUNDLE_NAME = "com.docdoku.server.localization.LocalStrings";
-    private static ResourceBundle mResourceBundle;
+    private ResourceBundle mResourceBundle;
 
 
-    public LangHelper() {
-        mResourceBundle=ResourceBundle.getBundle(DEFAULT_BUNDLE_NAME, Locale.getDefault());
-
-    }
-
-    public LangHelper(Locale locale) {
-        mResourceBundle=ResourceBundle.getBundle(DEFAULT_BUNDLE_NAME, locale);
+    public LangHelper(String bundleName, Locale locale) {
+        mResourceBundle=ResourceBundle.getBundle(bundleName, locale);
 
     }
 
-    public String getLocalizedMessage(String key, Locale locale){
+    public String getLocalizedMessage(String key){
         return mResourceBundle.getString(key);
     }
+
 
 }
