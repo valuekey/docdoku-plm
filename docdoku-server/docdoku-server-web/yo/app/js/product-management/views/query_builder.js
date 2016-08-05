@@ -120,10 +120,23 @@ define([
 
             if(e.target.value){
                 var query = _.findWhere(this.queries,{id: parseInt(e.target.value,10)});
-                if (query.queryRule.rules.length === 0){
-                    this.$where.queryBuilder('reset');
-                }else{
-                    this.$where.queryBuilder('setRules', query.queryRule);
+                if (query.queryRule) {
+                    if (query.queryRule.rules.length === 0) {
+                        this.$where.queryBuilder('reset');
+                    } else {
+                        if (query.queryRule && query.queryRule.rules) {
+                            var rules = query.queryRule.rules;
+                            for (var i=0; i<rules.length; i++) {
+                                if (rules[i].values.length == 1) {
+                                    rules[i].value = rules[i].values[0];
+                                } else {
+                                    rules[i].value = rules[i].values;
+                                }
+                                rules[i].values = undefined;
+                            }
+                        }
+                        this.$where.queryBuilder('setRules', query.queryRule);
+                    }
                 }
 
                 _.each(query.contexts, function(value){
@@ -532,6 +545,18 @@ define([
 
             var isValid = this.$where.queryBuilder('validate');
             var rules = this.$where.queryBuilder('getRules');
+
+            if (rules.rules) {
+                for (var i=0; i<rules.rules.length; i++) {
+                    if (rules.rules[i].value instanceof Array) {
+                        rules.rules[i].values = rules.rules[i].value;
+                    } else {
+                        rules.rules[i].values = [rules.rules[i].value];
+                    }
+                    rules.rules[i].value = undefined;
+                }
+            }
+
             var selectsSize = this.$select[0].selectize.items.length;
 
             if(selectsSize && (isValid || !rules.condition && !rules.rules)) {
