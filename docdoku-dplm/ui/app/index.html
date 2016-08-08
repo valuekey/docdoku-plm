@@ -21,12 +21,13 @@
     <link rel="stylesheet" type="text/css" href="css/folders.css"/>
     <link rel="stylesheet" type="text/css" href="css/buttons.css"/>
     <link rel="stylesheet" type="text/css" href="css/output.css"/>
+    <link rel="stylesheet" type="text/css" href="css/menu.css"/>
     <!-- endbuild -->
 
 </head>
-<body>
+<body layout="vertical">
 
-    <div layout="vertical" layout-fill>
+    <div layout="vertical" layout-fill >
         <section layout="horizontal" flex >
             <md-sidenav class="md-sidenav-left md-whiteframe-z2" component-id="menu" is-locked-open="$media('md')" ng-controller="MenuController" ng-include="'js/menu/menu.html'">
             </md-sidenav>
