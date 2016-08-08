@@ -545,17 +545,7 @@ define([
 
             var isValid = this.$where.queryBuilder('validate');
             var rules = this.$where.queryBuilder('getRules');
-
-            if (rules.rules) {
-                for (var i=0; i<rules.rules.length; i++) {
-                    if (rules.rules[i].value instanceof Array) {
-                        rules.rules[i].values = rules.rules[i].value;
-                    } else {
-                        rules.rules[i].values = [rules.rules[i].value];
-                    }
-                    rules.rules[i].value = undefined;
-                }
-            }
+            this.sendValuesInArray(rules.rules);
 
             var selectsSize = this.$select[0].selectize.items.length;
 
@@ -620,11 +610,25 @@ define([
                     }
                 });
             }
+        },
+
+        sendValuesInArray : function(rules) {
+            if (rules) {
+                for (var i=0; i<rules.length; i++) {
+                    if (rules[i].value === undefined) {
+                        this.sendValuesInArray(rules[i].rules);
+                    } else {
+                        if (rules[i].value instanceof Array) {
+                            rules[i].values = rules[i].value;
+                        } else {
+                            rules[i].values = [rules[i].value];
+                        }
+                        rules[i].value = undefined;
+                    }
+                }
+            }
         }
-
     });
-
-
 
     return QueryBuilderView;
 });
