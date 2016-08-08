@@ -62,11 +62,8 @@ md-sidenav h3:first-of-type{
 }
 .menu-list{
 	border: 1px dashed white;
-	max-height: 150px;
+	height: 100%;
 	transition: all 1s linear;
-}
-.menu-list.expanded{
-	max-height: initial;
 }
 .list-toggle{
 	transition: all 0.5s linear;
@@ -77,9 +74,6 @@ md-sidenav h3:first-of-type{
 }
 .list-toggle:hover{
     color: #555;
-}
-.list-toggle.expanded{
-	color:blue;
 }
 
 .empty-list{
