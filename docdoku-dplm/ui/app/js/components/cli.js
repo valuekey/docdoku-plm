@@ -328,8 +328,6 @@
                     args.push('-s');
                 }
 
-
-
                 args.push(filePath);
 
                 return run(args,true,onOutput);

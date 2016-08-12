@@ -379,6 +379,10 @@
                         $scope.output.push(o);
                     };
 
+                    /**
+                     * createPart is used to create a new part in the PLM server OR add a file to an existing part
+                     * see execImpl in PartCreationCommand.java
+                     */
                     $scope.createPart = function () {
                         $scope.file.busy = true;
                         CliService.createPart($scope.newPart, $scope.file.path, onOutput).then(function () {
