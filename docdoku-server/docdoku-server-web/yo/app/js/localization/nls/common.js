@@ -547,6 +547,7 @@ define({
 		SEARCH_PARTS: "Search parts",
 		SEARCH: "Search",
         SEARCHING: "Searching...",
+        SEARCHING_FOR_PARTS: "Searching for parts, please do not close the window...",
         SECONDS: "s",
 		SELECT_FILE: "Choose a file",
         SELECT_FILES: "Choose one or more file(s)",

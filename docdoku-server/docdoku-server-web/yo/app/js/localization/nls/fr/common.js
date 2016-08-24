@@ -543,6 +543,7 @@ define({
 	SEARCH_PARTS: "Recherche d'articles",
 	SEARCH: "Rechercher",
     SEARCHING: "Recherche en cours...",
+    SEARCHING_FOR_PARTS: "Recherche des articles en cours, veuillez ne pas fermer la fenêtre...",
     SECONDS: "s",
 	SELECT_FILE: "Choisissez un fichier",
 	SELECT_FILES: "Choisissez un ou plusieurs fichier(s)",
