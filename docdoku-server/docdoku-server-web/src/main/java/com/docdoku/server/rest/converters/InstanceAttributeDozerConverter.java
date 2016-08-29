@@ -80,7 +80,11 @@ public class InstanceAttributeDozerConverter extends DozerConverter<InstanceAttr
             for (NameValuePair item : items){
                 itemsDTO.add(mapper.map(item, NameValuePairDTO.class));
             }
+        } else if (source instanceof InstanceLongTextAttribute) {
+            type = InstanceAttributeDTO.Type.LONG_TEXT;
+            value = source.getValue() + "";
         }
+
         else {
             throw new IllegalArgumentException("Instance attribute not supported");
         }
@@ -104,7 +108,8 @@ public class InstanceAttributeDozerConverter extends DozerConverter<InstanceAttr
                 return new InstanceTextAttribute(source.getName(), source.getValue(), source.isMandatory());
             case URL:
                 return new InstanceURLAttribute(source.getName(), source.getValue(), source.isMandatory());
-                      
+            case LONG_TEXT:
+                return new InstanceLongTextAttribute(source.getName(), source.getValue(), source.isMandatory());
         }
         throw new IllegalArgumentException("Instance attribute not supported");
     }

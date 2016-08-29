@@ -34,7 +34,7 @@ public class InstanceAttributeDTO  implements Serializable{
 
     private Type type;
     public enum Type {
-        TEXT, NUMBER, DATE, BOOLEAN, URL, LOV
+        TEXT, NUMBER, DATE, BOOLEAN, URL, LOV, LONG_TEXT
     }
     private String value;
 
