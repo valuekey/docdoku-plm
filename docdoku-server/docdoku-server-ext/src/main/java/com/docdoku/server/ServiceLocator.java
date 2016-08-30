@@ -21,6 +21,7 @@ public class ServiceLocator {
     private static final String SHARE_MANAGER = "java:global/docdoku-server-ear/docdoku-server-ejb/ShareManagerBean!com.docdoku.core.services.IShareManagerLocal";
     private static final String PART_WORKFLOW_MANAGER = "java:global/docdoku-server-ear/docdoku-server-ejb/PartWorkflowManagerBean!com.docdoku.core.services.IPartWorkflowManagerLocal";
     private static final String DOCUMENT_WORKFLOW_MANAGER = "java:global/docdoku-server-ear/docdoku-server-ejb/DocumentWorkflowManagerBean!com.docdoku.core.services.IDocumentWorkflowManagerLocal";
+    private static final String LOV_MANAGER = "java:global/docdoku-server-ear/docdoku-server-ejb/LOVManagerBean!com.docdoku.core.services.ILOVManagerLocal";
 
     private static final Logger LOGGER = Logger.getLogger(ServiceLocator.class.getName());
 
@@ -78,5 +79,10 @@ public class ServiceLocator {
         return (IDocumentWorkflowManagerLocal) context.lookup(DOCUMENT_WORKFLOW_MANAGER);
     }
 
+    @InternalService
+    @Produces
+    public ILOVManagerLocal findLOVManager() throws NamingException {
+        return (ILOVManagerLocal) context.lookup(LOV_MANAGER);
+    }
 
 }
