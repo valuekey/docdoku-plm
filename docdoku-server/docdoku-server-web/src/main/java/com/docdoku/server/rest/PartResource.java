@@ -636,7 +636,7 @@ public class PartResource {
             case URL:
                 attr = new InstanceURLAttribute();
                 break;
-            case LOV :
+            case LOV:
                 attr = new InstanceListOfValuesAttribute();
                 List<NameValuePairDTO> itemsDTO = dto.getItems();
                 List<NameValuePair> items = new ArrayList<>();
@@ -646,6 +646,9 @@ public class PartResource {
                     }
                 }
                 ((InstanceListOfValuesAttribute) attr).setItems(items);
+                break;
+            case LONG_TEXT:
+                attr = new InstanceLongTextAttribute();
                 break;
             default:
                 throw new IllegalArgumentException("Instance attribute not supported");
