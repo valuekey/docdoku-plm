@@ -36,7 +36,7 @@ public class InstanceAttributeTemplateDTO implements Serializable {
     private boolean locked;
 
     public enum AttributeType {
-        TEXT, NUMBER, DATE, BOOLEAN, URL, LOV
+        TEXT, NUMBER, DATE, BOOLEAN, URL, LOV, LONG_TEXT
     }
 
     public InstanceAttributeTemplateDTO() {
